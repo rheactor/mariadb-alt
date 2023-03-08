@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "alwaysStrict": true,
+    "checkJs": true,
+    "declaration": true,
+    "declarationDir": "dist",
+    "disableSizeLimit": true,
+    "esModuleInterop": true,
+    "importsNotUsedAsValues": "error",
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "newLine": "LF",
+    "noErrorTruncation": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+
+    "paths": { "@/*": ["./src/*"], "@Tests/*": ["./tests/*"] }
+  },
+
+  "include": [
+    "./.env.d.ts",
+    "./jest.config.*.ts",
+    "./src/**/*.ts",
+    "./tests/**/*.ts"
+  ],
+  "exclude": ["./dist"]
+}
