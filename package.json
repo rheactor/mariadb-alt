@@ -13,8 +13,8 @@
     "eslint:fix": "eslint --fix ./src",
     "test": "jest",
     "test:build": "npm run build && jest --config ./jest.config.build.ts",
-    "test:watch": "jest --watchAll",
-    "test:coverage": "jest --coverage --watchAll"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@babel/preset-env": "^7.20.2",

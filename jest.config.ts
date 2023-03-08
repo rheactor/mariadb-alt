@@ -1,4 +1,6 @@
-export const jestConfig = (sourcePath = "src") => ({
+import type { Config } from "jest";
+
+export const jestConfig = (sourcePath = "src"): Config => ({
   moduleNameMapper: {
     "^@/(.*)$": `<rootDir>/${sourcePath}/$1`,
     "^@Tests/(.*)$": "<rootDir>/tests/$1",
@@ -14,4 +16,4 @@ export const jestConfig = (sourcePath = "src") => ({
   },
 });
 
-export default jestConfig();
+export default jestConfig() as unknown;

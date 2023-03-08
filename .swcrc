@@ -4,7 +4,11 @@
     "target": "es2022",
     "minify": {
       "mangle": true,
-      "compress": { "defaults": true, "passes": 2, "arguments": true }
+      "compress": {
+        "defaults": true,
+        "arguments": true,
+        "passes": 2
+      }
     }
   },
   "test": ".*\\.js$",
