@@ -1,4 +1,4 @@
-export const InitialHandshakePacket = {
+export const InitialHandshakePacketFixture = {
   Example1: Buffer.from([
     // Protocol version: 1-byte int.
     0x0a,

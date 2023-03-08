@@ -1,5 +1,5 @@
 import { BufferConsumer } from "@/Utils/BufferConsumer";
-import { InitialHandshakePacket } from "@Tests/Fixtures/InitialHandshakePacket";
+import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 
 describe("BufferConsumer", () => {
   test("readInt()", () => {
@@ -63,7 +63,9 @@ describe("BufferConsumer", () => {
   });
 
   test("initial handshake packet example", () => {
-    const bufferConsumer = new BufferConsumer(InitialHandshakePacket.Example1);
+    const bufferConsumer = new BufferConsumer(
+      InitialHandshakePacketFixture.Example1
+    );
 
     expect(bufferConsumer.readInt()).toBe(0x0a);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
