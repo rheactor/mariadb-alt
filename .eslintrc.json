@@ -37,7 +37,6 @@
     "no-alert": "warn",
     "no-array-constructor": "warn",
     "no-await-in-loop": "warn",
-    "no-bitwise": ["warn", { "allow": ["<<"] }],
     "no-caller": "warn",
     "no-console": "warn",
     "no-constant-binary-expression": "warn",
