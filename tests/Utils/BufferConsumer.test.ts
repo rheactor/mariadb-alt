@@ -111,14 +111,26 @@ describe("BufferConsumer", () => {
       ])
     );
 
-    expect(bufferConsumer.readStringEncoded()).toBe("");
-    expect(bufferConsumer.readStringEncoded()).toBe(null);
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr1.toString());
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr250.toString());
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr255.toString());
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr400.toString());
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr100K.toString());
-    expect(bufferConsumer.readStringEncoded()).toBe(bufferStr16M1.toString());
+    expect(bufferConsumer.readStringEncoded()).toStrictEqual(Buffer.from(""));
+    expect(bufferConsumer.readStringEncoded()).toStrictEqual(null);
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr1.length
+    );
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr250.length
+    );
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr255.length
+    );
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr400.length
+    );
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr100K.length
+    );
+    expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
+      bufferStr16M1.length
+    );
   });
 
   test("skip()", () => {

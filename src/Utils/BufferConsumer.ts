@@ -58,7 +58,7 @@ export class BufferConsumer {
     return bufferString;
   }
 
-  public readStringEncoded(): string | null {
+  public readStringEncoded(): Buffer | null {
     const bufferInt = this.readIntEncoded();
 
     if (bufferInt === null) {
@@ -66,7 +66,7 @@ export class BufferConsumer {
     }
 
     if (bufferInt === 0) {
-      return "";
+      return Buffer.from("");
     }
 
     const bufferString = this.buffer.subarray(
@@ -76,7 +76,7 @@ export class BufferConsumer {
 
     this.byteOffset += bufferString.length;
 
-    return bufferString.toString("binary");
+    return bufferString;
   }
 
   public skip(bytes = 1) {
