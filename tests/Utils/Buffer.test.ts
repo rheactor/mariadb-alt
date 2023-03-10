@@ -1,16 +1,17 @@
 import {
   readIntEncoded,
   readNullTerminatedString,
-  readNullTerminatedStringEscapable,
+  readNullTerminatedStringEscaped,
   readStringEncoded,
   toIntEncoded,
+  toNullTerminatedStringEscaped,
   toStringEncoded,
 } from "@/Utils/Buffer";
 
 describe("Buffer", () => {
-  type NTSUnit = [Buffer, Buffer, number?];
+  type ReadNTSUnit = [Buffer, Buffer, number?];
 
-  const readNullTerminatedStringUnits: NTSUnit[] = [
+  const readNullTerminatedStringUnits: ReadNTSUnit[] = [
     [Buffer.from("\0"), Buffer.from("")],
     [Buffer.from("AA\0"), Buffer.from("AA")],
     [Buffer.from("AA\0BB"), Buffer.from("AA")],
@@ -37,7 +38,7 @@ describe("Buffer", () => {
     });
   });
 
-  const readNullTerminatedStringEscapableUnits: NTSUnit[] = [
+  const readNullTerminatedStringEscapedUnits: ReadNTSUnit[] = [
     ...readNullTerminatedStringUnits,
     [Buffer.from("AA\0BB\0"), Buffer.from("AA")],
     [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from("AA\0BB\0CC")],
@@ -46,28 +47,46 @@ describe("Buffer", () => {
     [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from(""), 3],
   ];
 
-  describe.each(readNullTerminatedStringEscapableUnits)(
-    "readNullTerminatedStringEscapable()",
+  describe.each(readNullTerminatedStringEscapedUnits)(
+    "readNullTerminatedStringEscaped()",
     (input, output, byteOffset) => {
       test(`${JSON.stringify(input.toString())} at ${byteOffset ?? 0}`, () => {
         expect(
-          readNullTerminatedStringEscapable(input, byteOffset)
+          readNullTerminatedStringEscaped(input, byteOffset)
         ).toStrictEqual(output);
       });
     }
   );
 
-  describe("readNullTerminatedStringEscapable()", () => {
+  describe("readNullTerminatedStringEscaped()", () => {
     test("expects a NULL-terminated string", () => {
       expect(() =>
-        readNullTerminatedStringEscapable(Buffer.from(""))
+        readNullTerminatedStringEscaped(Buffer.from(""))
       ).toThrowError("expected a NULL-terminated string");
 
       expect(() =>
-        readNullTerminatedStringEscapable(Buffer.from("AA\0\0AA"))
+        readNullTerminatedStringEscaped(Buffer.from("AA\0\0AA"))
       ).toThrowError("expected a NULL-terminated string");
     });
   });
+
+  type ToNTSUnit = [string | null, Buffer];
+
+  const toNullTerminatedStringEscapedUnits: ToNTSUnit[] = [
+    [null, Buffer.from("\0")],
+    ["", Buffer.from("\0")],
+    ["ABC", Buffer.from("ABC\0")],
+    ["AA\0BB\0CC", Buffer.from("AA\0\0BB\0\0CC\0")],
+  ];
+
+  describe.each(toNullTerminatedStringEscapedUnits)(
+    "toNullTerminatedStringEscaped()",
+    (input, output) => {
+      test(`${JSON.stringify(input?.toString() ?? "null")}`, () => {
+        expect(toNullTerminatedStringEscaped(input)).toStrictEqual(output);
+      });
+    }
+  );
 
   type ReadIntEncodedUnit = [
     Buffer,

@@ -8,7 +8,7 @@ export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
   return data.subarray(byteOffset, nullIndexOf);
 };
 
-export const readNullTerminatedStringEscapable = (
+export const readNullTerminatedStringEscaped = (
   data: Buffer,
   byteOffset?: number
 ) => {
@@ -36,6 +36,14 @@ export const readNullTerminatedStringEscapable = (
   }
 
   return Buffer.concat(buffers);
+};
+
+export const toNullTerminatedStringEscaped = (data: string | null) => {
+  if (data === "" || data === null) {
+    return Buffer.from([0x00]);
+  }
+
+  return Buffer.from(`${data.replaceAll("\x00", "\x00\x00")}\x00`);
 };
 
 export const readStringEncoded = (
