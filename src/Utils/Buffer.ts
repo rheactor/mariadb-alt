@@ -139,3 +139,17 @@ export const toIntEncoded = (value: bigint | number | null) => {
 
   return Buffer.from([value]);
 };
+
+export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
+  if (bufferA.length !== bufferB.length) {
+    throw Error("both Buffer instances must have the same size");
+  }
+
+  const bufferResult = Buffer.allocUnsafe(bufferA.length);
+
+  for (let i = 0; i < bufferA.length; i++) {
+    bufferResult[i] = bufferA[i]! ^ bufferB[i]!;
+  }
+
+  return bufferResult;
+};

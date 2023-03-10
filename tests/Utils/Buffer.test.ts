@@ -1,4 +1,5 @@
 import {
+  bufferXOR,
   readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
@@ -213,6 +214,25 @@ describe("Buffer", () => {
   describe.each(toStringEncodedUnits)("toStringEncoded()", (input, output) => {
     test(`Buffer of length ${input?.length ?? "null"}`, () => {
       expect(toStringEncoded(input)).toStrictEqual(output);
+    });
+  });
+
+  describe("bufferXOR()", () => {
+    test("XOR between two Buffer's", () => {
+      expect(
+        bufferXOR(
+          Buffer.from([0b1100_1111, 0b1111_1111, 0b10101010, 0b1111_0000]),
+          Buffer.from([0b0011_1010, 0b0000_0000, 0b10101010, 0b1111_1111])
+        )
+      ).toStrictEqual(
+        Buffer.from([0b1111_0101, 0b1111_1111, 0b0000_0000, 0b0000_1111])
+      );
+    });
+
+    test("XOR between two Buffer's", () => {
+      expect(() =>
+        bufferXOR(Buffer.from([0x00]), Buffer.from([]))
+      ).toThrowError("both Buffer instances must have the same size");
     });
   });
 });
