@@ -1,6 +1,8 @@
 import {
+  readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscapable,
+  toIntEncoded,
 } from "@/Utils/Buffer";
 
 describe("Buffer", () => {
@@ -62,6 +64,63 @@ describe("Buffer", () => {
       expect(() =>
         readNullTerminatedStringEscapable(Buffer.from("AA\0\0AA"))
       ).toThrowError("expected a NULL-terminated string");
+    });
+  });
+
+  type ReadIntEncodedUnit = [
+    Buffer,
+    ReturnType<typeof readIntEncoded>,
+    number?
+  ];
+
+  const readIntEncodedUnits: ReadIntEncodedUnit[] = [
+    [Buffer.from([0x00]), 0],
+    [Buffer.from([0x10]), 16],
+    [Buffer.from([0xfa]), 250],
+    [Buffer.from([0xfb]), null],
+    [Buffer.from([0x00, 0xfb]), null, 1],
+    [Buffer.from([0xfc, 0x10, 0x20]), 0x2010],
+    [Buffer.from([0xfd, 0x10, 0x20, 0x30]), 0x302010],
+    [
+      Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]),
+      0x80706050_40302010n,
+    ],
+  ];
+
+  describe.each(readIntEncodedUnits)(
+    "readIntEncoded()",
+    (input, output, byteOffset) => {
+      const inputString = JSON.stringify(input.toString("hex"));
+
+      test(`0x${inputString} at ${byteOffset ?? 0}`, () => {
+        expect(readIntEncoded(input, byteOffset)).toStrictEqual(output);
+      });
+    }
+  );
+
+  type ToIntEncodedUnit = [Parameters<typeof toIntEncoded>[0], Buffer];
+
+  const toIntEncodedUnits: ToIntEncodedUnit[] = [
+    [0, Buffer.from([0x00])],
+    [16, Buffer.from([0x10])],
+    [250, Buffer.from([0xfa])],
+    [null, Buffer.from([0xfb])],
+    [255, Buffer.from([0xfc, 0xff, 0x00])],
+    [0x2010, Buffer.from([0xfc, 0x10, 0x20])],
+    [0x302010, Buffer.from([0xfd, 0x10, 0x20, 0x30])],
+    [
+      0x80706050_40302010n,
+      Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]),
+    ],
+  ];
+
+  describe.each(toIntEncodedUnits)("toIntEncoded()", (input, output) => {
+    const inputString = JSON.stringify(
+      typeof input === "bigint" ? input.toString(16) : input
+    );
+
+    test(inputString, () => {
+      expect(toIntEncoded(input)).toStrictEqual(output);
     });
   });
 });
