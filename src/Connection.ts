@@ -2,8 +2,8 @@ import {
   InitialHandshakePacket,
   type InitialHandshakePacket as InitialHandshake,
 } from "@/Protocol/Packet/InitialHandshakePacket";
-import { EventEmitter } from "node:events";
-import { createConnection, type Socket } from "node:net";
+import { EventEmitter } from "@/Utils/EventEmitter";
+import { Socket } from "node:net";
 
 const enum Status {
   CONNECTING,
@@ -18,9 +18,59 @@ interface ConnectionOptions {
 
   /** Connection port number. Default is 3306. */
   port?: number;
+
+  /** Connection timeout. */
+  timeout?: number;
 }
 
-export class Connection extends EventEmitter {
+abstract class ConnectionEvents {
+  private readonly eventsEmitter = new EventEmitter();
+
+  public on(
+    eventName: "error",
+    listener: (connection: Connection, error: Error) => void
+  ): void;
+
+  public on(
+    eventName: "ready",
+    listener: (connection: Connection) => void
+  ): void;
+
+  public on(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    listener: (...args: any[]) => void
+  ): void {
+    this.eventsEmitter.on(eventName, listener);
+  }
+
+  public once(
+    eventName: "error",
+    listener: (connection: Connection, error: Error) => void
+  ): void;
+
+  public once(
+    eventName: "ready",
+    listener: (connection: Connection) => void
+  ): void;
+
+  public once(
+    eventName: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    listener: (...args: any[]) => void
+  ): void {
+    this.eventsEmitter.once(eventName, listener);
+  }
+
+  public emit(
+    eventName: string,
+    ...args: Parameters<EventEmitter["emit"]>[1]
+  ): void {
+    this.eventsEmitter.emit(eventName, ...args);
+  }
+}
+
+export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
 
   public initialHandshakePacket?: InitialHandshake;
@@ -30,10 +80,7 @@ export class Connection extends EventEmitter {
   public constructor(options: ConnectionOptions = {}) {
     super();
 
-    const socket = createConnection({
-      host: options.host ?? "localhost",
-      port: options.port ?? 3306,
-    });
+    const socket = new Socket();
 
     socket.on("connect", () => {
       this.status = Status.CONNECTED;
@@ -45,22 +92,25 @@ export class Connection extends EventEmitter {
       );
 
       this.status = Status.READY;
-      this.emit("ready");
+      this.emit("ready", this);
     });
 
     socket.on("error", (err) => {
       this.status = Status.ERROR;
-      throw err;
+      this.emit("error", this, err);
     });
+
+    if (options.timeout !== undefined) {
+      socket.setTimeout(options.timeout);
+    }
+
+    socket.connect(options.port ?? 3306, options.host ?? "localhost");
 
     this.socket = socket;
   }
 
-  public on(
-    eventName: "ready",
-    listener: (connection: Connection) => void
-  ): this {
-    return super.on(eventName, listener.bind(this, this));
+  public isError() {
+    return this.status === Status.ERROR;
   }
 
   public isReady() {
