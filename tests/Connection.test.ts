@@ -1,8 +1,8 @@
-import { Connection } from "@/Connection";
+import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("Connection", () => {
   describe("socket initialization", () => {
-    const connectionBase = new Connection();
+    const connectionBase = TestConnection();
 
     test("socket initialization", (done) => {
       expect.assertions(1);

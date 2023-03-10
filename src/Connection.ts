@@ -12,6 +12,14 @@ const enum Status {
   ERROR,
 }
 
+interface ConnectionOptions {
+  /** Connection host. Default is "localhost". */
+  host?: string;
+
+  /** Connection port number. Default is 3306. */
+  port?: number;
+}
+
 export class Connection extends EventEmitter {
   public status: Status = Status.CONNECTING;
 
@@ -19,12 +27,12 @@ export class Connection extends EventEmitter {
 
   private readonly socket: Socket;
 
-  public constructor() {
+  public constructor(options: ConnectionOptions = {}) {
     super();
 
     const socket = createConnection({
-      host: "localhost",
-      port: 3306,
+      host: options.host ?? "localhost",
+      port: options.port ?? 3306,
     });
 
     socket.on("connect", () => {
