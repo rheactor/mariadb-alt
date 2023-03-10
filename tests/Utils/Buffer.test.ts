@@ -2,7 +2,9 @@ import {
   readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscapable,
+  readStringEncoded,
   toIntEncoded,
+  toStringEncoded,
 } from "@/Utils/Buffer";
 
 describe("Buffer", () => {
@@ -121,6 +123,77 @@ describe("Buffer", () => {
 
     test(inputString, () => {
       expect(toIntEncoded(input)).toStrictEqual(output);
+    });
+  });
+
+  type ReadStringEncodedUnit = [Buffer, Buffer | null, number?];
+
+  const bufferStr1 = Buffer.from("a");
+  const bufferStr250 = Buffer.allocUnsafe(250).fill("a");
+  const bufferStr255 = Buffer.allocUnsafe(255).fill("b");
+  const bufferStr400 = Buffer.allocUnsafe(400).fill("c");
+
+  const readStringEncodedUnits: ReadStringEncodedUnit[] = [
+    [Buffer.from([0xfb]), null],
+    [Buffer.from([0x00]), Buffer.from("")],
+    [Buffer.from([0xff, 0x00]), Buffer.from(""), 1],
+    [Buffer.concat([Buffer.from([0x01]), bufferStr1]), bufferStr1],
+    [Buffer.concat([Buffer.from([0xfa]), bufferStr250]), bufferStr250],
+    [
+      Buffer.concat([Buffer.from([0xfc, 0xfa, 0x00]), bufferStr250]),
+      bufferStr250,
+    ],
+    [
+      Buffer.concat([Buffer.from([0xfc, 0xff, 0x00]), bufferStr255]),
+      bufferStr255,
+    ],
+    [
+      Buffer.concat([Buffer.from([0xfd, 0x90, 0x01, 0x00]), bufferStr400]),
+      bufferStr400,
+    ],
+    [
+      Buffer.concat([Buffer.from([0xfd, 0x00, 0x90, 0x01]), bufferStr400]),
+      bufferStr400,
+    ],
+    [
+      Buffer.concat([
+        Buffer.from([0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0x01]),
+        bufferStr400,
+      ]),
+      bufferStr400,
+    ],
+  ];
+
+  describe.each(readStringEncodedUnits)(
+    "readStringEncoded()",
+    (input, output, byteOffset) => {
+      test(`Buffer of length ${output?.length ?? "null"} at ${
+        byteOffset ?? 0
+      }`, () => {
+        expect(readStringEncoded(input, byteOffset)).toStrictEqual(output);
+      });
+    }
+  );
+
+  type ToStringEncodedUnit = [string | null, Buffer];
+
+  const toStringEncodedUnits: ToStringEncodedUnit[] = [
+    [null, Buffer.from([0xfb])],
+    ["", Buffer.from([0x00])],
+    [bufferStr1.toString(), Buffer.concat([Buffer.from([0x01]), bufferStr1])],
+    [
+      bufferStr250.toString(),
+      Buffer.concat([Buffer.from([0xfa]), bufferStr250]),
+    ],
+    [
+      bufferStr255.toString(),
+      Buffer.concat([Buffer.from([0xfc, 0xff, 0x00]), bufferStr255]),
+    ],
+  ];
+
+  describe.each(toStringEncodedUnits)("toStringEncoded()", (input, output) => {
+    test(`Buffer of length ${input?.length ?? "null"}`, () => {
+      expect(toStringEncoded(input)).toStrictEqual(output);
     });
   });
 });

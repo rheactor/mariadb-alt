@@ -38,6 +38,48 @@ export const readNullTerminatedStringEscapable = (
   return Buffer.concat(buffers);
 };
 
+export const readStringEncoded = (
+  data: Buffer,
+  byteOffset = 0
+): Buffer | null => {
+  const bufferInt = readIntEncoded(data, byteOffset);
+
+  if (bufferInt === null) {
+    return null;
+  }
+
+  if (bufferInt === 0) {
+    return Buffer.from("");
+  }
+
+  const bufferType = data.readUInt8(byteOffset);
+  const bufferOffset =
+    bufferType === 0xfc
+      ? 3
+      : bufferType === 0xfd
+      ? 4
+      : bufferType === 0xfe
+      ? 9
+      : 1;
+
+  return data.subarray(
+    byteOffset + bufferOffset,
+    byteOffset + bufferOffset + Number(bufferInt)
+  );
+};
+
+export const toStringEncoded = (value: string | null) => {
+  if (value === null) {
+    return Buffer.from([0xfb]);
+  }
+
+  if (value === "") {
+    return Buffer.from([0x00]);
+  }
+
+  return Buffer.concat([toIntEncoded(value.length), Buffer.from(value)]);
+};
+
 export const readIntEncoded = (
   data: Buffer,
   byteOffset = 0
