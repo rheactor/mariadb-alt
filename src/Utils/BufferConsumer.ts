@@ -13,6 +13,32 @@ export class BufferConsumer {
     return bufferInt;
   }
 
+  public readIntEncoded(): bigint | number | null {
+    const bufferInt = this.buffer.readUInt8(this.byteOffset++);
+
+    if (bufferInt === 0xfb) {
+      return null;
+    }
+
+    if (bufferInt === 0xfc) {
+      return this.readInt(2);
+    }
+
+    if (bufferInt === 0xfd) {
+      return this.readInt(3);
+    }
+
+    if (bufferInt === 0xfe) {
+      const bufferBigInt = this.buffer.readBigUInt64LE(this.byteOffset);
+
+      this.byteOffset += 8;
+
+      return bufferBigInt;
+    }
+
+    return bufferInt;
+  }
+
   public readNullTerminatedString(): Buffer {
     const bufferString = readNullTerminatedString(this.buffer, this.byteOffset);
 
@@ -30,6 +56,27 @@ export class BufferConsumer {
     this.byteOffset += bytes + +nullTerminated;
 
     return bufferString;
+  }
+
+  public readStringEncoded(): string | null {
+    const bufferInt = this.readIntEncoded();
+
+    if (bufferInt === null) {
+      return null;
+    }
+
+    if (bufferInt === 0) {
+      return "";
+    }
+
+    const bufferString = this.buffer.subarray(
+      this.byteOffset,
+      this.byteOffset + Number(bufferInt)
+    );
+
+    this.byteOffset += bufferString.length;
+
+    return bufferString.toString("binary");
   }
 
   public skip(bytes = 1) {
