@@ -1,6 +1,6 @@
 import { EventEmitter } from "@/Utils/EventEmitter";
 
-describe("EventEmitter", () => {
+describe("Utils/EventEmitter", () => {
   test("on(), emit()", () => {
     expect.assertions(1);
 

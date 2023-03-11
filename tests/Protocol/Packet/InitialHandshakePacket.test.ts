@@ -2,7 +2,7 @@ import { Capabilities, ServerStatus } from "@/Protocol/Enumerations";
 import { InitialHandshakePacket } from "@/Protocol/Packet/InitialHandshakePacket";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 
-describe("InitialHandshakePacket", () => {
+describe("Protocol/Packet/InitialHandshakePacket", () => {
   test("read properties", () => {
     const packet = new InitialHandshakePacket(
       InitialHandshakePacketFixture.Example1

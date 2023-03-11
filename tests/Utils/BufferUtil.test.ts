@@ -1,5 +1,9 @@
 import {
   bufferXOR,
+  createUInt16LE,
+  createUInt24LE,
+  createUInt32LE,
+  createUInt64LE,
   readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
@@ -7,9 +11,9 @@ import {
   toIntEncoded,
   toNullTerminatedStringEscaped,
   toStringEncoded,
-} from "@/Utils/Buffer";
+} from "@/Utils/BufferUtil";
 
-describe("Buffer", () => {
+describe("Utils/BufferUtil", () => {
   type ReadNTSUnit = [Buffer, Buffer, number?];
 
   const readNullTerminatedStringUnits: ReadNTSUnit[] = [
@@ -233,6 +237,50 @@ describe("Buffer", () => {
       expect(() =>
         bufferXOR(Buffer.from([0x00]), Buffer.from([]))
       ).toThrowError("both Buffer instances must have the same size");
+    });
+  });
+
+  describe("createUInt{16, 24, 32, 64}LE()", () => {
+    test("createUInt16LE()", () => {
+      expect(createUInt16LE(0x0000)).toStrictEqual(Buffer.from([0x00, 0x00]));
+      expect(createUInt16LE(0x1020)).toStrictEqual(Buffer.from([0x20, 0x10]));
+      expect(createUInt16LE(0xffff)).toStrictEqual(Buffer.from([0xff, 0xff]));
+    });
+
+    test("createUInt24LE()", () => {
+      expect(createUInt24LE(0x000000)).toStrictEqual(
+        Buffer.from([0x00, 0x00, 0x00])
+      );
+      expect(createUInt24LE(0x102030)).toStrictEqual(
+        Buffer.from([0x30, 0x20, 0x10])
+      );
+      expect(createUInt24LE(0xffffff)).toStrictEqual(
+        Buffer.from([0xff, 0xff, 0xff])
+      );
+    });
+
+    test("createUInt32LE()", () => {
+      expect(createUInt32LE(0x000000)).toStrictEqual(
+        Buffer.from([0x00, 0x00, 0x00, 0x00])
+      );
+      expect(createUInt32LE(0x10203040)).toStrictEqual(
+        Buffer.from([0x40, 0x30, 0x20, 0x10])
+      );
+      expect(createUInt32LE(0xffffffff)).toStrictEqual(
+        Buffer.from([0xff, 0xff, 0xff, 0xff])
+      );
+    });
+
+    test("createUInt64LE()", () => {
+      expect(createUInt64LE(0x0000000000000000n)).toStrictEqual(
+        Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+      );
+      expect(createUInt64LE(0x1020304050607080n)).toStrictEqual(
+        Buffer.from([0x80, 0x70, 0x60, 0x50, 0x40, 0x30, 0x20, 0x10])
+      );
+      expect(createUInt64LE(0xf0f0f0f0f0f0f0f0n)).toStrictEqual(
+        Buffer.from([0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0])
+      );
     });
   });
 });

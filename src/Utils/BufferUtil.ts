@@ -153,3 +153,35 @@ export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
 
   return bufferResult;
 };
+
+export const createUInt16LE = (value: number) => {
+  const buffer = Buffer.allocUnsafe(2);
+
+  buffer.writeUInt16LE(value);
+
+  return buffer;
+};
+
+export const createUInt24LE = (value: number) => {
+  const buffer = Buffer.allocUnsafe(3);
+
+  buffer.writeUIntLE(value, 0, 3);
+
+  return buffer;
+};
+
+export const createUInt32LE = (value: number) => {
+  const buffer = Buffer.allocUnsafe(4);
+
+  buffer.writeUInt32LE(value);
+
+  return buffer;
+};
+
+export const createUInt64LE = (value: bigint) => {
+  const buffer = Buffer.allocUnsafe(8);
+
+  buffer.writeBigUInt64LE(value);
+
+  return buffer;
+};

@@ -1,6 +1,6 @@
 import { Packet } from "@/Protocol/Packet/Packet";
 
-describe("Packet", () => {
+describe("Protocol/Packet/Packet", () => {
   test("basic Packet", () => {
     const packetCOMPing = new Packet(Buffer.from("\x01\0\0\x10\x0E"));
 

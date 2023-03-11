@@ -1,6 +1,6 @@
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
-describe("Connection", () => {
+describe("/Connection", () => {
   describe("connection ready", () => {
     test("socket initialization", (done) => {
       expect.assertions(1);

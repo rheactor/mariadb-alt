@@ -1,4 +1,4 @@
-import { readNullTerminatedString } from "@/Utils/Buffer";
+import { readNullTerminatedString } from "@/Utils/BufferUtil";
 
 export class BufferConsumer {
   private byteOffset = 0;

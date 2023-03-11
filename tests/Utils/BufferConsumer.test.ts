@@ -1,7 +1,7 @@
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 
-describe("BufferConsumer", () => {
+describe("Utils/BufferConsumer", () => {
   test("readInt()", () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from("\x10\x20\x30\x40\x50\x60\x00\xFF\xFF\x70\x80\x90", "binary")

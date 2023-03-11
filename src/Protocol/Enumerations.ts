@@ -11,9 +11,9 @@ export const Capabilities = {
   SSL: 1n << 11n,
   TRANSACTIONS: 1n << 13n,
   SECURE_CONNECTION: 1n << 15n,
-  MULTI_STATEMENTS: 1n << 16n,
 
   // Capabilities #2.
+  MULTI_STATEMENTS: 1n << 16n,
   MULTI_RESULTS: 1n << 17n,
   PS_MULTI_RESULTS: 1n << 18n,
   PLUGIN_AUTH: 1n << 19n,
