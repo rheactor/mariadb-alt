@@ -185,4 +185,10 @@ describe("Utils/BufferConsumer", () => {
       Buffer.from("mysql_native_password")
     );
   });
+
+  test("rest()", () => {
+    const bufferConsumer = new BufferConsumer(Buffer.from("0123"), 1);
+
+    expect(bufferConsumer.rest()).toStrictEqual(Buffer.from("123"));
+  });
 });

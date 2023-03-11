@@ -1,9 +1,7 @@
 import { readNullTerminatedString } from "@/Utils/BufferUtil";
 
 export class BufferConsumer {
-  private byteOffset = 0;
-
-  public constructor(private readonly buffer: Buffer) {}
+  public constructor(private readonly buffer: Buffer, private byteOffset = 0) {}
 
   public readInt(byteLength = 1): number {
     const bufferInt = this.buffer.readUIntLE(this.byteOffset, byteLength);
@@ -77,6 +75,10 @@ export class BufferConsumer {
     this.byteOffset += bufferString.length;
 
     return bufferString;
+  }
+
+  public rest(): Buffer {
+    return this.buffer.subarray(this.byteOffset);
   }
 
   public skip(bytes = 1) {

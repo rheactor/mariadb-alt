@@ -1,7 +1,7 @@
 import { Capabilities } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-export class InitialHandshakePacket {
+export class InitialHandshake {
   /** DBMS protocol version (eg. MariaDB 10.x === 10). */
   public protocolVersion: number;
 
@@ -15,7 +15,7 @@ export class InitialHandshakePacket {
   public authSeed: Buffer;
 
   /** Authentication plugin name. */
-  public authPluginName?: Buffer;
+  public authPluginName: Buffer;
 
   /** Length of auth_plugin_data (scramble) if greater than 0 and capabilities has CLIENT_PLUGIN_AUTH. */
   public authPluginNameLength: number;
@@ -55,9 +55,7 @@ export class InitialHandshakePacket {
       ]);
     }
 
-    if (this.hasCapability(Capabilities.PLUGIN_AUTH)) {
-      this.authPluginName = bufferConsumer.readNullTerminatedString();
-    }
+    this.authPluginName = bufferConsumer.readNullTerminatedString();
   }
 
   public hasCapability(capability: bigint) {
