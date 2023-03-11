@@ -34,7 +34,7 @@ describe("Protocol/Packet/Packet", () => {
   });
 
   test("create PING Packet", () => {
-    const packetEmpty = Packet.createPing(2);
+    const packetEmpty = new Packet(Packet.createPing(2));
 
     expect(packetEmpty.length).toBe(1);
     expect(packetEmpty.sequence).toBe(2);
@@ -42,9 +42,10 @@ describe("Protocol/Packet/Packet", () => {
   });
 
   test("split a Packet", () => {
-    const packetExample = Packet.create(
-      Buffer.from("\0\x01\x02\x03\x04\x05\x06")
+    const packetExample = new Packet(
+      Packet.from(Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), 0)
     );
+
     const packets = packetExample.split(3) as [Packet, Packet, Packet];
 
     expect(packets[0].length).toBe(3);

@@ -16,19 +16,19 @@ export class Packet {
   }
 
   /** Creates a new Packet. */
-  public static create(body: Buffer, sequence = 0) {
-    const packet = Buffer.alloc(4 + body.length);
+  public static from(body: Buffer, sequence: number) {
+    const buffer = Buffer.alloc(4 + body.length);
 
-    packet.writeIntLE(body.length, 0, 3);
-    packet.writeInt8(sequence, 3);
-    packet.set(body, 4);
+    buffer.writeIntLE(body.length, 0, 3);
+    buffer.writeInt8(sequence, 3);
+    buffer.set(body, 4);
 
-    return new Packet(packet);
+    return buffer;
   }
 
   /** Creates a simple PING Packet instance. */
-  public static createPing(sequence = 0) {
-    return this.create(Buffer.from("\x0E"), sequence);
+  public static createPing(sequence: number) {
+    return this.from(Buffer.from("\x0E"), sequence);
   }
 
   /** Split this Packet into a lot of Packet[]. */
@@ -37,7 +37,9 @@ export class Packet {
 
     for (let i = 0; i < this.length; i += length) {
       packets.push(
-        Packet.create(this.body.subarray(i, i + length), packets.length)
+        new Packet(
+          Packet.from(this.body.subarray(i, i + length), packets.length)
+        )
       );
     }
 
