@@ -85,7 +85,10 @@ export const toStringEncoded = (value: string | null) => {
     return Buffer.from([0x00]);
   }
 
-  return Buffer.concat([toIntEncoded(value.length), Buffer.from(value)]);
+  return Buffer.concat([
+    toIntEncoded(value.length),
+    Buffer.from(value, "binary"),
+  ]);
 };
 
 export const readIntEncoded = (

@@ -27,7 +27,9 @@ describe("Utils/BufferUtil", () => {
   describe.each(readNullTerminatedStringUnits)(
     "readNullTerminatedString()",
     (input, output, byteOffset) => {
-      test(`${JSON.stringify(input.toString())} at ${byteOffset ?? 0}`, () => {
+      const inputJSON = JSON.stringify(input.toString("binary"));
+
+      test(`${inputJSON} at ${byteOffset ?? 0}`, () => {
         expect(readNullTerminatedString(input, byteOffset)).toStrictEqual(
           output
         );
@@ -55,7 +57,9 @@ describe("Utils/BufferUtil", () => {
   describe.each(readNullTerminatedStringEscapedUnits)(
     "readNullTerminatedStringEscaped()",
     (input, output, byteOffset) => {
-      test(`${JSON.stringify(input.toString())} at ${byteOffset ?? 0}`, () => {
+      const inputJSON = JSON.stringify(input.toString("binary"));
+
+      test(`${inputJSON} at ${byteOffset ?? 0}`, () => {
         expect(
           readNullTerminatedStringEscaped(input, byteOffset)
         ).toStrictEqual(output);
@@ -204,13 +208,20 @@ describe("Utils/BufferUtil", () => {
   const toStringEncodedUnits: ToStringEncodedUnit[] = [
     [null, Buffer.from([0xfb])],
     ["", Buffer.from([0x00])],
-    [bufferStr1.toString(), Buffer.concat([Buffer.from([0x01]), bufferStr1])],
     [
-      bufferStr250.toString(),
+      "\x4f\x6c\xc3\xa1\x2c\x20\x6d\x75\x6e\x64\x6f\x21",
+      Buffer.concat([Buffer.from([0x0c]), Buffer.from("Olá, mundo!")]),
+    ],
+    [
+      bufferStr1.toString("binary"),
+      Buffer.concat([Buffer.from([0x01]), bufferStr1]),
+    ],
+    [
+      bufferStr250.toString("binary"),
       Buffer.concat([Buffer.from([0xfa]), bufferStr250]),
     ],
     [
-      bufferStr255.toString(),
+      bufferStr255.toString("binary"),
       Buffer.concat([Buffer.from([0xfc, 0xff, 0x00]), bufferStr255]),
     ],
   ];
