@@ -1,3 +1,9 @@
+import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
+import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
+import { BufferConsumer } from "@/Utils/BufferConsumer";
+
 export class Packet {
   /** Packet 3-byte length. */
   public readonly length: number;
@@ -24,6 +30,30 @@ export class Packet {
     buffer.set(body, 4);
 
     return buffer;
+  }
+
+  /** Create a PacketOK or PacketError, depending of data Buffer content. */
+  public static fromResponse(data: Buffer) {
+    const bufferConsumer = new BufferConsumer(data, 4);
+    const bufferType = bufferConsumer.readInt();
+
+    if (bufferType === 0) {
+      return new PacketOk(bufferConsumer.rest());
+    }
+
+    const bufferErrorCode = bufferConsumer.readInt(2);
+
+    if (bufferErrorCode === 0xffff) {
+      return new PacketProgress(bufferConsumer.rest());
+    }
+
+    const bufferStateMarker = bufferConsumer.readString(1);
+
+    if (bufferStateMarker.at(0) === 0x23) {
+      return new PacketErrorState(bufferErrorCode, bufferConsumer.rest());
+    }
+
+    return new PacketError(bufferErrorCode, bufferConsumer.rest(-1));
   }
 
   /** Creates a simple PING Packet instance. */
