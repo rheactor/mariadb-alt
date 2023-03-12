@@ -77,8 +77,8 @@ export class BufferConsumer {
     return bufferString;
   }
 
-  public rest(): Buffer {
-    return this.buffer.subarray(this.byteOffset);
+  public rest(offsetShift = 0): Buffer {
+    return this.buffer.subarray(this.byteOffset + offsetShift);
   }
 
   public skip(bytes = 1) {
