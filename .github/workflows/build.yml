@@ -40,10 +40,10 @@ jobs:
         ports:
           - 3306:3306
         env:
-          MARIADB_ROOT_PASSWORD: password
           MARIADB_USER: user
+          MARIADB_ROOT_PASSWORD: password
           MARIADB_PASSWORD: password
-          MARIADB_DATABASE: test
+          MARIADB_DATABASE: test-rev
         options: >-
           --health-cmd="mariadb-admin ping"
           --health-interval=10s
@@ -58,14 +58,15 @@ jobs:
           node-version: 19
 
       - run: npm ci
+
       - run: npm run test
         env:
-          TESTING_DATABASE: test
+          TESTING_DATABASE: test-rev
           TESTING_USER: user
           TESTING_PASSWORD: password
 
       - run: npm run test:build
         env:
-          TESTING_DATABASE: test
+          TESTING_DATABASE: test-rev
           TESTING_USER: user
           TESTING_PASSWORD: password

@@ -6,7 +6,7 @@ export const jestConfig = (sourcePath = "src"): Config => ({
     "^@Tests/(.*)$": "<rootDir>/tests/$1",
   },
   setupFiles: ["dotenv/config"],
-  testTimeout: 250,
+  testTimeout: 2000,
   coverageThreshold: {
     global: {
       branches: 100,

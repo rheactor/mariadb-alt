@@ -23,6 +23,10 @@ describe("/Connection", () => {
         expect(connection.isAuthenticated()).toBe(true);
         connection.close();
       });
+
+      connectionBase.once("error", (connection, error) => {
+        console.error(error);
+      });
     });
 
     test("ping() command", async () => {
@@ -48,31 +52,33 @@ describe("/Connection", () => {
     test("invalid port", (done) => {
       expect.assertions(2);
 
-      const connectionBase = TestConnection({ port: 0 });
+      const connectionBase = TestConnection({ port: 1 });
 
       connectionBase.once("closed", () => done());
 
       connectionBase.once("error", (connection, error) => {
         expect(connection.isError()).toBe(true);
-        expect(error.message).toContain("EADDRNOTAVAIL");
+        expect(error.message).toContain("ECONNREFUSED");
       });
     });
 
-    test("invalid database", (done) => {
+    test("invalid user", (done) => {
       expect.assertions(3);
 
       const connectionBase = TestConnection({
-        database: `invalid-database-${Math.random()}`,
+        user: `random-user-${Math.random()}`,
       });
 
       connectionBase.once("closed", () => done());
 
       connectionBase.once("error", (connection, error) => {
+        expect.assertions(3);
+
         expect(connection.isError()).toBe(true);
-        expect(error.message).toContain("invalid-database");
+        expect(error.message).toContain("random-user");
 
         if (error.cause instanceof PacketErrorState) {
-          expect(error.cause.code).toBe(1049);
+          expect(error.cause.code).toBe(1045);
         }
       });
     });
