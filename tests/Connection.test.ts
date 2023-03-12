@@ -1,34 +1,63 @@
+import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("/Connection", () => {
   describe("connection ready", () => {
     test("socket initialization", (done) => {
-      expect.assertions(1);
+      expect.assertions(3);
 
       const connectionBase = TestConnection();
 
-      connectionBase.once("ready", (connection) => {
-        expect(connection.isReady()).toBe(true);
-        done();
+      connectionBase.once("closed", () => done());
+
+      connectionBase.once("connected", (connection) => {
+        expect(connection.isConnected()).toBe(true);
       });
 
-      connectionBase.close();
+      connectionBase.once("authenticating", (connection) => {
+        expect(connection.isAuthenticating()).toBe(true);
+      });
+
+      connectionBase.once("authenticated", (connection) => {
+        expect(connection.isAuthenticated()).toBe(true);
+        connection.close();
+      });
     });
   });
 
-  describe("connection error", () => {
+  describe("connection error: invalid port", () => {
     test("socket initialization", (done) => {
       expect.assertions(2);
 
       const connectionBase = TestConnection({ port: 0 });
 
+      connectionBase.once("closed", () => done());
+
       connectionBase.once("error", (connection, error) => {
         expect(connection.isError()).toBe(true);
         expect(error.message).toContain("EADDRNOTAVAIL");
-        done();
+      });
+    });
+  });
+
+  describe("connection error: invalid database", () => {
+    test("socket initialization", (done) => {
+      expect.assertions(3);
+
+      const connectionBase = TestConnection({
+        database: `invalid-database-${Math.random()}`,
       });
 
-      connectionBase.close();
+      connectionBase.once("closed", () => done());
+
+      connectionBase.once("error", (connection, error) => {
+        expect(connection.isError()).toBe(true);
+        expect(error.message).toContain("invalid-database");
+
+        if (error.cause instanceof PacketErrorState) {
+          expect(error.cause.code).toBe(1049);
+        }
+      });
     });
   });
 });

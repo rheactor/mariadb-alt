@@ -1,38 +1,57 @@
-import {
-  InitialHandshakePacket,
-  type InitialHandshakePacket as InitialHandshake,
-} from "@/Protocol/Packet/InitialHandshakePacket";
+import { createHandshakeResponse } from "@/Protocol/Packet/HandshakeResponse";
+import { InitialHandshake } from "@/Protocol/Packet/InitialHandshake";
+import { Packet } from "@/Protocol/Packet/Packet";
+import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { EventEmitter } from "@/Utils/EventEmitter";
 import { Socket } from "node:net";
 
 const enum Status {
   CONNECTING,
-  CONNECTED,
-  READY,
+  AUTHENTICATING,
+  AUTHENTICATED,
   ERROR,
 }
 
 interface ConnectionOptions {
   /** Connection host. Default is "localhost". */
-  host?: string;
+  host: string;
 
   /** Connection port number. Default is 3306. */
-  port?: number;
+  port: number;
+
+  /** Connection user. Default is "root". */
+  user: string;
+
+  /** Connection password. Default is empty. */
+  password?: string;
+
+  /** Connection database. Default is none. */
+  database?: string;
 
   /** Connection timeout. */
   timeout?: number;
 }
 
+type ConnectionEventsError = "error";
+
+type ConnectionEventsCommon =
+  | "authenticated"
+  | "authenticating"
+  | "closed"
+  | "connected"
+  | "ready";
+
 abstract class ConnectionEvents {
   private readonly eventsEmitter = new EventEmitter();
 
   public on(
-    eventName: "error",
+    eventName: ConnectionEventsError,
     listener: (connection: Connection, error: Error) => void
   ): void;
 
   public on(
-    eventName: "ready",
+    eventName: ConnectionEventsCommon,
     listener: (connection: Connection) => void
   ): void;
 
@@ -45,12 +64,12 @@ abstract class ConnectionEvents {
   }
 
   public once(
-    eventName: "error",
+    eventName: ConnectionEventsError,
     listener: (connection: Connection, error: Error) => void
   ): void;
 
   public once(
-    eventName: "ready",
+    eventName: ConnectionEventsCommon,
     listener: (connection: Connection) => void
   ): void;
 
@@ -63,7 +82,7 @@ abstract class ConnectionEvents {
   }
 
   public emit(
-    eventName: string,
+    eventName: ConnectionEventsCommon | ConnectionEventsError,
     ...args: Parameters<EventEmitter["emit"]>[1]
   ): void {
     this.eventsEmitter.emit(eventName, ...args);
@@ -73,51 +92,112 @@ abstract class ConnectionEvents {
 export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
 
-  public initialHandshakePacket?: InitialHandshake;
+  public initialHandshake?: InitialHandshake;
+
+  private connected = false;
 
   private readonly socket: Socket;
 
-  public constructor(options: ConnectionOptions = {}) {
+  private readonly options: ConnectionOptions;
+
+  public constructor(options: Partial<ConnectionOptions> = {}) {
     super();
+
+    this.options = {
+      host: "localhost",
+      port: 3306,
+      user: "root",
+      ...options,
+    };
 
     const socket = new Socket();
 
-    socket.on("connect", () => {
-      this.status = Status.CONNECTED;
+    socket.once("connect", () => {
+      this.connected = true;
+      this.emit("connected", this);
     });
 
-    socket.on("data", (initialHandshakePacket) => {
-      this.initialHandshakePacket = new InitialHandshakePacket(
-        initialHandshakePacket.subarray(4)
-      );
-
-      this.status = Status.READY;
-      this.emit("ready", this);
+    socket.once("data", (data) => {
+      this.processResponse(data);
     });
 
-    socket.on("error", (err) => {
+    socket.once("error", (err) => {
       this.status = Status.ERROR;
       this.emit("error", this, err);
+    });
+
+    socket.once("close", () => {
+      this.emit("closed", this);
     });
 
     if (options.timeout !== undefined) {
       socket.setTimeout(options.timeout);
     }
 
-    socket.connect(options.port ?? 3306, options.host ?? "localhost");
+    socket.connect(this.options.port, this.options.host);
 
     this.socket = socket;
+  }
+
+  public isConnected() {
+    return this.connected;
   }
 
   public isError() {
     return this.status === Status.ERROR;
   }
 
-  public isReady() {
-    return this.status === Status.READY;
+  public isAuthenticating() {
+    return this.status === Status.AUTHENTICATING;
+  }
+
+  public isAuthenticated() {
+    return this.status === Status.AUTHENTICATED;
   }
 
   public close() {
     this.socket.end();
+  }
+
+  private processResponse(data: Buffer) {
+    const initialHandshakePacket = new Packet(data);
+
+    this.initialHandshake = new InitialHandshake(initialHandshakePacket.body);
+
+    this.socket.once("data", (serverData) => {
+      const serverResponse = Packet.fromResponse(serverData);
+
+      if (serverResponse instanceof PacketOk) {
+        this.status = Status.AUTHENTICATED;
+        this.emit("authenticated", this);
+      } else if (serverResponse instanceof PacketError) {
+        this.status = Status.ERROR;
+        this.emit(
+          "error",
+          this,
+          new Error(serverResponse.message, {
+            cause: serverResponse,
+          })
+        );
+        this.close();
+      }
+    });
+
+    const handshakeResponse = Packet.from(
+      createHandshakeResponse(
+        this.initialHandshake.authSeed,
+        this.initialHandshake.authPluginName,
+        this.options.user,
+        this.options.password ?? "",
+        this.options.database,
+        0xffffffff
+      ),
+      initialHandshakePacket.sequence + 1
+    );
+
+    this.status = Status.AUTHENTICATING;
+    this.emit("authenticating", this);
+
+    this.socket.write(handshakeResponse);
   }
 }
