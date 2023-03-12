@@ -4,6 +4,8 @@ import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
+export type PacketKind = PacketError | PacketOk | PacketProgress;
+
 export class Packet {
   /** Packet 3-byte length. */
   public readonly length: number;

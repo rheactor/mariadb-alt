@@ -1,6 +1,6 @@
 import { createHandshakeResponse } from "@/Protocol/Packet/HandshakeResponse";
 import { InitialHandshake } from "@/Protocol/Packet/InitialHandshake";
-import { Packet } from "@/Protocol/Packet/Packet";
+import { Packet, type PacketKind } from "@/Protocol/Packet/Packet";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { EventEmitter } from "@/Utils/EventEmitter";
@@ -10,6 +10,7 @@ const enum Status {
   CONNECTING,
   AUTHENTICATING,
   AUTHENTICATED,
+  EXECUTING,
   ERROR,
 }
 
@@ -41,6 +42,11 @@ type ConnectionEventsCommon =
   | "closed"
   | "connected"
   | "ready";
+
+interface ConnectionCommand {
+  buffer: Buffer;
+  resolve(packet: PacketKind): void;
+}
 
 abstract class ConnectionEvents {
   private readonly eventsEmitter = new EventEmitter();
@@ -95,6 +101,8 @@ export class Connection extends ConnectionEvents {
   public initialHandshake?: InitialHandshake;
 
   private connected = false;
+
+  private readonly commands: ConnectionCommand[] = [];
 
   private readonly socket: Socket;
 
@@ -155,8 +163,41 @@ export class Connection extends ConnectionEvents {
     return this.status === Status.AUTHENTICATED;
   }
 
+  public async ping() {
+    return this.commandQueue(Buffer.from([0x0e]));
+  }
+
   public close() {
     this.socket.end();
+  }
+
+  private async commandQueue(buffer: Buffer) {
+    return new Promise<PacketKind>((resolve) => {
+      this.commands.push({ buffer, resolve });
+      this.commandRun();
+    });
+  }
+
+  private commandRun() {
+    if (this.status === Status.AUTHENTICATED) {
+      const command = this.commands.shift();
+
+      if (!command) {
+        return;
+      }
+
+      this.status = Status.EXECUTING;
+
+      this.socket.once("data", (data) => {
+        this.status = Status.AUTHENTICATED;
+
+        command.resolve(Packet.fromResponse(data));
+
+        this.commandRun();
+      });
+
+      this.socket.write(Packet.from(command.buffer, 0));
+    }
   }
 
   private processResponse(data: Buffer) {
@@ -170,6 +211,7 @@ export class Connection extends ConnectionEvents {
       if (serverResponse instanceof PacketOk) {
         this.status = Status.AUTHENTICATED;
         this.emit("authenticated", this);
+        this.commandRun();
       } else if (serverResponse instanceof PacketError) {
         this.status = Status.ERROR;
         this.emit(

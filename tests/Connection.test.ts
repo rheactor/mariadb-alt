@@ -1,4 +1,5 @@
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
+import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("/Connection", () => {
@@ -23,10 +24,28 @@ describe("/Connection", () => {
         connection.close();
       });
     });
+
+    test("ping() command", async () => {
+      expect.assertions(2);
+
+      const connectionBase = TestConnection();
+
+      const ping1 = expect(connectionBase.ping()).resolves.toBeInstanceOf(
+        PacketOk
+      );
+
+      const ping2 = expect(connectionBase.ping()).resolves.toBeInstanceOf(
+        PacketOk
+      );
+
+      await Promise.all([ping1, ping2]);
+
+      connectionBase.close();
+    });
   });
 
-  describe("connection error: invalid port", () => {
-    test("socket initialization", (done) => {
+  describe("connection error", () => {
+    test("invalid port", (done) => {
       expect.assertions(2);
 
       const connectionBase = TestConnection({ port: 0 });
@@ -38,10 +57,8 @@ describe("/Connection", () => {
         expect(error.message).toContain("EADDRNOTAVAIL");
       });
     });
-  });
 
-  describe("connection error: invalid database", () => {
-    test("socket initialization", (done) => {
+    test("invalid database", (done) => {
       expect.assertions(3);
 
       const connectionBase = TestConnection({
