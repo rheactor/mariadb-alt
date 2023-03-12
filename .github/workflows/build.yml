@@ -43,7 +43,7 @@ jobs:
           MARIADB_USER: user
           MARIADB_ROOT_PASSWORD: password
           MARIADB_PASSWORD: password
-          MARIADB_DATABASE: test-rev
+          MARIADB_DATABASE: mariadb_alt
         options: >-
           --health-cmd="mariadb-admin ping"
           --health-interval=10s
@@ -61,12 +61,12 @@ jobs:
 
       - run: npm run test
         env:
-          TESTING_DATABASE: test-rev
+          TESTING_DATABASE: mariadb_alt
           TESTING_USER: user
           TESTING_PASSWORD: password
 
       - run: npm run test:build
         env:
-          TESTING_DATABASE: test-rev
+          TESTING_DATABASE: mariadb_alt
           TESTING_USER: user
           TESTING_PASSWORD: password

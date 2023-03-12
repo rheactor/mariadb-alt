@@ -1,6 +1,6 @@
 {
-  "name": "@rheactor/mariadb-rev",
-  "description": "A revolution mariadb driver (Typescript-based).",
+  "name": "@rheactor/mariadb_alt",
+  "description": "An alternative mariadb driver (Typescript-based).",
   "version": "0.1.0",
   "license": "Apache License 2.0",
   "scripts": {

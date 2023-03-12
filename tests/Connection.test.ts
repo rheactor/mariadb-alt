@@ -23,10 +23,6 @@ describe("/Connection", () => {
         expect(connection.isAuthenticated()).toBe(true);
         connection.close();
       });
-
-      connectionBase.once("error", (connection, error) => {
-        console.error(error);
-      });
     });
 
     test("ping() command", async () => {

@@ -8,6 +8,6 @@ export const TestConnection = (
     port: process.env.TESTING_PORT ?? 3306,
     user: process.env.TESTING_USER ?? "root",
     password: process.env.TESTING_PASSWORD,
-    database: process.env.TESTING_DATABASE ?? "test-rev",
+    database: process.env.TESTING_DATABASE ?? "mariadb_alt",
     ...(options ?? {}),
   });
