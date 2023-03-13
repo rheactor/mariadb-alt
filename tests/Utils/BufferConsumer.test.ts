@@ -134,11 +134,9 @@ describe("Utils/BufferConsumer", () => {
   });
 
   test("skip()", () => {
-    const bufferConsumer = new BufferConsumer(Buffer.from("00123"));
-
-    bufferConsumer.skip(2);
-
-    expect(bufferConsumer.readString(3)).toStrictEqual(Buffer.from("123"));
+    expect(
+      new BufferConsumer(Buffer.from("00123")).skip(2).readString(3)
+    ).toStrictEqual(Buffer.from("123"));
   });
 
   test("multiples", () => {

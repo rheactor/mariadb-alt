@@ -83,5 +83,7 @@ export class BufferConsumer {
 
   public skip(bytes = 1) {
     this.byteOffset += bytes;
+
+    return this;
   }
 }
