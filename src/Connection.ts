@@ -1,7 +1,7 @@
 import { createHandshakeResponse } from "@/Protocol/Packet/HandshakeResponse";
 import { InitialHandshake } from "@/Protocol/Packet/InitialHandshake";
 import { Packet, type PacketKind } from "@/Protocol/Packet/Packet";
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import type { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { EventEmitter } from "@/Utils/EventEmitter";
 import { Socket } from "node:net";
@@ -28,10 +28,7 @@ interface ConnectionOptions {
   password?: string;
 
   /** Connection database. Default is none. */
-  database?: string;
-
-  /** Connection timeout. */
-  timeout?: number;
+  database: string;
 }
 
 type ConnectionEventsError = "error";
@@ -108,7 +105,9 @@ export class Connection extends ConnectionEvents {
 
   private readonly options: ConnectionOptions;
 
-  public constructor(options: Partial<ConnectionOptions> = {}) {
+  public constructor(
+    options: Partial<ConnectionOptions> & Pick<ConnectionOptions, "database">
+  ) {
     super();
 
     this.options = {
@@ -138,10 +137,6 @@ export class Connection extends ConnectionEvents {
       this.emit("closed", this);
     });
 
-    if (options.timeout !== undefined) {
-      socket.setTimeout(options.timeout);
-    }
-
     socket.connect(this.options.port, this.options.host);
 
     this.socket = socket;
@@ -165,6 +160,10 @@ export class Connection extends ConnectionEvents {
 
   public async ping() {
     return this.commandQueue(Buffer.from([0x0e]));
+  }
+
+  public async query(sql: string) {
+    return this.commandQueue(Buffer.from(`\x03${sql}`));
   }
 
   public close() {
@@ -206,13 +205,15 @@ export class Connection extends ConnectionEvents {
     this.initialHandshake = new InitialHandshake(initialHandshakePacket.body);
 
     this.socket.once("data", (serverData) => {
-      const serverResponse = Packet.fromResponse(serverData);
+      const serverResponse = Packet.fromResponse(serverData) as
+        | PacketError
+        | PacketOk;
 
       if (serverResponse instanceof PacketOk) {
         this.status = Status.AUTHENTICATED;
         this.emit("authenticated", this);
         this.commandRun();
-      } else if (serverResponse instanceof PacketError) {
+      } else {
         this.status = Status.ERROR;
         this.emit(
           "error",

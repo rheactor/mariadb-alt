@@ -1,3 +1,3 @@
 import { jestConfig } from "./jest.config";
 
-export default jestConfig("dist");
+export default jestConfig("dist") as unknown;

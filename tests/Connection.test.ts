@@ -1,15 +1,16 @@
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("/Connection", () => {
   describe("connection ready", () => {
-    test("socket initialization", (done) => {
+    test("authenticate", (done) => {
       expect.assertions(3);
 
       const connectionBase = TestConnection();
 
-      connectionBase.once("closed", () => done());
+      connectionBase.on("closed", () => done());
 
       connectionBase.once("connected", (connection) => {
         expect(connection.isConnected()).toBe(true);
@@ -42,6 +43,45 @@ describe("/Connection", () => {
 
       connectionBase.close();
     });
+
+    type QuerySelectUnit = [string, bigint | number | string | null];
+
+    const querySelectUnits: QuerySelectUnit[] = [
+      ["'abc'", "abc"],
+      ["123", 123],
+      ["NULL", null],
+      ["123.45", 123.45],
+      ["1152921504606846975", 1152921504606846975n],
+    ];
+
+    describe.each(querySelectUnits)("query()", (input, output) => {
+      const connectionBase = TestConnection();
+
+      test(`SELECT ${input}`, async () => {
+        const queryResult = await connectionBase.query(
+          `SELECT ${input} AS \`value\``
+        );
+
+        expect(queryResult).toBeInstanceOf(PacketResultSet);
+
+        if (queryResult instanceof PacketResultSet) {
+          expect(queryResult.rows).toHaveLength(1);
+
+          // eslint-disable-next-line prefer-destructuring
+          const resultValue = queryResult.rows[0]![0];
+
+          if (typeof resultValue === "bigint") {
+            expect(resultValue.toString(16)).toBe(output?.toString(16));
+          } else {
+            expect(resultValue).toBe(output);
+          }
+        }
+      });
+
+      afterAll(() => {
+        connectionBase.close();
+      });
+    });
   });
 
   describe("connection error", () => {
@@ -72,6 +112,27 @@ describe("/Connection", () => {
 
         expect(connection.isError()).toBe(true);
         expect(error.message).toContain("random-user");
+
+        if (error.cause instanceof PacketErrorState) {
+          expect(error.cause.code).toBe(1045);
+        }
+      });
+    });
+
+    test("wrong password", (done) => {
+      expect.assertions(3);
+
+      const connectionBase = TestConnection({
+        password: Math.random().toString(),
+      });
+
+      connectionBase.once("closed", () => done());
+
+      connectionBase.once("error", (connection, error) => {
+        expect.assertions(3);
+
+        expect(connection.isError()).toBe(true);
+        expect(error.message).toContain("denied for user");
 
         if (error.cause instanceof PacketErrorState) {
           expect(error.cause.code).toBe(1045);

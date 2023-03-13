@@ -2,9 +2,14 @@ import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-export type PacketKind = PacketError | PacketOk | PacketProgress;
+export type PacketKind =
+  | PacketError
+  | PacketOk
+  | PacketProgress
+  | PacketResultSet;
 
 export class Packet {
   /** Packet 3-byte length. */
@@ -39,8 +44,12 @@ export class Packet {
     const bufferConsumer = new BufferConsumer(data, 4);
     const bufferType = bufferConsumer.readInt();
 
-    if (bufferType === 0) {
+    if (bufferType === 0x00 || bufferType === 0xfe) {
       return new PacketOk(bufferConsumer.rest());
+    }
+
+    if (bufferType !== 0xff) {
+      return new PacketResultSet(bufferConsumer.rest(-1));
     }
 
     const bufferErrorCode = bufferConsumer.readInt(2);

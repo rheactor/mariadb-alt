@@ -1,4 +1,3 @@
-import { Capabilities } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
 export class InitialHandshake {
@@ -45,15 +44,13 @@ export class InitialHandshake {
     bufferConsumer.skip(6);
     this.capabilities += BigInt(bufferConsumer.readInt(4)) << 32n;
 
-    if (this.hasCapability(Capabilities.SECURE_CONNECTION)) {
-      this.authSeed = Buffer.concat([
-        this.authSeed,
-        bufferConsumer.readString(
-          Math.max(12, this.authPluginNameLength - 9),
-          true
-        ),
-      ]);
-    }
+    this.authSeed = Buffer.concat([
+      this.authSeed,
+      bufferConsumer.readString(
+        Math.max(12, this.authPluginNameLength - 9),
+        true
+      ),
+    ]);
 
     this.authPluginName = bufferConsumer.readNullTerminatedString();
   }

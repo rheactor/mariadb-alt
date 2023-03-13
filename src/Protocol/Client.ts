@@ -10,7 +10,9 @@ export const capabilitiesExtended =
   // Capabilities.PLUGIN_AUTH
   0b0000_0000_0000_1000 |
   // Capabilities.PLUGIN_AUTH_LENENC_CLIENT_DATA
-  0b0000_0000_0010_0000;
+  0b0000_0000_0010_0000 |
+  // Capabilities.CLIENT_DEPRECATE_EOF
+  0b0000_0001_0000_0000;
 
 export const capabilitiesMariaDB = 0;
 

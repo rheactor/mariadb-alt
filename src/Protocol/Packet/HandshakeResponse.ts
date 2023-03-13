@@ -17,7 +17,7 @@ export const createHandshakeResponse = (
   authPluginName: Buffer,
   user: string,
   password: string,
-  database: string | undefined,
+  database: string,
   maxPacketSize: number
 ) => {
   const bufferAuthentication = password
@@ -35,7 +35,7 @@ export const createHandshakeResponse = (
     createUInt32LE(capabilitiesMariaDB),
     toNullTerminatedStringEscaped(user),
     bufferAuthentication,
-    toNullTerminatedStringEscaped(database ?? null),
+    toNullTerminatedStringEscaped(database),
     toNullTerminatedStringEscaped(authPluginName.toString("binary")),
   ]);
 };
