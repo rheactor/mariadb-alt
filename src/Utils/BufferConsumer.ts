@@ -3,6 +3,10 @@ import { readNullTerminatedString } from "@/Utils/BufferUtil";
 export class BufferConsumer {
   public constructor(private readonly buffer: Buffer, private byteOffset = 0) {}
 
+  public at(byteOffset = 0): number {
+    return this.buffer.readUInt8(this.byteOffset + byteOffset);
+  }
+
   public readInt(byteLength = 1): number {
     const bufferInt = this.buffer.readUIntLE(this.byteOffset, byteLength);
 

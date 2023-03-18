@@ -139,6 +139,10 @@ describe("Utils/BufferConsumer", () => {
     ).toStrictEqual(Buffer.from("123"));
   });
 
+  test("at()", () => {
+    expect(new BufferConsumer(Buffer.from("123")).at(1)).toBe(50);
+  });
+
   test("multiples", () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from("\x10\x20\x30\x40\x50\x60Test\0\x00123", "binary")
