@@ -9,7 +9,6 @@
     "declarationDir": "dist",
     "disableSizeLimit": true,
     "esModuleInterop": true,
-    "importsNotUsedAsValues": "error",
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "lib": ["ES2022"],
