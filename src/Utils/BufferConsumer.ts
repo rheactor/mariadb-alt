@@ -90,4 +90,16 @@ export class BufferConsumer {
 
     return this;
   }
+
+  public skipStringEncoded() {
+    const bufferInt = this.readIntEncoded();
+
+    if (bufferInt === null || bufferInt === 0) {
+      return this;
+    }
+
+    this.byteOffset += Number(bufferInt);
+
+    return this;
+  }
 }

@@ -143,6 +143,16 @@ describe("Utils/BufferConsumer", () => {
     expect(new BufferConsumer(Buffer.from("123")).at(1)).toBe(50);
   });
 
+  test("skipStringEncoded()", () => {
+    const bufferConsumer = new BufferConsumer(
+      Buffer.from([0x00, 0xfb, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f])
+    );
+
+    expect(
+      bufferConsumer.skipStringEncoded().skipStringEncoded().readStringEncoded()
+    ).toStrictEqual(Buffer.from("Hello"));
+  });
+
   test("multiples", () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from("\x10\x20\x30\x40\x50\x60Test\0\x00123", "binary")
