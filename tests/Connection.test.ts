@@ -1,3 +1,4 @@
+import { Collations, FieldTypes } from "@/Protocol/Enumerations";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
@@ -44,14 +45,14 @@ describe("/Connection", () => {
       connectionBase.close();
     });
 
-    type QuerySelectUnit = [string, bigint | number | string | null];
+    type QuerySelectUnit = [string, string | null];
 
     const querySelectUnits: QuerySelectUnit[] = [
-      ["'abc'", "abc"],
-      ["123", 123],
       ["NULL", null],
-      ["123.45", 123.45],
-      ["1152921504606846975", 1152921504606846975n],
+      ["'abc'", "abc"],
+      ["123", "123"],
+      ["123.45", "123.45"],
+      ["1152921504606846975", "1152921504606846975"],
     ];
 
     describe.each(querySelectUnits)("query()", (input, output) => {
@@ -65,16 +66,63 @@ describe("/Connection", () => {
         expect(queryResult).toBeInstanceOf(PacketResultSet);
 
         if (queryResult instanceof PacketResultSet) {
-          expect(queryResult.rows).toHaveLength(1);
+          const queryRows = [...queryResult.getRows()];
 
-          // eslint-disable-next-line prefer-destructuring
-          const resultValue = queryResult.rows[0]![0];
+          expect(queryRows).toHaveLength(1);
+          expect(queryRows[0]!["value"]).toBe(output);
+        }
+      });
 
-          if (typeof resultValue === "bigint") {
-            expect(resultValue.toString(16)).toBe(output?.toString(16));
-          } else {
-            expect(resultValue).toBe(output);
-          }
+      afterAll(() => {
+        connectionBase.close();
+      });
+    });
+
+    describe("query()", () => {
+      const connectionBase = TestConnection();
+
+      test(`Example`, async () => {
+        expect(
+          await connectionBase.query(`DROP TABLE IF EXISTS \`example\``)
+        ).toBeInstanceOf(PacketOk);
+
+        expect(
+          await connectionBase.query(
+            "CREATE TABLE `example` ( `id` INT NULL AUTO_INCREMENT, `text` VARCHAR(20), PRIMARY KEY (`id`) )"
+          )
+        ).toBeInstanceOf(PacketOk);
+
+        const insertInto = await connectionBase.query(
+          "INSERT INTO `example` (`id`, `text`) VALUES (123, 'example')"
+        );
+
+        expect(insertInto).toBeInstanceOf(PacketOk);
+
+        if (insertInto instanceof PacketOk) {
+          expect(insertInto.affectedRows).toBe(1);
+          expect(insertInto.lastInsertId).toBe(123);
+        }
+
+        const query = await connectionBase.query(
+          "SELECT `id` as `a`, `text` FROM `example` `b`"
+        );
+
+        expect(query).toBeInstanceOf(PacketResultSet);
+
+        if (query instanceof PacketResultSet) {
+          const queryMetadata = query.getMetadata();
+          const queryMetadata1 = queryMetadata[0]!;
+
+          expect(queryMetadata1.name).toBe("a");
+          expect(queryMetadata1.collation).toBe(Collations.binary);
+          expect(queryMetadata1.type).toBe(FieldTypes.LONG);
+
+          const queryMetadata2 = queryMetadata[1]!;
+
+          expect(queryMetadata2.name).toBe("text");
+          expect(queryMetadata2.collation).toBe(Collations.utf8mb4_general_ci);
+          expect(queryMetadata2.type).toBe(FieldTypes.VAR_STRING);
+          expect(queryMetadata2.flags).toBe(0);
         }
       });
 
@@ -102,7 +150,7 @@ describe("/Connection", () => {
       expect.assertions(3);
 
       const connectionBase = TestConnection({
-        user: `random-user-${Math.random()}`,
+        user: `random-user-0.5318529997882291`,
       });
 
       connectionBase.once("closed", () => done());
