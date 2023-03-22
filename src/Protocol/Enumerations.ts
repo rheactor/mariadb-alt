@@ -88,6 +88,47 @@ export const FieldTypes = {
   GEOMETRY: 255,
 };
 
+export const FieldTypesGrouped = {
+  TEMPORAL: [
+    FieldTypes.TIMESTAMP,
+    FieldTypes.DATE,
+    FieldTypes.TIME,
+    FieldTypes.DATETIME,
+    FieldTypes.NEWDATE,
+    FieldTypes.TIMESTAMP2,
+    FieldTypes.DATETIME2,
+    FieldTypes.TIME2,
+  ],
+
+  NUMBER: [
+    FieldTypes.LONG,
+    FieldTypes.DOUBLE,
+    FieldTypes.FLOAT,
+    FieldTypes.NEWDECIMAL,
+    FieldTypes.DECIMAL,
+    FieldTypes.INT24,
+    FieldTypes.TINY,
+    FieldTypes.SHORT,
+    FieldTypes.YEAR,
+    FieldTypes.BIT,
+  ],
+
+  STRING: [
+    FieldTypes.VARCHAR,
+    FieldTypes.VAR_STRING,
+    FieldTypes.STRING,
+    FieldTypes.ENUM,
+    FieldTypes.SET,
+  ],
+
+  BLOB: [
+    FieldTypes.LONG_BLOB,
+    FieldTypes.MEDIUM_BLOB,
+    FieldTypes.TINY_BLOB,
+    FieldTypes.BLOB,
+  ],
+};
+
 /** @see https://mariadb.com/kb/en/result-set-packets/#field-details-flag */
 export const FieldFlags = {
   NOT_NULL: 1,

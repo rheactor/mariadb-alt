@@ -45,38 +45,61 @@ describe("/Connection", () => {
       connectionBase.close();
     });
 
-    type QuerySelectUnit = [string, string | null];
-
-    const querySelectUnits: QuerySelectUnit[] = [
-      ["NULL", null],
-      ["'abc'", "abc"],
-      ["123", "123"],
-      ["123.45", "123.45"],
-      ["1152921504606846975", "1152921504606846975"],
+    type QuerySelectUnit = [
+      string,
+      string | null,
+      bigint | number | string | null
     ];
 
-    describe.each(querySelectUnits)("query()", (input, output) => {
-      const connectionBase = TestConnection();
+    const querySelectUnits: QuerySelectUnit[] = [
+      ["NULL", null, null],
+      ["'abc'", "abc", "abc"],
+      ["123", "123", 123],
+      ["123.45", "123.45", 123.45],
+      ["1152921504606846975", "1152921504606846975", 1152921504606846975n],
+    ];
 
-      test(`SELECT ${input}`, async () => {
-        const queryResult = await connectionBase.query(
-          `SELECT ${input} AS \`value\``
-        );
+    describe.each(querySelectUnits)(
+      "query()",
+      (input, output, outputNormalized) => {
+        const connectionBase = TestConnection();
 
-        expect(queryResult).toBeInstanceOf(PacketResultSet);
+        test(`SELECT ${input}`, async () => {
+          const queryResult = await connectionBase.query(
+            `SELECT ${input} AS \`value\``
+          );
 
-        if (queryResult instanceof PacketResultSet) {
-          const queryRows = [...queryResult.getRows()];
+          expect(queryResult).toBeInstanceOf(PacketResultSet);
 
-          expect(queryRows).toHaveLength(1);
-          expect(queryRows[0]!["value"]).toBe(output);
-        }
-      });
+          if (queryResult instanceof PacketResultSet) {
+            const queryRows = [...queryResult.getRows()];
 
-      afterAll(() => {
-        connectionBase.close();
-      });
-    });
+            expect(queryRows).toHaveLength(1);
+
+            const queryRow = queryRows[0]!;
+
+            expect(queryRow[0]?.toString() ?? null).toBe(output);
+
+            const rowValueNormalized = PacketResultSet.transform(
+              queryRow,
+              queryResult.getMetadata()
+            );
+
+            if (typeof outputNormalized === "bigint") {
+              expect(rowValueNormalized["value"]!.toString()).toBe(
+                outputNormalized.toString()
+              );
+            } else {
+              expect(rowValueNormalized["value"]).toBe(outputNormalized);
+            }
+          }
+        });
+
+        afterAll(() => {
+          connectionBase.close();
+        });
+      }
+    );
 
     describe("query()", () => {
       const connectionBase = TestConnection();

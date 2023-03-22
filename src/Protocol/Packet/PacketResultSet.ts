@@ -1,20 +1,17 @@
+import { FieldTypes, FieldTypesGrouped } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-enum FieldType {
-  STRING,
-  NUMBER,
-  BIGINT,
-}
-
 interface FieldMetadata {
-  type: FieldType;
+  type: number;
   name: string;
   collation: number;
   flags: number;
   decimals: number;
 }
 
-type Row = Record<string, string | null>;
+type Row = Array<Buffer | null>;
+
+type RowTransformed = Record<string, Buffer | bigint | number | string | null>;
 
 export class PacketResultSet {
   private readonly bufferConsumer: BufferConsumer;
@@ -23,6 +20,30 @@ export class PacketResultSet {
 
   public constructor(buffer: Buffer) {
     this.bufferConsumer = new BufferConsumer(buffer);
+  }
+
+  public static transform(row: Row, metadata: FieldMetadata[]): RowTransformed {
+    const rowTransformed: RowTransformed = {};
+    const metadataLength = metadata.length;
+
+    for (let i = 0; i < metadataLength; i++) {
+      const column = metadata[i]!;
+      const cell = row[i];
+
+      if (column.type === FieldTypes.LONGLONG) {
+        rowTransformed[column.name] = BigInt(cell!.toString());
+      } else if (FieldTypesGrouped.NUMBER.includes(column.type)) {
+        rowTransformed[column.name] = Number(cell!);
+      } else if (FieldTypesGrouped.BLOB.includes(column.type)) {
+        rowTransformed[column.name] = cell!;
+      } else if (FieldTypesGrouped.STRING.includes(column.type)) {
+        rowTransformed[column.name] = cell!.toString();
+      } else {
+        rowTransformed[column.name] = null;
+      }
+    }
+
+    return rowTransformed;
   }
 
   public getMetadata() {
@@ -55,17 +76,15 @@ export class PacketResultSet {
 
   public *getRows() {
     const metadata = this.fields ?? this.getMetadata();
+    const metadataLength = metadata.length;
 
     while (this.bufferConsumer.at(4) !== 0xfe) {
       this.bufferConsumer.skip(4); // header
 
-      const row: Row = {};
+      const row: Row = [];
 
-      // eslint-disable-next-line @typescript-eslint/prefer-for-of
-      for (let i = 0; i < metadata.length; i++) {
-        const cell = this.bufferConsumer.readStringEncoded();
-
-        row[metadata[i]!.name] = cell ? cell.toString() : null;
+      for (let i = 0; i < metadataLength; i++) {
+        row.push(this.bufferConsumer.readStringEncoded());
       }
 
       yield row;
