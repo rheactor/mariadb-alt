@@ -85,6 +85,15 @@ export class BufferConsumer {
     return this.buffer.subarray(this.byteOffset + offsetShift);
   }
 
+  public slice(bytes: number): Buffer {
+    const bufferSliced = this.buffer.subarray(
+      this.byteOffset,
+      (this.byteOffset += bytes)
+    );
+
+    return bufferSliced;
+  }
+
   public skip(bytes = 1) {
     this.byteOffset += bytes;
 

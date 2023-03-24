@@ -133,6 +133,12 @@ describe("Utils/BufferConsumer", () => {
     );
   });
 
+  test("slice()", () => {
+    expect(
+      new BufferConsumer(Buffer.from("0012300")).skip(2).slice(3)
+    ).toStrictEqual(Buffer.from("123"));
+  });
+
   test("skip()", () => {
     expect(
       new BufferConsumer(Buffer.from("00123")).skip(2).readString(3)
