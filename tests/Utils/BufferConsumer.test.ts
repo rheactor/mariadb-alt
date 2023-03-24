@@ -145,6 +145,16 @@ describe("Utils/BufferConsumer", () => {
     ).toStrictEqual(Buffer.from("123"));
   });
 
+  test("consumed()", () => {
+    expect(new BufferConsumer(Buffer.from("123")).skip(2).consumed()).toBe(
+      false
+    );
+
+    expect(new BufferConsumer(Buffer.from("123")).skip(3).consumed()).toBe(
+      true
+    );
+  });
+
   test("at()", () => {
     expect(new BufferConsumer(Buffer.from("123")).at(1)).toBe(50);
   });

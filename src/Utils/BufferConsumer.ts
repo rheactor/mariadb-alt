@@ -111,4 +111,8 @@ export class BufferConsumer {
 
     return this;
   }
+
+  public consumed() {
+    return this.byteOffset === this.buffer.length;
+  }
 }
