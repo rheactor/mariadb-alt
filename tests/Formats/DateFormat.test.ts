@@ -1,6 +1,6 @@
-import { Date } from "@/Protocol/Date";
+import { DateFormat } from "@/Formats/DateFormat";
 
-describe("Protocol/Date", () => {
+describe("Formats/DateFormat", () => {
   type ToNativeDateUnits = Array<[string, string, number?]>;
 
   const toNativeDateUnits: ToNativeDateUnits = [
@@ -17,7 +17,7 @@ describe("Protocol/Date", () => {
     (input, output, offset) => {
       test(input, () => {
         expect(
-          new Date(input)
+          new DateFormat(input)
             .toNativeDate(offset ?? 0, offset ?? 0, offset ?? 0, offset ?? 0)
             .toISOString()
         ).toBe(output);
@@ -27,15 +27,15 @@ describe("Protocol/Date", () => {
 
   describe("isZeroed()", () => {
     test("0000-00-00", () => {
-      expect(new Date("0000-00-00").isZeroed()).toBe(true);
+      expect(new DateFormat("0000-00-00").isZeroed()).toBe(true);
     });
 
     test("0001-00-00", () => {
-      expect(new Date("0001-00-00").isZeroed()).toBe(false);
+      expect(new DateFormat("0001-00-00").isZeroed()).toBe(false);
     });
 
     test("-000001-00-00", () => {
-      expect(new Date("0001-00-00").isZeroed()).toBe(false);
+      expect(new DateFormat("0001-00-00").isZeroed()).toBe(false);
     });
   });
 });

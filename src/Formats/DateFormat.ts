@@ -2,7 +2,7 @@ import { toNativeDate } from "@/Utils/DatetimeUtil";
 
 const dateParseRegexp = /^(-?\d{4,6})-(\d{2})-(\d{2})/;
 
-export class Date {
+export class DateFormat {
   public day: number;
 
   public month: number;
@@ -17,12 +17,7 @@ export class Date {
     this.day = Math.max(1, Number(dateParsed[3]));
   }
 
-  public toNativeDate(
-    hours = 0,
-    minutes = 0,
-    seconds = 0,
-    ms = 0
-  ): globalThis.Date {
+  public toNativeDate(hours = 0, minutes = 0, seconds = 0, ms = 0): Date {
     return toNativeDate(
       this.year,
       this.month,
