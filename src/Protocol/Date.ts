@@ -1,4 +1,4 @@
-import { padDatetime as pad } from "@/Utils/DatetimeUtil";
+import { toNativeDate } from "@/Utils/DatetimeUtil";
 
 const dateParseRegexp = /^(-?\d{4,6})-(\d{2})-(\d{2})/;
 
@@ -23,10 +23,14 @@ export class Date {
     seconds = 0,
     ms = 0
   ): globalThis.Date {
-    return new globalThis.Date(
-      `${this.year < 0 ? "-00" : ""}` +
-        `${pad(Math.abs(this.year), 4)}-${pad(this.month)}-${pad(this.day)}T` +
-        `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(ms, 3)}Z`
+    return toNativeDate(
+      this.year,
+      this.month,
+      this.day,
+      hours,
+      minutes,
+      seconds,
+      ms
     );
   }
 
