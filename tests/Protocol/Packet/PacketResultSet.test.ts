@@ -25,6 +25,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
       | string[]
       | TimeFormat
       | bigint
+      | boolean
       | number
       | string
       | null;
@@ -78,6 +79,18 @@ describe("Protocol/Packet/PacketResultSet", () => {
       metadata: { type: FieldTypes.BIT, length: 1 },
       input: "NULL",
       output: null,
+    },
+    {
+      query: "BIT(1) NULL",
+      metadata: { type: FieldTypes.BIT, length: 1 },
+      input: "1",
+      output: true,
+    },
+    {
+      query: "BIT(1) NULL",
+      metadata: { type: FieldTypes.BIT, length: 1 },
+      input: "FALSE",
+      output: false,
     },
     {
       query: "BIT(14)",

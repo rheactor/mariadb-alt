@@ -29,6 +29,7 @@ type RowTransformed = Record<
   | string[]
   | TimeFormat
   | bigint
+  | boolean
   | number
   | string
   | null
@@ -119,10 +120,13 @@ export class PacketResultSet {
           break;
 
         case FieldTypes.BIT:
-          rowTransformed[column.name] =
-            column.length > 32
-              ? BigInt(`0x${cell!.toString("hex")}`)
-              : cell!.readIntBE(0, cell!.length);
+          if (column.length === 1) {
+            rowTransformed[column.name] = Boolean(cell!.readIntBE(0, 1));
+          } else if (column.length > 32) {
+            rowTransformed[column.name] = BigInt(`0x${cell!.toString("hex")}`);
+          } else {
+            rowTransformed[column.name] = cell!.readIntBE(0, cell!.length);
+          }
           break;
 
         default: // empty
