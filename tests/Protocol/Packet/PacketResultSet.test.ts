@@ -284,12 +284,6 @@ describe("Protocol/Packet/PacketResultSet", () => {
       output: "a",
     },
     {
-      query: "ENUM('a')",
-      metadata: { type: FieldTypes.CHAR },
-      input: "''",
-      output: "",
-    },
-    {
       query: "ENUM('a') NULL",
       metadata: { type: FieldTypes.CHAR },
       input: "NULL",

@@ -14,7 +14,7 @@
     "test": "jest --detect-open-handles",
     "test:ci": "jest --detect-open-handles --ci",
     "test:build": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles",
-    "test:build:ci": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles -ci",
+    "test:build:ci": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles --ci",
     "test:watch": "jest --watch --expand --detect-open-handles --only-changed",
     "test:coverage": "jest --coverage --detect-open-handles"
   },
