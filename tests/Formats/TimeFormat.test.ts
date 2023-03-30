@@ -20,4 +20,14 @@ describe("Formats/TimeFormat", () => {
       ).toBe(output);
     });
   });
+
+  test("6-digits .ms", () => {
+    const timeFormat = new TimeFormat("00:00:00.1234567");
+
+    expect(timeFormat.toNativeDate().toISOString()).toBe(
+      "1970-01-01T00:00:00.123Z"
+    );
+
+    expect(timeFormat.ms).toBe(123456);
+  });
 });

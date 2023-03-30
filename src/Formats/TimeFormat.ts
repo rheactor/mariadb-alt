@@ -1,6 +1,6 @@
 import { toNativeDate } from "@/Utils/DatetimeUtil";
 
-const timeParseRegexp = /^(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?/;
+const timeParseRegexp = /^(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?/;
 
 export class TimeFormat {
   public hours: number;
@@ -19,9 +19,7 @@ export class TimeFormat {
     this.minutes = Number(timeParsed[2]);
     this.seconds = Number(timeParsed[3]);
     this.ms =
-      timeParsed[4] === undefined
-        ? 0
-        : Number(timeParsed[4].substring(0, 3).padEnd(3, "0"));
+      timeParsed[4] === undefined ? 0 : Number(timeParsed[4].padEnd(6, "0"));
   }
 
   public toNativeDate(year = 1970, month = 1, day = 1): Date {
