@@ -1,6 +1,6 @@
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
-import { Packet, type PacketKind } from "@/Protocol/Packet/Packet";
+import { Packet } from "@/Protocol/Packet/Packet";
 import type { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { EventEmitter } from "@/Utils/EventEmitter";
@@ -9,7 +9,7 @@ import { Socket } from "node:net";
 const enum Status {
   CONNECTING,
   AUTHENTICATING,
-  AUTHENTICATED,
+  READY,
   EXECUTING,
   ERROR,
 }
@@ -41,7 +41,7 @@ type ConnectionEventsCommon =
 
 interface ConnectionCommand {
   buffer: Buffer;
-  resolve(packet: PacketKind): void;
+  resolve(data: Buffer): void;
 }
 
 abstract class ConnectionEvents {
@@ -154,15 +154,19 @@ export class Connection extends ConnectionEvents {
   }
 
   public isAuthenticated() {
-    return this.status === Status.AUTHENTICATED;
+    return this.status === Status.READY;
   }
 
   public async ping() {
-    return this.commandQueue(Buffer.from([0x0e]));
+    return this.commandQueue(Buffer.from([0x0e])).then((data) =>
+      Packet.fromResponse(data)
+    );
   }
 
   public async query(sql: string) {
-    return this.commandQueue(Buffer.from(`\x03${sql}`));
+    return this.commandQueue(Buffer.from(`\x03${sql}`)).then((data) =>
+      Packet.fromResponse(data)
+    );
   }
 
   public async close() {
@@ -174,14 +178,14 @@ export class Connection extends ConnectionEvents {
   }
 
   private async commandQueue(buffer: Buffer) {
-    return new Promise<PacketKind>((resolve) => {
+    return new Promise<Buffer>((resolve) => {
       this.commands.push({ buffer, resolve });
       this.commandRun();
     });
   }
 
   private commandRun() {
-    if (this.status === Status.AUTHENTICATED) {
+    if (this.status === Status.READY) {
       const command = this.commands.shift();
 
       if (!command) {
@@ -191,9 +195,9 @@ export class Connection extends ConnectionEvents {
       this.status = Status.EXECUTING;
 
       this.socket.once("data", (data) => {
-        this.status = Status.AUTHENTICATED;
+        this.status = Status.READY;
 
-        command.resolve(Packet.fromResponse(data));
+        command.resolve(data);
 
         this.commandRun();
       });
@@ -213,7 +217,7 @@ export class Connection extends ConnectionEvents {
         | PacketOk;
 
       if (serverResponse instanceof PacketOk) {
-        this.status = Status.AUTHENTICATED;
+        this.status = Status.READY;
         this.emit("authenticated", this);
         this.commandRun();
       } else {
