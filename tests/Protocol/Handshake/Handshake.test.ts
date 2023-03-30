@@ -1,10 +1,10 @@
 import { Capabilities, ServerStatus } from "@/Protocol/Enumerations";
-import { InitialHandshake } from "@/Protocol/Packet/InitialHandshake";
+import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 
-describe("Protocol/Packet/InitialHandshakePacket", () => {
+describe("Protocol/Handshake/Handshake", () => {
   test("read properties", () => {
-    const packet = new InitialHandshake(InitialHandshakePacketFixture.Example1);
+    const packet = new Handshake(InitialHandshakePacketFixture.Example1);
 
     expect(packet.protocolVersion).toBe(0x0a);
     expect(packet.serverVersion).toStrictEqual(Buffer.from("example"));

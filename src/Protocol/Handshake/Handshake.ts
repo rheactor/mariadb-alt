@@ -1,6 +1,6 @@
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-export class InitialHandshake {
+export class Handshake {
   /** DBMS protocol version (eg. MariaDB 10.x === 10). */
   public protocolVersion: number;
 

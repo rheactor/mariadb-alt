@@ -1,5 +1,5 @@
-import { createHandshakeResponse } from "@/Protocol/Packet/HandshakeResponse";
-import { InitialHandshake } from "@/Protocol/Packet/InitialHandshake";
+import { Handshake } from "@/Protocol/Handshake/Handshake";
+import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { Packet, type PacketKind } from "@/Protocol/Packet/Packet";
 import type { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
@@ -94,7 +94,7 @@ abstract class ConnectionEvents {
 export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
 
-  public initialHandshake?: InitialHandshake;
+  public initialHandshake?: Handshake;
 
   private connected = false;
 
@@ -205,7 +205,7 @@ export class Connection extends ConnectionEvents {
   private processResponse(data: Buffer) {
     const initialHandshakePacket = new Packet(data);
 
-    this.initialHandshake = new InitialHandshake(initialHandshakePacket.body);
+    this.initialHandshake = new Handshake(initialHandshakePacket.body);
 
     this.socket.once("data", (serverData) => {
       const serverResponse = Packet.fromResponse(serverData) as
