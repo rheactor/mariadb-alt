@@ -14,6 +14,8 @@ export const capabilitiesExtended =
   // Capabilities.CLIENT_DEPRECATE_EOF
   0b0000_0001_0000_0000;
 
-export const capabilitiesMariaDB = 0;
+export const capabilitiesMariaDB =
+  // Capabilities.MARIADB_CLIENT_EXTENDED_METADATA
+  0b0000_0000_0000_1000;
 
 export const defaultCollation = 0x2d; // utf8mb4_general_ci

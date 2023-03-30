@@ -55,78 +55,27 @@ export const ServerStatus = {
 
 /** @see https://mariadb.com/kb/en/result-set-packets/#field-types */
 export const FieldTypes = {
-  DECIMAL: 0,
-  TINY: 1,
-  SHORT: 2,
-  LONG: 3,
+  TINYINT: 1,
+  SMALLINT: 2,
+  MEDIUMINT: 9,
+  INT: 3,
+  BIGINT: 8,
+
   FLOAT: 4,
   DOUBLE: 5,
-  NULL: 6,
-  TIMESTAMP: 7,
-  LONGLONG: 8,
-  INT24: 9,
+  DECIMAL: 246,
+
+  DATETIME: 12,
   DATE: 10,
   TIME: 11,
-  DATETIME: 12,
+  TIMESTAMP: 7,
   YEAR: 13,
-  NEWDATE: 14,
-  VARCHAR: 15,
-  BIT: 16,
-  TIMESTAMP2: 17,
-  DATETIME2: 18,
-  TIME2: 19,
-  JSON: 245,
-  NEWDECIMAL: 246,
-  ENUM: 247,
-  SET: 248,
-  TINY_BLOB: 249,
-  MEDIUM_BLOB: 250,
-  LONG_BLOB: 251,
+
+  VARCHAR: 253,
+  CHAR: 254,
   BLOB: 252,
-  VAR_STRING: 253,
-  STRING: 254,
-  GEOMETRY: 255,
-};
 
-export const FieldTypesGrouped = {
-  TEMPORAL: [
-    FieldTypes.TIMESTAMP,
-    FieldTypes.DATE,
-    FieldTypes.TIME,
-    FieldTypes.DATETIME,
-    FieldTypes.NEWDATE,
-    FieldTypes.TIMESTAMP2,
-    FieldTypes.DATETIME2,
-    FieldTypes.TIME2,
-  ],
-
-  NUMBER: [
-    FieldTypes.LONG,
-    FieldTypes.DOUBLE,
-    FieldTypes.FLOAT,
-    FieldTypes.NEWDECIMAL,
-    FieldTypes.DECIMAL,
-    FieldTypes.INT24,
-    FieldTypes.TINY,
-    FieldTypes.SHORT,
-    FieldTypes.YEAR,
-    FieldTypes.BIT,
-  ],
-
-  STRING: [
-    FieldTypes.VARCHAR,
-    FieldTypes.VAR_STRING,
-    FieldTypes.STRING,
-    FieldTypes.ENUM,
-    FieldTypes.SET,
-  ],
-
-  BLOB: [
-    FieldTypes.LONG_BLOB,
-    FieldTypes.MEDIUM_BLOB,
-    FieldTypes.TINY_BLOB,
-    FieldTypes.BLOB,
-  ],
+  BIT: 16,
 };
 
 /** @see https://mariadb.com/kb/en/result-set-packets/#field-details-flag */

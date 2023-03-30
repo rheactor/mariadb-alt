@@ -105,18 +105,16 @@ describe("/Connection", () => {
       const connectionBase = TestConnection();
 
       test(`Example`, async () => {
-        expect(
-          await connectionBase.query(`DROP TABLE IF EXISTS \`example\``)
-        ).toBeInstanceOf(PacketOk);
+        const table = `test-${Math.random()}`;
 
         expect(
           await connectionBase.query(
-            "CREATE TABLE `example` ( `id` INT NULL AUTO_INCREMENT, `text` VARCHAR(20), PRIMARY KEY (`id`) )"
+            `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`
           )
         ).toBeInstanceOf(PacketOk);
 
         const insertInto = await connectionBase.query(
-          "INSERT INTO `example` (`id`, `text`) VALUES (123, 'example')"
+          `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`
         );
 
         expect(insertInto).toBeInstanceOf(PacketOk);
@@ -127,7 +125,7 @@ describe("/Connection", () => {
         }
 
         const query = await connectionBase.query(
-          "SELECT `id` as `a`, `text` FROM `example` `b`"
+          `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``
         );
 
         expect(query).toBeInstanceOf(PacketResultSet);
@@ -138,13 +136,13 @@ describe("/Connection", () => {
 
           expect(queryMetadata1.name).toBe("a");
           expect(queryMetadata1.collation).toBe(Collations.binary);
-          expect(queryMetadata1.type).toBe(FieldTypes.LONG);
+          expect(queryMetadata1.type).toBe(FieldTypes.INT);
 
           const queryMetadata2 = queryMetadata[1]!;
 
           expect(queryMetadata2.name).toBe("text");
           expect(queryMetadata2.collation).toBe(Collations.utf8mb4_general_ci);
-          expect(queryMetadata2.type).toBe(FieldTypes.VAR_STRING);
+          expect(queryMetadata2.type).toBe(FieldTypes.VARCHAR);
           expect(queryMetadata2.flags).toBe(0);
         }
       });
