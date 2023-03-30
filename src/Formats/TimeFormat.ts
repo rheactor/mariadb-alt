@@ -1,6 +1,6 @@
 import { toNativeDate } from "@/Utils/DatetimeUtil";
 
-const timeParseRegexp = /^(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?/;
+const timeParseRegexp = /^(-?\d{2,3}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?/;
 
 export class TimeFormat {
   public hours: number;

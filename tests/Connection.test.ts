@@ -1,3 +1,4 @@
+import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
@@ -48,7 +49,7 @@ describe("/Connection", () => {
     type QuerySelectUnit = [
       string,
       string | null,
-      bigint | number | string | null
+      TimeFormat | bigint | number | string | null
     ];
 
     const querySelectUnits: QuerySelectUnit[] = [
@@ -57,6 +58,13 @@ describe("/Connection", () => {
       ["123", "123", 123],
       ["123.45", "123.45", 123.45],
       ["1152921504606846975", "1152921504606846975", 1152921504606846975n],
+      ["HEX('example')", "6578616D706C65", "6578616D706C65"],
+      ["x'6578616D706C65'", "example", "example"],
+      ["'您好 (chinese)'", "您好 (chinese)", "您好 (chinese)"],
+      ["'नमस्ते (Hindi)'", "नमस्ते (Hindi)", "नमस्ते (Hindi)"],
+      ["'привет (Russian)'", "привет (Russian)", "привет (Russian)"],
+      ["TIME('999:00:00')", "838:59:59", new TimeFormat("838:59:59")],
+      ["TIME('-999:00:00')", "-838:59:59", new TimeFormat("-838:59:59")],
     ];
 
     describe.each(querySelectUnits)(
@@ -90,7 +98,9 @@ describe("/Connection", () => {
                 outputNormalized.toString()
               );
             } else {
-              expect(rowValueNormalized["value"]).toBe(outputNormalized);
+              expect(rowValueNormalized["value"]).toStrictEqual(
+                outputNormalized
+              );
             }
           }
         });

@@ -183,6 +183,24 @@ describe("Protocol/Packet/PacketResultSet", () => {
       output: { abc: 123 },
     },
     {
+      query: "JSON",
+      metadata: { type: FieldTypes.BLOB, json: true },
+      input: '\'["a", "b", "c"]\'',
+      output: ["a", "b", "c"],
+    },
+    {
+      query: "JSON",
+      metadata: { type: FieldTypes.BLOB, json: true },
+      input: "123",
+      output: 123,
+    },
+    {
+      query: "JSON",
+      metadata: { type: FieldTypes.BLOB, json: true },
+      input: "'false'",
+      output: false,
+    },
+    {
       query: "JSON NULL",
       metadata: { type: FieldTypes.BLOB, json: true },
       input: "NULL",
@@ -295,6 +313,12 @@ describe("Protocol/Packet/PacketResultSet", () => {
       metadata: { type: FieldTypes.CHAR },
       input: "'a'",
       output: "a",
+    },
+    {
+      query: "ENUM('a', 'b', 'c')",
+      metadata: { type: FieldTypes.CHAR },
+      input: "2",
+      output: "b",
     },
     {
       query: "ENUM('a') NULL",
