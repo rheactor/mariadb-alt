@@ -86,7 +86,7 @@ describe("/Connection", () => {
             );
 
             if (typeof outputNormalized === "bigint") {
-              expect(rowValueNormalized["value"]!.toString()).toBe(
+              expect((rowValueNormalized["value"] as bigint).toString()).toBe(
                 outputNormalized.toString()
               );
             } else {
