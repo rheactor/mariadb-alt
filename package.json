@@ -11,10 +11,12 @@
     "prettier:fix": "prettier --write ./src",
     "eslint": "eslint ./src",
     "eslint:fix": "eslint --fix ./src",
-    "test": "jest",
-    "test:build": "npm run build && jest --config ./jest.config.build.ts",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "jest --detect-open-handles",
+    "test:ci": "jest --detect-open-handles --ci",
+    "test:build": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles",
+    "test:build:ci": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles -ci",
+    "test:watch": "jest --watch --expand --detect-open-handles --only-changed",
+    "test:coverage": "jest --coverage --detect-open-handles"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.20.2",
