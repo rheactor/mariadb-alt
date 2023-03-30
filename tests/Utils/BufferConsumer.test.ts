@@ -156,7 +156,10 @@ describe("Utils/BufferConsumer", () => {
   });
 
   test("at()", () => {
-    expect(new BufferConsumer(Buffer.from("123")).at(1)).toBe(50);
+    const bufferConsumer = new BufferConsumer(Buffer.from("123"));
+
+    expect(bufferConsumer.at()).toBe(49);
+    expect(bufferConsumer.at(1)).toBe(50);
   });
 
   test("skipStringEncoded()", () => {

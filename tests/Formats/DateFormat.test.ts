@@ -27,6 +27,14 @@ describe("Formats/DateFormat", () => {
     }
   );
 
+  describe("toNativeDate()", () => {
+    test("2023-03-26 start of day", () => {
+      expect(new DateFormat("2023-03-26").toNativeDate().toISOString()).toBe(
+        "2023-03-26T00:00:00.000Z"
+      );
+    });
+  });
+
   describe("isZeroed()", () => {
     test("0000-00-00", () => {
       expect(new DateFormat("0000-00-00").isZeroed()).toBe(true);

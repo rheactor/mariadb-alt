@@ -1,8 +1,3 @@
-const dateOffset = Math.abs(new Date().getTimezoneOffset() * 60000);
-
-export const normalizeDate = (date: Date) =>
-  new Date(date.getTime() - dateOffset);
-
 export const toNativeDate = (
   year: number,
   month: number,
