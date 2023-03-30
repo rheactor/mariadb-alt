@@ -37,8 +37,7 @@ type ConnectionEventsCommon =
   | "authenticated"
   | "authenticating"
   | "closed"
-  | "connected"
-  | "ready";
+  | "connected";
 
 interface ConnectionCommand {
   buffer: Buffer;
