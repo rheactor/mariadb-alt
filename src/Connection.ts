@@ -165,7 +165,11 @@ export class Connection extends ConnectionEvents {
     return this.commandQueue(Buffer.from(`\x03${sql}`));
   }
 
-  public close() {
+  public async close() {
+    if (this.connected) {
+      await this.commandQueue(Buffer.from([0x01]));
+    }
+
     this.socket.end();
   }
 
