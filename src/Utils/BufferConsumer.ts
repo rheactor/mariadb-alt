@@ -23,6 +23,22 @@ export class BufferConsumer {
     return bufferInt;
   }
 
+  public readUBigInt(): bigint {
+    const bufferInt = this.buffer.readBigUInt64LE(this.byteOffset);
+
+    this.byteOffset += 8;
+
+    return bufferInt;
+  }
+
+  public readBigInt(): bigint {
+    const bufferInt = this.buffer.readBigInt64LE(this.byteOffset);
+
+    this.byteOffset += 8;
+
+    return bufferInt;
+  }
+
   public readIntEncoded(): bigint | number | null {
     const bufferInt = this.buffer.readUInt8(this.byteOffset++);
 

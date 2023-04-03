@@ -2,7 +2,7 @@ import { BufferConsumer } from "@/Utils/BufferConsumer";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 
 describe("Utils/BufferConsumer", () => {
-  test("readInt()", () => {
+  test("readUInt()", () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from("\x10\x20\x30\x40\x50\x60\x00\xFF\xFF\x70\x80\x90", "binary")
     );
@@ -16,13 +16,37 @@ describe("Utils/BufferConsumer", () => {
     expect(bufferConsumer.readUInt(3)).toBe(0x908070);
   });
 
-  test("readUInt()", () => {
+  test("readInt()", () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from("\x80\xff", "binary")
     );
 
     expect(bufferConsumer.readInt()).toBe(-128);
     expect(bufferConsumer.readInt()).toBe(-1);
+  });
+
+  test("readUBigInt()", () => {
+    const bufferConsumer = new BufferConsumer(
+      Buffer.from(
+        "\x10\x20\x30\x40\x50\x60\x70\x80\x80\x70\x60\x50\x40\x30\x20\x10",
+        "binary"
+      )
+    );
+
+    expect(bufferConsumer.readUBigInt()).toBe(9255003132036915216n);
+    expect(bufferConsumer.readUBigInt()).toBe(1161981756646125696n);
+  });
+
+  test("readUInt()", () => {
+    const bufferConsumer = new BufferConsumer(
+      Buffer.from(
+        "\x10\x20\x30\x40\x50\x60\x70\x80\x80\x70\x60\x50\x40\x30\x20\x10",
+        "binary"
+      )
+    );
+
+    expect(bufferConsumer.readBigInt()).toBe(-9191740941672636400n);
+    expect(bufferConsumer.readBigInt()).toBe(1161981756646125696n);
   });
 
   test("readIntEncoded()", () => {
