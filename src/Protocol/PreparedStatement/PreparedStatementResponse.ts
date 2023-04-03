@@ -18,10 +18,10 @@ export class PreparedStatementResponse {
 
   public constructor(packet: Buffer) {
     this.bufferConsumer = new BufferConsumer(packet, 5);
-    this.statementId = this.bufferConsumer.readInt(4);
-    this.fieldsCount = this.bufferConsumer.readInt(2);
-    this.parametersCount = this.bufferConsumer.readInt(2);
-    this.warningCount = this.bufferConsumer.skip(1).readInt(2);
+    this.statementId = this.bufferConsumer.readUInt(4);
+    this.fieldsCount = this.bufferConsumer.readUInt(2);
+    this.parametersCount = this.bufferConsumer.readUInt(2);
+    this.warningCount = this.bufferConsumer.skip(1).readUInt(2);
   }
 
   public getParameters(): Field[] {

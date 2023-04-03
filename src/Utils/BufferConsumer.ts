@@ -7,8 +7,16 @@ export class BufferConsumer {
     return this.buffer.readUInt8(this.byteOffset + byteOffset);
   }
 
-  public readInt(byteLength = 1): number {
+  public readUInt(byteLength = 1): number {
     const bufferInt = this.buffer.readUIntLE(this.byteOffset, byteLength);
+
+    this.byteOffset += byteLength;
+
+    return bufferInt;
+  }
+
+  public readInt(byteLength = 1): number {
+    const bufferInt = this.buffer.readIntLE(this.byteOffset, byteLength);
 
     this.byteOffset += byteLength;
 
@@ -23,11 +31,11 @@ export class BufferConsumer {
     }
 
     if (bufferInt === 0xfc) {
-      return this.readInt(2);
+      return this.readUInt(2);
     }
 
     if (bufferInt === 0xfd) {
-      return this.readInt(3);
+      return this.readUInt(3);
     }
 
     if (bufferInt === 0xfe) {

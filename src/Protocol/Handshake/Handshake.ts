@@ -32,17 +32,17 @@ export class Handshake {
     const bufferConsumer = new BufferConsumer(data);
 
     /** @see https://mariadb.com/kb/en/connection/#initial-handshake-packet */
-    this.protocolVersion = bufferConsumer.readInt();
+    this.protocolVersion = bufferConsumer.readUInt();
     this.serverVersion = bufferConsumer.readNullTerminatedString();
-    this.connectionId = bufferConsumer.readInt(4);
+    this.connectionId = bufferConsumer.readUInt(4);
     this.authSeed = bufferConsumer.readString(8, true);
-    this.capabilities = BigInt(bufferConsumer.readInt(2));
-    this.defaultCollation = bufferConsumer.readInt();
-    this.serverStatus = bufferConsumer.readInt(2);
-    this.capabilities += BigInt(bufferConsumer.readInt(2)) << 16n;
-    this.authPluginNameLength = bufferConsumer.readInt();
+    this.capabilities = BigInt(bufferConsumer.readUInt(2));
+    this.defaultCollation = bufferConsumer.readUInt();
+    this.serverStatus = bufferConsumer.readUInt(2);
+    this.capabilities += BigInt(bufferConsumer.readUInt(2)) << 16n;
+    this.authPluginNameLength = bufferConsumer.readUInt();
     bufferConsumer.skip(6);
-    this.capabilities += BigInt(bufferConsumer.readInt(4)) << 32n;
+    this.capabilities += BigInt(bufferConsumer.readUInt(4)) << 32n;
 
     this.authSeed = Buffer.concat([
       this.authSeed,

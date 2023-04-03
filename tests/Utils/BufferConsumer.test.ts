@@ -7,13 +7,22 @@ describe("Utils/BufferConsumer", () => {
       Buffer.from("\x10\x20\x30\x40\x50\x60\x00\xFF\xFF\x70\x80\x90", "binary")
     );
 
-    expect(bufferConsumer.readInt()).toBe(0x10);
-    expect(bufferConsumer.readInt()).toBe(0x20);
-    expect(bufferConsumer.readInt(2)).toBe(0x4030);
-    expect(bufferConsumer.readInt(2)).toBe(0x6050);
-    expect(bufferConsumer.readInt()).toBe(0x00);
-    expect(bufferConsumer.readInt(2)).toBe(0xffff);
-    expect(bufferConsumer.readInt(3)).toBe(0x908070);
+    expect(bufferConsumer.readUInt()).toBe(0x10);
+    expect(bufferConsumer.readUInt()).toBe(0x20);
+    expect(bufferConsumer.readUInt(2)).toBe(0x4030);
+    expect(bufferConsumer.readUInt(2)).toBe(0x6050);
+    expect(bufferConsumer.readUInt()).toBe(0x00);
+    expect(bufferConsumer.readUInt(2)).toBe(0xffff);
+    expect(bufferConsumer.readUInt(3)).toBe(0x908070);
+  });
+
+  test("readUInt()", () => {
+    const bufferConsumer = new BufferConsumer(
+      Buffer.from("\x80\xff", "binary")
+    );
+
+    expect(bufferConsumer.readInt()).toBe(-128);
+    expect(bufferConsumer.readInt()).toBe(-1);
   });
 
   test("readIntEncoded()", () => {
@@ -177,9 +186,9 @@ describe("Utils/BufferConsumer", () => {
       Buffer.from("\x10\x20\x30\x40\x50\x60Test\0\x00123", "binary")
     );
 
-    expect(bufferConsumer.readInt()).toBe(0x10);
-    expect(bufferConsumer.readInt(2)).toBe(0x3020);
-    expect(bufferConsumer.readInt(3)).toBe(0x605040);
+    expect(bufferConsumer.readUInt()).toBe(0x10);
+    expect(bufferConsumer.readUInt(2)).toBe(0x3020);
+    expect(bufferConsumer.readUInt(3)).toBe(0x605040);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
       Buffer.from("Test")
     );
@@ -194,21 +203,21 @@ describe("Utils/BufferConsumer", () => {
       InitialHandshakePacketFixture.Example1
     );
 
-    expect(bufferConsumer.readInt()).toBe(0x0a);
+    expect(bufferConsumer.readUInt()).toBe(0x0a);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
       Buffer.from("example")
     );
-    expect(bufferConsumer.readInt(4)).toBe(0x40302010);
+    expect(bufferConsumer.readUInt(4)).toBe(0x40302010);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
       Buffer.from("Scramble")
     );
-    expect(bufferConsumer.readInt(2)).toBe(0xf7fe);
-    expect(bufferConsumer.readInt()).toBe(0x2d);
-    expect(bufferConsumer.readInt(2)).toBe(0x0002);
-    expect(bufferConsumer.readInt(2)).toBe(0x81ff);
-    expect(bufferConsumer.readInt()).toBe(0x15);
+    expect(bufferConsumer.readUInt(2)).toBe(0xf7fe);
+    expect(bufferConsumer.readUInt()).toBe(0x2d);
+    expect(bufferConsumer.readUInt(2)).toBe(0x0002);
+    expect(bufferConsumer.readUInt(2)).toBe(0x81ff);
+    expect(bufferConsumer.readUInt()).toBe(0x15);
     bufferConsumer.skip(6);
-    expect(bufferConsumer.readInt(4)).toBe(0x0000001d);
+    expect(bufferConsumer.readUInt(4)).toBe(0x0000001d);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
       Buffer.from("Scramble1234")
     );

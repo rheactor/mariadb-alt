@@ -12,9 +12,9 @@ export class PacketProgress {
   public constructor(packet: Buffer) {
     const bufferConsumer = new BufferConsumer(packet);
 
-    this.stage = bufferConsumer.readInt();
-    this.maxStage = bufferConsumer.readInt();
-    this.progress = bufferConsumer.readInt(3);
+    this.stage = bufferConsumer.readUInt();
+    this.maxStage = bufferConsumer.readUInt();
+    this.progress = bufferConsumer.readUInt(3);
     this.progressInfo = bufferConsumer.readStringEncoded();
   }
 }

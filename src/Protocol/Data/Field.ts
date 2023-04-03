@@ -27,7 +27,7 @@ const readFieldExtended = (bufferConsumer: BufferConsumer) => {
   );
 
   while (!extendedBuffer.consumed()) {
-    const dataType = extendedBuffer.readInt();
+    const dataType = extendedBuffer.readUInt();
     const dataValue = extendedBuffer.readStringEncoded()!.toString();
 
     if (dataType === 1 && dataValue === "json") {
@@ -50,11 +50,11 @@ export const readField = (bufferConsumer: BufferConsumer) => {
   const field: Field = {
     name: bufferConsumer.readStringEncoded()!.toString(),
     ...readFieldExtended(bufferConsumer.skipStringEncoded()),
-    collation: bufferConsumer.skip(1).readInt(2),
-    length: bufferConsumer.readInt(4),
-    type: bufferConsumer.readInt(),
-    flags: bufferConsumer.readInt(2),
-    decimals: bufferConsumer.readInt(),
+    collation: bufferConsumer.skip(1).readUInt(2),
+    length: bufferConsumer.readUInt(4),
+    type: bufferConsumer.readUInt(),
+    flags: bufferConsumer.readUInt(2),
+    decimals: bufferConsumer.readUInt(),
   };
 
   bufferConsumer.skip(2);

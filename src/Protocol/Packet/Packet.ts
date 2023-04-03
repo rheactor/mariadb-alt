@@ -42,7 +42,7 @@ export class Packet {
   /** Create a PacketOK or PacketError, depending of data Buffer content. */
   public static fromResponse(data: Buffer) {
     const bufferConsumer = new BufferConsumer(data, 4);
-    const bufferType = bufferConsumer.readInt();
+    const bufferType = bufferConsumer.readUInt();
 
     if (bufferType === 0x00 || bufferType === 0xfe) {
       return new PacketOk(bufferConsumer.rest());
@@ -52,7 +52,7 @@ export class Packet {
       return new PacketResultSet(bufferConsumer.rest(-1));
     }
 
-    const bufferErrorCode = bufferConsumer.readInt(2);
+    const bufferErrorCode = bufferConsumer.readUInt(2);
 
     if (bufferErrorCode === 0xffff) {
       return new PacketProgress(bufferConsumer.rest());

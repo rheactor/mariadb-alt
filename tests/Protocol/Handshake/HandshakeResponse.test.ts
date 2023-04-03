@@ -15,12 +15,12 @@ describe("/Protocol/Handshake/HandshakeResponse", () => {
     );
 
     handshake.skip(4);
-    expect(handshake.readInt(4)).toBe(0x000000ff);
+    expect(handshake.readUInt(4)).toBe(0x000000ff);
     handshake.skip(24);
     expect(handshake.readNullTerminatedString().toString("binary")).toBe(
       "root"
     );
-    expect(handshake.readInt()).toBe(0);
+    expect(handshake.readUInt()).toBe(0);
     expect(handshake.readNullTerminatedString().toString("binary")).toBe(
       "test"
     );
