@@ -213,3 +213,17 @@ export const getFieldsPositions = (
 
   return positions;
 };
+
+export const generateNullBitmap = (args: unknown[]): Buffer => {
+  const nullBitmap: number[] = Array(Math.floor((args.length + 7) / 8)).fill(0);
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === null) {
+      const bit = Math.floor(i / 8);
+
+      nullBitmap[bit] |= 1 << (7 - (i - bit * 8));
+    }
+  }
+
+  return Buffer.from(nullBitmap);
+};

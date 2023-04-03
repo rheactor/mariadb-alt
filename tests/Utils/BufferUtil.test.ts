@@ -4,6 +4,7 @@ import {
   createUInt24LE,
   createUInt32LE,
   createUInt64LE,
+  generateNullBitmap,
   getFieldsPositions,
   readIntEncoded,
   readNullTerminatedString,
@@ -298,7 +299,7 @@ describe("Utils/BufferUtil", () => {
 
   type FieldsPositionsUnit = [Buffer, number, number[]];
 
-  const nullBitmapsUnits: FieldsPositionsUnit[] = [
+  const fieldsPositionsUnits: FieldsPositionsUnit[] = [
     [Buffer.from([0b0000_0000]), 1, [0]],
     [Buffer.from([0b1000_0000]), 1, []],
     [Buffer.from([0b0000_0000]), 2, [0, 1]],
@@ -314,7 +315,7 @@ describe("Utils/BufferUtil", () => {
     [Buffer.from([0b1010_1010, 0b1100_0000]), 10, [1, 3, 5, 7]],
   ];
 
-  describe.each(nullBitmapsUnits)(
+  describe.each(fieldsPositionsUnits)(
     "getNullBitmapPositions()",
     (nullBitmap, fieldsCount, output) => {
       const nullBitmapTitle = nullBitmap
@@ -329,4 +330,39 @@ describe("Utils/BufferUtil", () => {
       });
     }
   );
+
+  type NullBitmapUnit = [unknown[], Buffer];
+
+  const nullBitmapsUnits: NullBitmapUnit[] = [
+    [[1], Buffer.from([0b0000_0000])],
+    [[null], Buffer.from([0b1000_0000])],
+    [[1, null], Buffer.from([0b0100_0000])],
+    [[null, null], Buffer.from([0b1100_0000])],
+    [[null, null, 1], Buffer.from([0b1100_0000])],
+    [[null, 1, null], Buffer.from([0b1010_0000])],
+    [[1, 1, null], Buffer.from([0b0010_0000])],
+    [[1, null, null], Buffer.from([0b0110_0000])],
+    [
+      [null, null, null, null, null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8],
+      Buffer.from([0b1111_1111, 0b0000_0000]),
+    ],
+    [
+      [1, 2, 3, 4, 5, 6, 7, 8, null, null, null, null, null, null, null, null],
+      Buffer.from([0b0000_0000, 0b1111_1111]),
+    ],
+    [
+      [1, 2, 3, 4, 5, 6, 7, 8, null, null, null, null],
+      Buffer.from([0b0000_0000, 0b1111_0000]),
+    ],
+    [
+      [null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8],
+      Buffer.from([0b1111_0000, 0b0000_0000]),
+    ],
+  ];
+
+  describe.each(nullBitmapsUnits)("generateNullBitmap()", (args, output) => {
+    test(JSON.stringify(args), () => {
+      expect(generateNullBitmap(args)).toStrictEqual(output);
+    });
+  });
 });
