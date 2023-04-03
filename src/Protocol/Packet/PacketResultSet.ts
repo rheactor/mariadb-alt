@@ -1,22 +1,9 @@
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
+import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
-
-interface ExtendedMetadata {
-  json: boolean;
-  uuid: boolean;
-}
-
-export interface FieldMetadata extends ExtendedMetadata {
-  type: number;
-  name: string;
-  collation: number;
-  flags: number;
-  length: number;
-  decimals: number;
-}
 
 type Row = Array<Buffer | null>;
 
@@ -38,18 +25,18 @@ type RowTransformed = Record<
 export class PacketResultSet {
   private readonly bufferConsumer: BufferConsumer;
 
-  private fields: FieldMetadata[] | undefined;
+  private fields: Field[] | undefined;
 
   public constructor(buffer: Buffer) {
     this.bufferConsumer = new BufferConsumer(buffer);
   }
 
-  public static transform(row: Row, metadata: FieldMetadata[]): RowTransformed {
+  public static transform(row: Row, fields: Field[]): RowTransformed {
     const rowTransformed: RowTransformed = {};
-    const metadataLength = metadata.length;
+    const fieldsLength = fields.length;
 
-    for (let i = 0; i < metadataLength; i++) {
-      const column = metadata[i]!;
+    for (let i = 0; i < fieldsLength; i++) {
+      const column = fields[i]!;
       const cell = row[i];
 
       if (cell === null) {
@@ -136,60 +123,14 @@ export class PacketResultSet {
     return rowTransformed;
   }
 
-  private static getExtendedMetadata(
-    bufferConsumer: BufferConsumer
-  ): ExtendedMetadata {
-    const extendedMetadataLength = bufferConsumer.readIntEncoded();
-    const extendedMetadata: ExtendedMetadata = { json: false, uuid: false };
-
-    if (extendedMetadataLength === 0) {
-      return extendedMetadata;
-    }
-
-    const extendedBuffer = new BufferConsumer(
-      bufferConsumer.slice(Number(extendedMetadataLength))
-    );
-
-    while (!extendedBuffer.consumed()) {
-      const dataType = extendedBuffer.readInt();
-      const dataValue = extendedBuffer.readStringEncoded()!.toString();
-
-      if (dataType === 1 && dataValue === "json") {
-        extendedMetadata.json = true;
-      } else if (dataType === 0 && dataValue === "uuid") {
-        extendedMetadata.uuid = true;
-      }
-    }
-
-    return extendedMetadata;
-  }
-
-  public getMetadata() {
+  public getFields() {
     if (this.fields === undefined) {
       this.fields = [];
 
       const fieldsCount = Number(this.bufferConsumer.readIntEncoded());
 
       for (let i = 0; i < fieldsCount; i++) {
-        this.bufferConsumer
-          .skip(8) // header + catalog
-          .skipStringEncoded() // database
-          .skipStringEncoded() // table alias
-          .skipStringEncoded(); // table
-
-        this.fields.push({
-          name: this.bufferConsumer.readStringEncoded()!.toString(),
-          ...PacketResultSet.getExtendedMetadata(
-            this.bufferConsumer.skipStringEncoded()
-          ),
-          collation: this.bufferConsumer.skip(1).readInt(2),
-          length: this.bufferConsumer.readInt(4),
-          type: this.bufferConsumer.readInt(),
-          flags: this.bufferConsumer.readInt(2),
-          decimals: this.bufferConsumer.readInt(),
-        });
-
-        this.bufferConsumer.skip(2);
+        this.fields.push(readField(this.bufferConsumer));
       }
     }
 
@@ -197,15 +138,15 @@ export class PacketResultSet {
   }
 
   public *getRows() {
-    const metadata = this.fields ?? this.getMetadata();
-    const metadataLength = metadata.length;
+    const fields = this.fields ?? this.getFields();
+    const fieldsLength = fields.length;
 
     while (this.bufferConsumer.at(4) !== 0xfe) {
       this.bufferConsumer.skip(4); // header
 
       const row: Row = [];
 
-      for (let i = 0; i < metadataLength; i++) {
+      for (let i = 0; i < fieldsLength; i++) {
         row.push(this.bufferConsumer.readStringEncoded());
       }
 

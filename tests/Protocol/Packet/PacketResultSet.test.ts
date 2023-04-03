@@ -1,3 +1,4 @@
+import { type Connection } from "@/Connection";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
@@ -10,7 +11,11 @@ import {
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("Protocol/Packet/PacketResultSet", () => {
-  const connectionBase = TestConnection();
+  let connectionBase: Connection;
+
+  beforeAll(() => {
+    connectionBase = TestConnection();
+  });
 
   interface PacketUnit {
     query: string;
@@ -372,7 +377,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
       expect(selectQuery).toBeInstanceOf(PacketResultSet);
 
       if (selectQuery instanceof PacketResultSet) {
-        const metadata = selectQuery.getMetadata();
+        const metadata = selectQuery.getFields();
         const field = metadata[0]!;
 
         for (const fieldProperty of Object.keys(field)) {
@@ -457,7 +462,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
         ])
       );
 
-      expect(packetResultSet.getMetadata()).toStrictEqual([
+      expect(packetResultSet.getFields()).toStrictEqual([
         {
           type: 0,
           name: "unknown",

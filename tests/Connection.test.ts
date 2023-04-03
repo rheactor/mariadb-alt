@@ -1,3 +1,4 @@
+import { type Connection } from "@/Connection";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
@@ -70,7 +71,11 @@ describe("/Connection", () => {
     describe.each(querySelectUnits)(
       "query()",
       (input, output, outputNormalized) => {
-        const connectionBase = TestConnection();
+        let connectionBase: Connection;
+
+        beforeAll(() => {
+          connectionBase = TestConnection();
+        });
 
         test(`SELECT ${input}`, async () => {
           const queryResult = await connectionBase.query(
@@ -90,7 +95,7 @@ describe("/Connection", () => {
 
             const rowValueNormalized = PacketResultSet.transform(
               queryRow,
-              queryResult.getMetadata()
+              queryResult.getFields()
             );
 
             if (typeof outputNormalized === "bigint") {
@@ -112,7 +117,11 @@ describe("/Connection", () => {
     );
 
     describe("query()", () => {
-      const connectionBase = TestConnection();
+      let connectionBase: Connection;
+
+      beforeAll(() => {
+        connectionBase = TestConnection();
+      });
 
       test(`Example`, async () => {
         const table = `test-${Math.random()}`;
@@ -141,7 +150,7 @@ describe("/Connection", () => {
         expect(query).toBeInstanceOf(PacketResultSet);
 
         if (query instanceof PacketResultSet) {
-          const queryMetadata = query.getMetadata();
+          const queryMetadata = query.getFields();
           const queryMetadata1 = queryMetadata[0]!;
 
           expect(queryMetadata1.name).toBe("a");
