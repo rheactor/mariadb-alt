@@ -100,7 +100,7 @@ describe("Protocol/Packet/Packet", () => {
       Buffer.from([
         // First 4-bytes is just ignored (it refer to Packet length + sequence).
         0x00, 0x00, 0x00, 0x00,
-        // The 0xFF response type mean a Error Packet.
+        // The 0xFF response type mean an Error Packet.
         0xff,
         // Progress Packet.
         0xff, 0xff,
@@ -130,7 +130,7 @@ describe("Protocol/Packet/Packet", () => {
       Buffer.from([
         // First 4-bytes is just ignored (it refer to Packet length + sequence).
         0x00, 0x00, 0x00, 0x00,
-        // The 0xFF response type mean a Error Packet.
+        // The 0xFF response type mean an Error Packet.
         0xff,
         // Error code.
         0x10, 0x20,
@@ -152,7 +152,7 @@ describe("Protocol/Packet/Packet", () => {
       Buffer.from([
         // First 4-bytes is just ignored (it refer to Packet length + sequence).
         0x00, 0x00, 0x00, 0x00,
-        // The 0xFF response type mean a Error Packet.
+        // The 0xFF response type mean an Error Packet.
         0xff,
         // Error code.
         0x10, 0x20,
