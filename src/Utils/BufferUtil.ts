@@ -205,7 +205,7 @@ export const getFieldsPositions = (
         break nullBitmapLoop;
       }
 
-      if ((nullBitmapCurrent & (1 << (7 - j))) === 0) {
+      if ((nullBitmapCurrent & (1 << j)) === 0) {
         positions.push(position);
       }
     }
@@ -221,7 +221,7 @@ export const generateNullBitmap = (args: unknown[]): Buffer => {
     if (args[i] === null) {
       const bit = Math.floor(i / 8);
 
-      nullBitmap[bit] |= 1 << (7 - (i - bit * 8));
+      nullBitmap[bit] |= 1 << (i - bit * 8);
     }
   }
 

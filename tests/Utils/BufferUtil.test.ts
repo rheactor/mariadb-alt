@@ -301,18 +301,18 @@ describe("Utils/BufferUtil", () => {
 
   const fieldsPositionsUnits: FieldsPositionsUnit[] = [
     [Buffer.from([0b0000_0000]), 1, [0]],
-    [Buffer.from([0b1000_0000]), 1, []],
+    [Buffer.from([0b0000_0001]), 1, []],
     [Buffer.from([0b0000_0000]), 2, [0, 1]],
-    [Buffer.from([0b0100_0000]), 2, [0]],
-    [Buffer.from([0b1000_0000]), 2, [1]],
-    [Buffer.from([0b1100_0000]), 2, []],
+    [Buffer.from([0b0000_0010]), 2, [0]],
+    [Buffer.from([0b0000_0001]), 2, [1]],
+    [Buffer.from([0b0000_0011]), 2, []],
     [Buffer.from([0b1111_1111]), 8, []],
     [Buffer.from([0b0000_0000]), 8, [0, 1, 2, 3, 4, 5, 6, 7]],
     [Buffer.from([0b0000_0000, 0b1111_1111]), 16, [0, 1, 2, 3, 4, 5, 6, 7]],
     [Buffer.from([0b1111_1111, 0b1111_1111]), 16, []],
-    [Buffer.from([0b1010_1010, 0b1010_1010]), 16, [1, 3, 5, 7, 9, 11, 13, 15]],
-    [Buffer.from([0b1010_1010, 0b1000_0000]), 10, [1, 3, 5, 7, 9]],
-    [Buffer.from([0b1010_1010, 0b1100_0000]), 10, [1, 3, 5, 7]],
+    [Buffer.from([0b0101_0101, 0b0101_0101]), 16, [1, 3, 5, 7, 9, 11, 13, 15]],
+    [Buffer.from([0b0101_0101, 0b0000_0001]), 10, [1, 3, 5, 7, 9]],
+    [Buffer.from([0b0101_0101, 0b0000_0011]), 10, [1, 3, 5, 7]],
   ];
 
   describe.each(fieldsPositionsUnits)(
@@ -335,13 +335,13 @@ describe("Utils/BufferUtil", () => {
 
   const nullBitmapsUnits: NullBitmapUnit[] = [
     [[1], Buffer.from([0b0000_0000])],
-    [[null], Buffer.from([0b1000_0000])],
-    [[1, null], Buffer.from([0b0100_0000])],
-    [[null, null], Buffer.from([0b1100_0000])],
-    [[null, null, 1], Buffer.from([0b1100_0000])],
-    [[null, 1, null], Buffer.from([0b1010_0000])],
-    [[1, 1, null], Buffer.from([0b0010_0000])],
-    [[1, null, null], Buffer.from([0b0110_0000])],
+    [[null], Buffer.from([0b0000_0001])],
+    [[1, null], Buffer.from([0b0000_0010])],
+    [[null, null], Buffer.from([0b0000_0011])],
+    [[null, null, 1], Buffer.from([0b0000_0011])],
+    [[null, 1, null], Buffer.from([0b0000_0101])],
+    [[1, 1, null], Buffer.from([0b0000_0100])],
+    [[1, null, null], Buffer.from([0b0000_0110])],
     [
       [null, null, null, null, null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8],
       Buffer.from([0b1111_1111, 0b0000_0000]),
@@ -352,11 +352,11 @@ describe("Utils/BufferUtil", () => {
     ],
     [
       [1, 2, 3, 4, 5, 6, 7, 8, null, null, null, null],
-      Buffer.from([0b0000_0000, 0b1111_0000]),
+      Buffer.from([0b0000_0000, 0b0000_1111]),
     ],
     [
       [null, null, null, null, 1, 2, 3, 4, 5, 6, 7, 8],
-      Buffer.from([0b1111_0000, 0b0000_0000]),
+      Buffer.from([0b0000_1111, 0b0000_0000]),
     ],
   ];
 
