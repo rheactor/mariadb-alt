@@ -205,11 +205,12 @@ describe("Utils/BufferUtil", () => {
     }
   );
 
-  type ToStringEncodedUnit = [string | null, Buffer];
+  type ToStringEncodedUnit = [Buffer | string | null, Buffer];
 
   const toStringEncodedUnits: ToStringEncodedUnit[] = [
     [null, Buffer.from([0xfb])],
     ["", Buffer.from([0x00])],
+    [Buffer.from("test"), Buffer.from("\x04test")],
     [
       "\x4f\x6c\xc3\xa1\x2c\x20\x6d\x75\x6e\x64\x6f\x21",
       Buffer.concat([Buffer.from([0x0c]), Buffer.from("Olá, mundo!")]),

@@ -76,13 +76,17 @@ export const readStringEncoded = (
   );
 };
 
-export const toStringEncoded = (value: string | null) => {
+export const toStringEncoded = (value: Buffer | string | null) => {
   if (value === null) {
     return Buffer.from([0xfb]);
   }
 
   if (value === "") {
     return Buffer.from([0x00]);
+  }
+
+  if (value instanceof Buffer) {
+    return Buffer.concat([toIntEncoded(value.length), value]);
   }
 
   return Buffer.concat([
