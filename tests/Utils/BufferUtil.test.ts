@@ -4,6 +4,7 @@ import {
   createUInt24LE,
   createUInt32LE,
   createUInt64LE,
+  getFieldsPositions,
   readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
@@ -294,4 +295,38 @@ describe("Utils/BufferUtil", () => {
       );
     });
   });
+
+  type FieldsPositionsUnit = [Buffer, number, number[]];
+
+  const nullBitmapsUnits: FieldsPositionsUnit[] = [
+    [Buffer.from([0b0000_0000]), 1, [0]],
+    [Buffer.from([0b1000_0000]), 1, []],
+    [Buffer.from([0b0000_0000]), 2, [0, 1]],
+    [Buffer.from([0b0100_0000]), 2, [0]],
+    [Buffer.from([0b1000_0000]), 2, [1]],
+    [Buffer.from([0b1100_0000]), 2, []],
+    [Buffer.from([0b1111_1111]), 8, []],
+    [Buffer.from([0b0000_0000]), 8, [0, 1, 2, 3, 4, 5, 6, 7]],
+    [Buffer.from([0b0000_0000, 0b1111_1111]), 16, [0, 1, 2, 3, 4, 5, 6, 7]],
+    [Buffer.from([0b1111_1111, 0b1111_1111]), 16, []],
+    [Buffer.from([0b1010_1010, 0b1010_1010]), 16, [1, 3, 5, 7, 9, 11, 13, 15]],
+    [Buffer.from([0b1010_1010, 0b1000_0000]), 10, [1, 3, 5, 7, 9]],
+    [Buffer.from([0b1010_1010, 0b1100_0000]), 10, [1, 3, 5, 7]],
+  ];
+
+  describe.each(nullBitmapsUnits)(
+    "getNullBitmapPositions()",
+    (nullBitmap, fieldsCount, output) => {
+      const nullBitmapTitle = nullBitmap
+        .toJSON()
+        .data[0]?.toString(2)
+        .padStart(8, "0");
+
+      test(`${nullBitmapTitle} with ${fieldsCount} field(s)`, () => {
+        expect(getFieldsPositions(nullBitmap, fieldsCount)).toStrictEqual(
+          output
+        );
+      });
+    }
+  );
 });

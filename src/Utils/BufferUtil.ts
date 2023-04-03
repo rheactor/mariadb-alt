@@ -188,3 +188,28 @@ export const createUInt64LE = (value: bigint) => {
 
   return buffer;
 };
+
+export const getFieldsPositions = (
+  nullBitmap: Buffer,
+  fieldsCount: number
+): number[] => {
+  const positions: number[] = [];
+
+  nullBitmapLoop: for (let i = 0; i < nullBitmap.length; i++) {
+    const nullBitmapCurrent = nullBitmap[i]!;
+
+    for (let j = 0; j < 8; j++) {
+      const position = i * 8 + j;
+
+      if (position >= fieldsCount) {
+        break nullBitmapLoop;
+      }
+
+      if ((nullBitmapCurrent & (1 << (7 - j))) === 0) {
+        positions.push(position);
+      }
+    }
+  }
+
+  return positions;
+};
