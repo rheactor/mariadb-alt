@@ -5,9 +5,9 @@ import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-type Row = Array<Buffer | null>;
+type RowUnprocessed = Array<Buffer | null>;
 
-type RowTransformed = Record<
+export type Row = Record<
   string,
   | Buffer
   | Date
@@ -31,8 +31,8 @@ export class PacketResultSet {
     this.bufferConsumer = new BufferConsumer(buffer);
   }
 
-  public static transform(row: Row, fields: Field[]): RowTransformed {
-    const rowTransformed: RowTransformed = {};
+  public static transform(row: RowUnprocessed, fields: Field[]): Row {
+    const rowTransformed: Row = {};
     const fieldsLength = fields.length;
 
     for (let i = 0; i < fieldsLength; i++) {
@@ -138,13 +138,13 @@ export class PacketResultSet {
   }
 
   public *getRows() {
-    const fields = this.fields ?? this.getFields();
+    const fields = this.getFields();
     const fieldsLength = fields.length;
 
     while (this.bufferConsumer.at(4) !== 0xfe) {
       this.bufferConsumer.skip(4); // header
 
-      const row: Row = [];
+      const row: RowUnprocessed = [];
 
       for (let i = 0; i < fieldsLength; i++) {
         row.push(this.bufferConsumer.readStringEncoded());
