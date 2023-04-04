@@ -15,7 +15,7 @@ describe("Formats/DateTimeFormat", () => {
 
   describe.each(toNativeDateUnits)("toNativeDate()", (input, output) => {
     test(input, () => {
-      expect(new DateTimeFormat(input).toNativeDate().toISOString()).toBe(
+      expect(DateTimeFormat.parse(input).toNativeDate().toISOString()).toBe(
         output
       );
     });

@@ -18,13 +18,15 @@ describe("Formats/TimeFormat", () => {
   describe.each(toNativeDateUnits)("toNativeDate()", (input, output, year) => {
     test(input, () => {
       expect(
-        new TimeFormat(input).toNativeDate(year ?? 1970).toISOString()
+        TimeFormat.parse(input)
+          .toNativeDate(year ?? 1970)
+          .toISOString()
       ).toBe(output);
     });
   });
 
   test("6-digits .ms", () => {
-    const timeFormat = new TimeFormat("00:00:00.1234567");
+    const timeFormat = TimeFormat.parse("00:00:00.1234567");
 
     expect(timeFormat.toNativeDate().toISOString()).toBe(
       "1970-01-01T00:00:00.123Z"

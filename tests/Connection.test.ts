@@ -64,8 +64,8 @@ describe("/Connection", () => {
       ["'您好 (chinese)'", "您好 (chinese)", "您好 (chinese)"],
       ["'नमस्ते (Hindi)'", "नमस्ते (Hindi)", "नमस्ते (Hindi)"],
       ["'привет (Russian)'", "привет (Russian)", "привет (Russian)"],
-      ["TIME('999:00:00')", "838:59:59", new TimeFormat("838:59:59")],
-      ["TIME('-999:00:00')", "-838:59:59", new TimeFormat("-838:59:59")],
+      ["TIME('999:00:00')", "838:59:59", TimeFormat.parse("838:59:59")],
+      ["TIME('-999:00:00')", "-838:59:59", TimeFormat.parse("-838:59:59")],
     ];
 
     describe.each(querySelectUnits)(

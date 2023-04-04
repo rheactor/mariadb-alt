@@ -19,7 +19,7 @@ describe("Formats/DateFormat", () => {
     (input, output, offset) => {
       test(input, () => {
         expect(
-          new DateFormat(input)
+          DateFormat.parse(input)
             .toNativeDate(offset ?? 0, offset ?? 0, offset ?? 0, offset ?? 0)
             .toISOString()
         ).toBe(output);
@@ -29,7 +29,7 @@ describe("Formats/DateFormat", () => {
 
   describe("toNativeDate()", () => {
     test("2023-03-26 start of day", () => {
-      expect(new DateFormat("2023-03-26").toNativeDate().toISOString()).toBe(
+      expect(DateFormat.parse("2023-03-26").toNativeDate().toISOString()).toBe(
         "2023-03-26T00:00:00.000Z"
       );
     });
@@ -37,15 +37,15 @@ describe("Formats/DateFormat", () => {
 
   describe("isZeroed()", () => {
     test("0000-00-00", () => {
-      expect(new DateFormat("0000-00-00").isZeroed()).toBe(true);
+      expect(DateFormat.parse("0000-00-00").isZeroed()).toBe(true);
     });
 
     test("0001-00-00", () => {
-      expect(new DateFormat("0001-00-00").isZeroed()).toBe(false);
+      expect(DateFormat.parse("0001-00-00").isZeroed()).toBe(false);
     });
 
     test("-000001-00-00", () => {
-      expect(new DateFormat("0001-00-00").isZeroed()).toBe(false);
+      expect(DateFormat.parse("0001-00-00").isZeroed()).toBe(false);
     });
   });
 });

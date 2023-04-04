@@ -61,7 +61,7 @@ export class PacketResultSet {
 
         case FieldTypes.DATETIME:
         case FieldTypes.TIMESTAMP:
-          rowTransformed[column.name] = new DateTimeFormat(cell!.toString());
+          rowTransformed[column.name] = DateTimeFormat.parse(cell!.toString());
           break;
 
         case FieldTypes.VARCHAR:
@@ -82,11 +82,11 @@ export class PacketResultSet {
           break;
 
         case FieldTypes.DATE:
-          rowTransformed[column.name] = new DateFormat(cell!.toString());
+          rowTransformed[column.name] = DateFormat.parse(cell!.toString());
           break;
 
         case FieldTypes.TIME:
-          rowTransformed[column.name] = new TimeFormat(cell!.toString());
+          rowTransformed[column.name] = TimeFormat.parse(cell!.toString());
           break;
 
         case FieldTypes.YEAR:
