@@ -1,4 +1,5 @@
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { TimeFormat } from "@/Formats/TimeFormat";
 import {
   bufferXOR,
   createUInt16LE,
@@ -12,10 +13,12 @@ import {
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
   readStringEncoded,
+  readTimeEncoded,
   toDatetimeEncoded,
   toIntEncoded,
   toNullTerminatedStringEscaped,
   toStringEncoded,
+  toTimeEncoded,
 } from "@/Utils/BufferUtil";
 
 describe("Utils/BufferUtil", () => {
@@ -207,6 +210,80 @@ describe("Utils/BufferUtil", () => {
       });
     }
   );
+
+  type ToTimeEncodedUnit = [[number, number, number, number], Buffer];
+
+  const toTimeEncodedUnits: ToTimeEncodedUnit[] = [
+    [[0, 0, 0, 0], Buffer.from([0])],
+    [[10, 20, 30, 0], Buffer.from([8, 0, 0, 0, 0, 0, 10, 20, 30])],
+    [
+      [10, 20, 30, 123456],
+      Buffer.from([12, 0, 0, 0, 0, 0, 10, 20, 30, 0x40, 0xe2, 0x01, 0x00]),
+    ],
+    [[64, 20, 30, 0], Buffer.from([8, 0, 2, 0, 0, 0, 16, 20, 30])],
+    [[-64, 20, 30, 0], Buffer.from([8, 1, 2, 0, 0, 0, 16, 20, 30])],
+    [
+      [-2899, 27, 30, 1],
+      Buffer.from([
+        0x0c, 0x01, 0x78, 0x00, 0x00, 0x00, 0x13, 0x1b, 0x1e, 0x01, 0x00, 0x00,
+        0x00,
+      ]),
+    ],
+    [
+      [-2899, 27, 30, 0],
+      Buffer.from([0x08, 0x01, 0x78, 0x00, 0x00, 0x00, 0x13, 0x1b, 0x1e]),
+    ],
+  ];
+
+  describe.each(toTimeEncodedUnits)(
+    "toTimeEncoded()",
+    ([hours, minutes, seconds, ms], output) => {
+      test(JSON.stringify({ hours, minutes, seconds, ms }), () => {
+        expect(toTimeEncoded(hours, minutes, seconds, ms)).toStrictEqual(
+          output
+        );
+      });
+    }
+  );
+
+  type ReadTimeEncodedUnit = [Buffer, TimeFormat];
+
+  const readTimeEncodedUnits: ReadTimeEncodedUnit[] = [
+    [Buffer.from([0]), TimeFormat.from(0, 0, 0, 0)],
+    [
+      Buffer.from([8, 0, 0, 0, 0, 0, 10, 20, 30]),
+      TimeFormat.from(10, 20, 30, 0),
+    ],
+    [
+      Buffer.from([12, 0, 0, 0, 0, 0, 10, 20, 30, 0x40, 0xe2, 0x01, 0x00]),
+      TimeFormat.from(10, 20, 30, 123456),
+    ],
+    [
+      Buffer.from([8, 0, 2, 0, 0, 0, 16, 20, 30]),
+      TimeFormat.from(64, 20, 30, 0),
+    ],
+    [
+      Buffer.from([8, 1, 2, 0, 0, 0, 16, 20, 30]),
+      TimeFormat.from(-64, 20, 30, 0),
+    ],
+    [
+      Buffer.from([
+        0x0c, 0x01, 0x78, 0x00, 0x00, 0x00, 0x13, 0x1b, 0x1e, 0x01, 0x00, 0x00,
+        0x00,
+      ]),
+      TimeFormat.from(-2899, 27, 30, 1),
+    ],
+    [
+      Buffer.from([0x08, 0x01, 0x78, 0x00, 0x00, 0x00, 0x13, 0x1b, 0x1e]),
+      TimeFormat.from(-2899, 27, 30, 0),
+    ],
+  ];
+
+  describe.each(readTimeEncodedUnits)("readTimeEncoded()", (input, output) => {
+    test(JSON.stringify(output), () => {
+      expect(readTimeEncoded(input)).toStrictEqual(output);
+    });
+  });
 
   type ToIntEncodedUnit = [Parameters<typeof toIntEncoded>[0], Buffer];
 

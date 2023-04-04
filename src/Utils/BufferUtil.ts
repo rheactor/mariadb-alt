@@ -1,4 +1,5 @@
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { TimeFormat } from "@/Formats/TimeFormat";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
 export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
@@ -99,13 +100,13 @@ export const toStringEncoded = (value: Buffer | string | null) => {
 };
 
 export const toDatetimeEncoded = (
-  year: number,
-  month: number,
-  day: number,
-  hours: number,
-  minutes: number,
-  seconds: number,
-  ms: number
+  year = 0,
+  month = 0,
+  day = 0,
+  hours = 0,
+  minutes = 0,
+  seconds = 0,
+  ms = 0
 ): Buffer => {
   const hasDate = year !== 0 || month !== 0 || day !== 0;
   const hasTime = hours !== 0 || minutes !== 0 || seconds !== 0;
@@ -160,6 +161,62 @@ export const readDatetimeEncoded = (buffer: Buffer): DateTimeFormat => {
     format > 4 ? bufferConsumer.readInt() : 0,
     format > 7 ? bufferConsumer.readInt(4) : 0
   );
+};
+
+export const toTimeEncoded = (
+  hours = 0,
+  minutes = 0,
+  seconds = 0,
+  ms = 0
+): Buffer => {
+  if (hours === 0 && minutes === 0 && seconds === 0 && ms === 0) {
+    return Buffer.from([0]);
+  }
+
+  const hoursAbsolute = Math.abs(hours);
+  const daysBuffer = Buffer.alloc(4);
+
+  daysBuffer.writeUint32LE(Math.floor(hoursAbsolute / 24));
+
+  if (ms !== 0) {
+    const msBuffer = Buffer.alloc(4);
+
+    msBuffer.writeUint32LE(ms);
+
+    return Buffer.concat([
+      Buffer.from([12, Number(hours < 0)]),
+      daysBuffer,
+      Buffer.from([hoursAbsolute % 24, minutes, seconds]),
+      msBuffer,
+    ]);
+  }
+
+  return Buffer.concat([
+    Buffer.from([8, Number(hours < 0)]),
+    daysBuffer,
+    Buffer.from([hoursAbsolute % 24, minutes, seconds]),
+  ]);
+};
+
+export const readTimeEncoded = (buffer: Buffer): TimeFormat => {
+  const bufferConsumer = new BufferConsumer(buffer);
+  const format = bufferConsumer.readInt();
+
+  if (format === 0) {
+    return TimeFormat.from(0, 0, 0, 0);
+  }
+
+  const hours =
+    (bufferConsumer.readBoolean() ? -1 : 1) *
+    (bufferConsumer.readUInt(4) * 24 + bufferConsumer.readUInt());
+  const minutes = bufferConsumer.readUInt();
+  const seconds = bufferConsumer.readUInt();
+
+  if (format === 12) {
+    return TimeFormat.from(hours, minutes, seconds, bufferConsumer.readUInt(4));
+  }
+
+  return TimeFormat.from(hours, minutes, seconds, 0);
 };
 
 export const readIntEncoded = (
