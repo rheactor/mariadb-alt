@@ -1,3 +1,6 @@
+import { DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { BufferConsumer } from "@/Utils/BufferConsumer";
+
 export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
   const nullIndexOf = data.indexOf("\0", byteOffset);
 
@@ -142,6 +145,21 @@ export const toDatetimeEncoded = (
   }
 
   return Buffer.from([0]);
+};
+
+export const readDatetimeEncoded = (buffer: Buffer): DateTimeFormat => {
+  const bufferConsumer = new BufferConsumer(buffer);
+  const format = bufferConsumer.readInt();
+
+  return DateTimeFormat.from(
+    format > 0 ? bufferConsumer.readInt(2) : 0,
+    format > 0 ? bufferConsumer.readInt() : 0,
+    format > 0 ? bufferConsumer.readInt() : 0,
+    format > 4 ? bufferConsumer.readInt() : 0,
+    format > 4 ? bufferConsumer.readInt() : 0,
+    format > 4 ? bufferConsumer.readInt() : 0,
+    format > 7 ? bufferConsumer.readInt(4) : 0
+  );
 };
 
 export const readIntEncoded = (

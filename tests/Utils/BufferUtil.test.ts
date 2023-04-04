@@ -1,3 +1,4 @@
+import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import {
   bufferXOR,
   createUInt16LE,
@@ -6,6 +7,7 @@ import {
   createUInt64LE,
   generateNullBitmap,
   getFieldsPositions,
+  readDatetimeEncoded,
   readIntEncoded,
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
@@ -147,6 +149,14 @@ describe("Utils/BufferUtil", () => {
       [2023, 3, 4, 10, 20, 30, 123456],
       Buffer.from([11, 0xe7, 0x07, 3, 4, 10, 20, 30, 0x40, 0xe2, 0x01, 0x00]),
     ],
+    [
+      [0, 0, 0, 0, 0, 0, 123000],
+      Buffer.from([11, 0, 0, 0, 0, 0, 0, 0, 0x78, 0xe0, 0x01, 0x00]),
+    ],
+    [
+      [0, 0, 0, 0, 0, 0, 123],
+      Buffer.from([11, 0, 0, 0, 0, 0, 0, 0, 0x7b, 0, 0, 0]),
+    ],
   ];
 
   describe.each(toDatetimeEncodedUnits)(
@@ -160,6 +170,41 @@ describe("Utils/BufferUtil", () => {
           ).toStrictEqual(output);
         }
       );
+    }
+  );
+
+  type ReadDatetimeEncodedUnit = [Buffer, DateTimeFormat];
+
+  const readDatetimeEncodedUnits: ReadDatetimeEncodedUnit[] = [
+    [Buffer.from([0]), DateTimeFormat.from(0, 0, 0, 0, 0, 0, 0)],
+    [
+      Buffer.from([4, 0xe7, 0x07, 0x03, 0x04]),
+      DateTimeFormat.from(2023, 3, 4, 0, 0, 0, 0),
+    ],
+    [
+      Buffer.from([7, 0xe7, 0x07, 3, 4, 10, 20, 30]),
+      DateTimeFormat.from(2023, 3, 4, 10, 20, 30, 0),
+    ],
+    [
+      Buffer.from([11, 0xe7, 0x07, 3, 4, 10, 20, 30, 0x40, 0xe2, 0x01, 0x00]),
+      DateTimeFormat.from(2023, 3, 4, 10, 20, 30, 123456),
+    ],
+    [
+      Buffer.from([11, 0, 0, 0, 0, 0, 0, 0, 0x78, 0xe0, 0x01, 0x00]),
+      DateTimeFormat.from(0, 0, 0, 0, 0, 0, 123000),
+    ],
+    [
+      Buffer.from([11, 0, 0, 0, 0, 0, 0, 0, 0x7b, 0, 0, 0]),
+      DateTimeFormat.from(0, 0, 0, 0, 0, 0, 123),
+    ],
+  ];
+
+  describe.each(readDatetimeEncodedUnits)(
+    "toDatetimeEncoded()",
+    (input, output) => {
+      test(JSON.stringify(output), () => {
+        expect(readDatetimeEncoded(input)).toStrictEqual(output);
+      });
     }
   );
 
