@@ -176,6 +176,12 @@ describe("Utils/BufferUtil", () => {
     }
   );
 
+  describe("toDatetimeEncoded()", () => {
+    test("no args", () => {
+      expect(toDatetimeEncoded()).toStrictEqual(Buffer.from([0]));
+    });
+  });
+
   type ReadDatetimeEncodedUnit = [Buffer, DateTimeFormat];
 
   const readDatetimeEncodedUnits: ReadDatetimeEncodedUnit[] = [
@@ -203,7 +209,7 @@ describe("Utils/BufferUtil", () => {
   ];
 
   describe.each(readDatetimeEncodedUnits)(
-    "toDatetimeEncoded()",
+    "readDatetimeEncoded()",
     (input, output) => {
       test(JSON.stringify(output), () => {
         expect(readDatetimeEncoded(input)).toStrictEqual(output);
@@ -245,6 +251,12 @@ describe("Utils/BufferUtil", () => {
       });
     }
   );
+
+  describe("toTimeEncoded()", () => {
+    test("no args", () => {
+      expect(toTimeEncoded()).toStrictEqual(Buffer.from([0]));
+    });
+  });
 
   type ReadTimeEncodedUnit = [Buffer, TimeFormat];
 

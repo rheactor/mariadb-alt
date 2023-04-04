@@ -1,10 +1,16 @@
+import { Socket } from "node:net";
+
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { Packet } from "@/Protocol/Packet/Packet";
-import type { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import {
+  PreparedStatementResponse,
+  type ExecuteArgument as QueryArgument,
+} from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { EventEmitter } from "@/Utils/EventEmitter";
-import { Socket } from "node:net";
 
 const enum Status {
   CONNECTING,
@@ -41,6 +47,7 @@ type ConnectionEventsCommon =
 
 interface ConnectionCommand {
   buffer: Buffer;
+  sequence: number;
   resolve(data: Buffer): void;
 }
 
@@ -163,7 +170,24 @@ export class Connection extends ConnectionEvents {
     );
   }
 
-  public async query(sql: string) {
+  public async query(sql: string, args?: QueryArgument[]) {
+    if (args !== undefined && args.length > 0) {
+      return this.commandQueue(Buffer.from(`\x16${sql}`)).then(
+        async (packet) => {
+          if (PacketError.is(packet)) {
+            return Packet.fromResponse(packet);
+          }
+
+          return new PreparedStatementResultSet(
+            await this.commandQueue(
+              new PreparedStatementResponse(packet).execute(args),
+              true
+            )
+          );
+        }
+      );
+    }
+
     return this.commandQueue(Buffer.from(`\x03${sql}`)).then((data) =>
       Packet.fromResponse(data)
     );
@@ -177,9 +201,14 @@ export class Connection extends ConnectionEvents {
     this.socket.end();
   }
 
-  private async commandQueue(buffer: Buffer) {
+  private async commandQueue(buffer: Buffer, prioritize = false, sequence = 0) {
     return new Promise<Buffer>((resolve) => {
-      this.commands.push({ buffer, resolve });
+      if (prioritize) {
+        this.commands.unshift({ buffer, resolve, sequence });
+      } else {
+        this.commands.push({ buffer, resolve, sequence });
+      }
+
       this.commandRun();
     });
   }
@@ -202,7 +231,7 @@ export class Connection extends ConnectionEvents {
         this.commandRun();
       });
 
-      this.socket.write(Packet.from(command.buffer, 0));
+      this.socket.write(Packet.from(command.buffer, command.sequence));
     }
   }
 

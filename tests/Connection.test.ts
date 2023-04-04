@@ -47,6 +47,28 @@ describe("/Connection", () => {
       connectionBase.close();
     });
 
+    test("close() command", (done) => {
+      expect.assertions(2);
+
+      const connectionBase = TestConnection();
+
+      connectionBase.once("closed", () => {
+        expect(true).toBe(true);
+        done();
+      });
+
+      connectionBase
+        .close()
+        .then(() => {
+          expect(true).toBe(true);
+
+          return null;
+        })
+        .catch(() => {
+          /** empty */
+        });
+    });
+
     type QuerySelectUnit = [
       string,
       string | null,

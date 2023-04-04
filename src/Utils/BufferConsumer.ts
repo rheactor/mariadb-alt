@@ -1,4 +1,10 @@
-import { readNullTerminatedString } from "@/Utils/BufferUtil";
+import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { type TimeFormat } from "@/Formats/TimeFormat";
+import {
+  readDatetimeEncoded,
+  readNullTerminatedString,
+  readTimeEncoded,
+} from "@/Utils/BufferUtil";
 
 export class BufferConsumer {
   public constructor(private readonly buffer: Buffer, private byteOffset = 0) {}
@@ -107,6 +113,14 @@ export class BufferConsumer {
     this.byteOffset += bufferString.length;
 
     return bufferString;
+  }
+
+  public readDatetimeEncoded(): DateTimeFormat {
+    return readDatetimeEncoded(this.slice(this.at() + 1));
+  }
+
+  public readTimeEncoded(): TimeFormat {
+    return readTimeEncoded(this.slice(this.at() + 1));
   }
 
   public rest(offsetShift = 0): Buffer {

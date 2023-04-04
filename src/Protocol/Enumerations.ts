@@ -76,6 +76,8 @@ export const FieldTypes = {
   BLOB: 252,
 
   BIT: 16,
+
+  NULL: 6,
 };
 
 /** @see https://mariadb.com/kb/en/result-set-packets/#field-details-flag */

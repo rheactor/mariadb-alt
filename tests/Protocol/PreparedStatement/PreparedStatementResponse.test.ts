@@ -94,5 +94,9 @@ describe("Protocol/PreparedStatement/PreparedStatementResponse", () => {
 
     expect(parameter1.name).toBe("?");
     expect(parameter1.type).toBe(FieldTypes.NULL);
+
+    const fieldsCached = preparedStatementResponse.getFields();
+
+    expect(fieldsCached).toBe(fields);
   });
 });
