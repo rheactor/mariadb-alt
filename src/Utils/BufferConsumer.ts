@@ -65,6 +65,10 @@ export class BufferConsumer {
     return bufferInt;
   }
 
+  public readBoolean(): boolean {
+    return Boolean(this.buffer.readInt8(this.byteOffset++));
+  }
+
   public readNullTerminatedString(): Buffer {
     const bufferString = readNullTerminatedString(this.buffer, this.byteOffset);
 

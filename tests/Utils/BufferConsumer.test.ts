@@ -91,6 +91,13 @@ describe("Utils/BufferConsumer", () => {
     expect(bufferBigInt.toString(16)).toBe("8070605040302010");
   });
 
+  test("readBoolean()", () => {
+    const bufferConsumer = new BufferConsumer(Buffer.from("\x00\x01"));
+
+    expect(bufferConsumer.readBoolean()).toBe(false);
+    expect(bufferConsumer.readBoolean()).toBe(true);
+  });
+
   test("readNullTerminatedString()", () => {
     const bufferConsumer = new BufferConsumer(Buffer.from("AA\0BB\0"));
 
