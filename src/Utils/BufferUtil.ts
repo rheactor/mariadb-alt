@@ -95,6 +95,55 @@ export const toStringEncoded = (value: Buffer | string | null) => {
   ]);
 };
 
+export const toDatetimeEncoded = (
+  year: number,
+  month: number,
+  day: number,
+  hours: number,
+  minutes: number,
+  seconds: number,
+  ms: number
+): Buffer => {
+  const hasDate = year !== 0 || month !== 0 || day !== 0;
+  const hasTime = hours !== 0 || minutes !== 0 || seconds !== 0;
+  const hasMs = ms !== 0;
+
+  if (hasDate || hasTime || hasMs) {
+    const yearBuffer = Buffer.alloc(2);
+
+    yearBuffer.writeInt16LE(year);
+
+    if (hasTime || hasMs) {
+      if (hasMs) {
+        const msBuffer = Buffer.alloc(4);
+
+        msBuffer.writeUint32LE(ms);
+
+        return Buffer.concat([
+          Buffer.from([11]),
+          yearBuffer,
+          Buffer.from([month, day, hours, minutes, seconds]),
+          msBuffer,
+        ]);
+      }
+
+      return Buffer.concat([
+        Buffer.from([7]),
+        yearBuffer,
+        Buffer.from([month, day, hours, minutes, seconds]),
+      ]);
+    }
+
+    return Buffer.concat([
+      Buffer.from([4]),
+      yearBuffer,
+      Buffer.from([month, day]),
+    ]);
+  }
+
+  return Buffer.from([0]);
+};
+
 export const readIntEncoded = (
   data: Buffer,
   byteOffset = 0

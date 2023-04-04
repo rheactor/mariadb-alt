@@ -10,6 +10,7 @@ import {
   readNullTerminatedString,
   readNullTerminatedStringEscaped,
   readStringEncoded,
+  toDatetimeEncoded,
   toIntEncoded,
   toNullTerminatedStringEscaped,
   toStringEncoded,
@@ -127,6 +128,38 @@ describe("Utils/BufferUtil", () => {
       test(`0x${inputString} at ${byteOffset ?? 0}`, () => {
         expect(readIntEncoded(input, byteOffset)).toStrictEqual(output);
       });
+    }
+  );
+
+  type ToDatetimeEncodedUnit = [
+    [number, number, number, number, number, number, number],
+    Buffer
+  ];
+
+  const toDatetimeEncodedUnits: ToDatetimeEncodedUnit[] = [
+    [[0, 0, 0, 0, 0, 0, 0], Buffer.from([0])],
+    [[2023, 3, 4, 0, 0, 0, 0], Buffer.from([4, 0xe7, 0x07, 0x03, 0x04])],
+    [
+      [2023, 3, 4, 10, 20, 30, 0],
+      Buffer.from([7, 0xe7, 0x07, 3, 4, 10, 20, 30]),
+    ],
+    [
+      [2023, 3, 4, 10, 20, 30, 123456],
+      Buffer.from([11, 0xe7, 0x07, 3, 4, 10, 20, 30, 0x40, 0xe2, 0x01, 0x00]),
+    ],
+  ];
+
+  describe.each(toDatetimeEncodedUnits)(
+    "toDatetimeEncoded()",
+    ([year, month, day, hours, minutes, seconds, ms], output) => {
+      test(
+        JSON.stringify({ year, month, day, hours, minutes, seconds, ms }),
+        () => {
+          expect(
+            toDatetimeEncoded(year, month, day, hours, minutes, seconds, ms)
+          ).toStrictEqual(output);
+        }
+      );
     }
   );
 
