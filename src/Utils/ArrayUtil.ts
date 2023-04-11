@@ -1,4 +1,4 @@
-export const splice = (array: unknown[], item: unknown) => {
+export const removeItem = <T>(array: T[], item: T) => {
   const itemIndex = array.indexOf(item);
 
   if (itemIndex !== -1) {

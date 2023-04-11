@@ -1,6 +1,7 @@
 import { Connection, type ConnectionOptions } from "@/Connection";
 import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
-import { splice } from "@/Utils/ArrayUtil";
+import { removeItem } from "@/Utils/ArrayUtil";
+import { TimerUtil } from "@/Utils/TimerUtil";
 
 interface ConnectionPoolOptions {
   /**
@@ -35,20 +36,6 @@ interface AcquisitionQueued<T> {
   resolve(data: unknown): void;
 }
 
-class ConnectionController {
-  public releaser: (() => ReturnType<typeof setTimeout>) | undefined;
-
-  private timeout: ReturnType<typeof setTimeout> | undefined;
-
-  public timeoutReset() {
-    this.timeout = this.releaser?.();
-  }
-
-  public timeoutLock() {
-    clearTimeout(this.timeout);
-  }
-}
-
 interface ConnectionPoolDebug {
   /** Number of active connections. */
   connectionsCount: number;
@@ -61,7 +48,7 @@ interface ConnectionPoolDebug {
 }
 
 export class ConnectionPool {
-  private readonly connections = new Map<Connection, ConnectionController>();
+  private readonly connections = new Map<Connection, TimerUtil>();
 
   private readonly idleConnections: Connection[] = [];
 
@@ -139,24 +126,19 @@ export class ConnectionPool {
       database: this.options.database,
     });
 
-    const connectionController = new ConnectionController();
-
-    if (this.options.idleTimeout !== undefined) {
-      connectionController.releaser = () =>
-        setTimeout(() => {
-          if (this.idleConnections.length > this.options.idleConnections) {
-            connection.close();
-          }
-        }, this.options.idleTimeout);
-    }
+    const connectionTimer = new TimerUtil(() => {
+      if (this.idleConnections.length > this.options.idleConnections) {
+        connection.close();
+      }
+    }, this.options.idleTimeout);
 
     this.options.afterInitialize?.(connection);
-    this.connections.set(connection, connectionController);
+    this.connections.set(connection, connectionTimer);
     this.idleConnections.push(connection);
 
     connection.once("closed", () => {
       this.connections.delete(connection);
-      splice(this.idleConnections, connection);
+      removeItem(this.idleConnections, connection);
     });
 
     return connection;
@@ -166,15 +148,14 @@ export class ConnectionPool {
     acquireCallback: AcquireCallback<T>,
     connection: Connection
   ) {
-    splice(this.idleConnections, connection);
+    const connectionTimer = this.connections.get(connection)!;
 
-    const connectionController = this.connections.get(connection)!;
-
-    connectionController.timeoutLock();
+    connectionTimer.stop();
+    removeItem(this.idleConnections, connection);
 
     return acquireCallback(connection).finally(async () => {
       this.idleConnections.push(connection);
-      connectionController.timeoutReset();
+      connectionTimer.restart();
 
       const acquisitionQueued = this.acquisitionQueue.shift();
 
