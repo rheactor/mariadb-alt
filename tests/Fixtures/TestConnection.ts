@@ -1,4 +1,5 @@
 import { Connection } from "@/Connection";
+import { ConnectionPool } from "@/ConnectionPool";
 
 type ConnectionOptions = ConstructorParameters<typeof Connection>[0];
 
@@ -26,6 +27,26 @@ export const TestConnection = (options?: TestConnectionOptions) => {
   });
 
   setSQLMode(connection);
+
+  return connection;
+};
+
+type ConnectionOptionsPool = ConstructorParameters<typeof ConnectionPool>[0];
+
+type TestConnectionOptionsPool = Omit<ConnectionOptionsPool, "database"> &
+  Partial<Pick<ConnectionOptionsPool, "database">>;
+
+export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
+  const connection = new ConnectionPool({
+    afterInitialize(conn: Connection) {
+      setSQLMode(conn);
+    },
+
+    connections: 2,
+
+    ...defaultConnection,
+    ...(options ?? {}),
+  });
 
   return connection;
 };
