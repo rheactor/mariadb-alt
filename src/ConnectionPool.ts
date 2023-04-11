@@ -36,20 +36,12 @@ interface AcquisitionQueued<T> {
 }
 
 class ConnectionController {
+  public releaser: (() => ReturnType<typeof setTimeout>) | undefined;
+
   private timeout: ReturnType<typeof setTimeout> | undefined;
 
-  public constructor(
-    private readonly connection: Connection,
-    private readonly options: ConnectionPool["options"]
-  ) {}
-
   public timeoutReset() {
-    if (this.options.idleTimeout !== undefined) {
-      this.timeout = setTimeout(
-        async () => this.connection.close(),
-        this.options.idleTimeout
-      );
-    }
+    this.timeout = this.releaser?.();
   }
 
   public timeoutLock() {
@@ -78,8 +70,8 @@ export class ConnectionPool {
   private readonly options: ConnectionOptions & ConnectionPoolOptions;
 
   public constructor(
-    options: Partial<ConnectionPoolOptions> &
-      Pick<ConnectionOptions, "database">
+    options: ConstructorParameters<typeof Connection>[0] &
+      Partial<ConnectionPoolOptions>
   ) {
     this.options = {
       host: "localhost",
@@ -147,11 +139,19 @@ export class ConnectionPool {
       database: this.options.database,
     });
 
+    const connectionController = new ConnectionController();
+
+    if (this.options.idleTimeout !== undefined) {
+      connectionController.releaser = () =>
+        setTimeout(() => {
+          if (this.idleConnections.length > this.options.idleConnections) {
+            connection.close();
+          }
+        }, this.options.idleTimeout);
+    }
+
     this.options.afterInitialize?.(connection);
-    this.connections.set(
-      connection,
-      new ConnectionController(connection, this.options)
-    );
+    this.connections.set(connection, connectionController);
     this.idleConnections.push(connection);
 
     connection.once("closed", () => {

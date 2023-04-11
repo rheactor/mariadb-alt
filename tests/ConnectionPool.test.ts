@@ -35,11 +35,33 @@ describe("ConnectionPool", () => {
     });
   });
 
+  describe("option.connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({ connections: undefined });
+    });
+
+    test("query()", async () => {
+      const query = await connectionPool.query("SELECT 1");
+
+      expect(query).toBeInstanceOf(PacketResultSet);
+
+      if (query instanceof PacketResultSet) {
+        expect(query.getRows().next().value).toStrictEqual({ "1": 1 });
+      }
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
+
   describe("query() simultaneous", () => {
     let connectionPool: ConnectionPool;
 
     beforeAll(() => {
-      connectionPool = TestConnectionPool();
+      connectionPool = TestConnectionPool({ idleTimeout: undefined });
     });
 
     test("debug", () => {
@@ -188,7 +210,7 @@ describe("ConnectionPool", () => {
       expect(connectionPool.debug.connectionsCount).toBe(2);
       expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
 
-      await delay(100);
+      await delay(250);
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(1);
       expect(connectionPool.debug.connectionsCount).toBe(1);
