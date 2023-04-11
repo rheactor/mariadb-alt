@@ -9,6 +9,12 @@ interface ConnectionPoolOptions {
   connections: number;
 
   /**
+   * Minimum of idle connections that never is released by idle timeout.
+   * Default is half of `connections` options.
+   */
+  idleConnections: number;
+
+  /**
    * Do something with the connection after it is initialized.
    */
   afterInitialize?(connection: Connection): void;
@@ -58,18 +64,8 @@ export class ConnectionPool {
       ...options,
     };
 
-    for (let i = 0; i < this.options.connections; i++) {
-      const connection = new Connection({
-        host: this.options.host,
-        port: this.options.port,
-        user: this.options.user,
-        password: this.options.password,
-        database: this.options.database,
-      });
-
-      this.options.afterInitialize?.(connection);
-      this.connections.set(connection, undefined);
-      this.idleConnections.push(connection);
+    for (let i = 0; i < this.options.idleConnections; i++) {
+      this.initializeConnection();
     }
   }
 
@@ -86,22 +82,19 @@ export class ConnectionPool {
     const connection = this.idleConnections.pop();
 
     if (connection === undefined) {
+      if (this.connections.size < this.options.connections) {
+        return this.acquireWith<T>(
+          acquireCallback,
+          this.initializeConnection(false)
+        );
+      }
+
       return new Promise((resolve) => {
         this.acquisitionQueue.push({ acquireCallback, resolve });
       });
     }
 
-    return acquireCallback(connection).finally(async () => {
-      this.idleConnections.push(connection);
-
-      const acquisitionQueued = this.acquisitionQueue.shift();
-
-      if (acquisitionQueued !== undefined) {
-        const result = await this.acquire(acquisitionQueued.acquireCallback);
-
-        acquisitionQueued.resolve(result);
-      }
-    });
+    return this.acquireWith<T>(acquireCallback, connection);
   }
 
   /** Run a query with an idle connection. */
@@ -113,5 +106,41 @@ export class ConnectionPool {
     return Promise.all(
       [...this.connections.keys()].map(async (connection) => connection.close())
     );
+  }
+
+  private initializeConnection(idlePush = true) {
+    const connection = new Connection({
+      host: this.options.host,
+      port: this.options.port,
+      user: this.options.user,
+      password: this.options.password,
+      database: this.options.database,
+    });
+
+    this.options.afterInitialize?.(connection);
+    this.connections.set(connection, undefined);
+
+    if (idlePush) {
+      this.idleConnections.push(connection);
+    }
+
+    return connection;
+  }
+
+  private async acquireWith<T>(
+    acquireCallback: AcquireCallback<T>,
+    connection: Connection
+  ) {
+    return acquireCallback(connection).finally(async () => {
+      this.idleConnections.push(connection);
+
+      const acquisitionQueued = this.acquisitionQueue.shift();
+
+      if (acquisitionQueued !== undefined) {
+        const result = await this.acquire(acquisitionQueued.acquireCallback);
+
+        acquisitionQueued.resolve(result);
+      }
+    });
   }
 }

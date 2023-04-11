@@ -42,24 +42,25 @@ describe("ConnectionPool", () => {
     });
 
     test("debug", () => {
-      expect(connectionPool.debug.connectionsCount).toBe(2);
-      expect(connectionPool.debug.idleConnectionsCount).toBe(2);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
     });
 
     test("query() simultaneous", async () => {
-      expect.assertions(4);
+      expect.assertions(5);
 
       const query1 = connectionPool.query(
         "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
       );
 
-      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
       const query2 = connectionPool.query(
         "SELECT NOW() AS time, NULL AS sleep"
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
 
       await Promise.all([query1, query2])
         .then(([result1, result2]) => {
@@ -141,6 +142,50 @@ describe("ConnectionPool", () => {
         .catch(() => {
           // empty
         });
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
+
+  describe("connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({
+        idleConnections: 1,
+        connections: 2,
+        idleTimeout: 100,
+      });
+    });
+
+    test("debug", () => {
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
+    });
+
+    test("connections", async () => {
+      const query1 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // from idle
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+
+      const query2 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // new connection
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(2);
+
+      const query3 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // queued acquisition
+
+      expect(connectionPool.debug.connectionsCount).toBe(2);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
+
+      await Promise.all([query1, query2, query3]);
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(2);
+      expect(connectionPool.debug.connectionsCount).toBe(2);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
     });
 
     afterAll(() => {
