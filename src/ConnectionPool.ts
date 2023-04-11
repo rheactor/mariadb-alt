@@ -1,5 +1,6 @@
 import { Connection, type ConnectionOptions } from "@/Connection";
 import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { splice } from "@/Utils/ArrayUtil";
 
 interface ConnectionPoolOptions {
   /**
@@ -7,6 +8,13 @@ interface ConnectionPoolOptions {
    * Default is 20.
    */
   connections: number;
+
+  /**
+   * Connection release time when idle in ms.
+   * Set as `undefined` means never release by idle timeout.
+   * Default is 60000 (1 minute).
+   */
+  idleTimeout?: number;
 
   /**
    * Minimum of idle connections that never is released by idle timeout.
@@ -27,6 +35,28 @@ interface AcquisitionQueued<T> {
   resolve(data: unknown): void;
 }
 
+class ConnectionController {
+  private timeout: ReturnType<typeof setTimeout> | undefined;
+
+  public constructor(
+    private readonly connection: Connection,
+    private readonly options: ConnectionPool["options"]
+  ) {}
+
+  public timeoutReset() {
+    if (this.options.idleTimeout !== undefined) {
+      this.timeout = setTimeout(
+        async () => this.connection.close(),
+        this.options.idleTimeout
+      );
+    }
+  }
+
+  public timeoutLock() {
+    clearTimeout(this.timeout);
+  }
+}
+
 interface ConnectionPoolDebug {
   /** Number of active connections. */
   connectionsCount: number;
@@ -39,7 +69,7 @@ interface ConnectionPoolDebug {
 }
 
 export class ConnectionPool {
-  private readonly connections = new Map<Connection, void>();
+  private readonly connections = new Map<Connection, ConnectionController>();
 
   private readonly idleConnections: Connection[] = [];
 
@@ -85,7 +115,7 @@ export class ConnectionPool {
       if (this.connections.size < this.options.connections) {
         return this.acquireWith<T>(
           acquireCallback,
-          this.initializeConnection(false)
+          this.initializeConnection()
         );
       }
 
@@ -108,7 +138,7 @@ export class ConnectionPool {
     );
   }
 
-  private initializeConnection(idlePush = true) {
+  private initializeConnection() {
     const connection = new Connection({
       host: this.options.host,
       port: this.options.port,
@@ -118,11 +148,16 @@ export class ConnectionPool {
     });
 
     this.options.afterInitialize?.(connection);
-    this.connections.set(connection, undefined);
+    this.connections.set(
+      connection,
+      new ConnectionController(connection, this.options)
+    );
+    this.idleConnections.push(connection);
 
-    if (idlePush) {
-      this.idleConnections.push(connection);
-    }
+    connection.once("closed", () => {
+      this.connections.delete(connection);
+      splice(this.idleConnections, connection);
+    });
 
     return connection;
   }
@@ -131,8 +166,15 @@ export class ConnectionPool {
     acquireCallback: AcquireCallback<T>,
     connection: Connection
   ) {
+    splice(this.idleConnections, connection);
+
+    const connectionController = this.connections.get(connection)!;
+
+    connectionController.timeoutLock();
+
     return acquireCallback(connection).finally(async () => {
       this.idleConnections.push(connection);
+      connectionController.timeoutReset();
 
       const acquisitionQueued = this.acquisitionQueue.shift();
 

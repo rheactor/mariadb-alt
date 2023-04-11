@@ -2,6 +2,7 @@ import { type ConnectionPool } from "@/ConnectionPool";
 import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnectionPool } from "@Tests/Fixtures/TestConnection";
+import { delay } from "@Tests/Fixtures/Utils";
 
 describe("ConnectionPool", () => {
   interface TimeSleepResultSet {
@@ -186,6 +187,11 @@ describe("ConnectionPool", () => {
       expect(connectionPool.debug.idleConnectionsCount).toBe(2);
       expect(connectionPool.debug.connectionsCount).toBe(2);
       expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
+
+      await delay(100);
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
     });
 
     afterAll(() => {
