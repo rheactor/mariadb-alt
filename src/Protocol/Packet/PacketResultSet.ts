@@ -137,7 +137,7 @@ export class PacketResultSet {
     return this.fields;
   }
 
-  public *getRows() {
+  public *getRowsUnprocessed() {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
@@ -151,6 +151,12 @@ export class PacketResultSet {
       }
 
       yield row;
+    }
+  }
+
+  public *getRows() {
+    for (const row of this.getRowsUnprocessed()) {
+      yield PacketResultSet.transform(row, this.fields!);
     }
   }
 }

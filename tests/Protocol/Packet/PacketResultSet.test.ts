@@ -2,12 +2,10 @@ import { type Connection } from "@/Connection";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
+import { type Field } from "@/Protocol/Data/Field";
 import { FieldTypes } from "@/Protocol/Enumerations";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import {
-  PacketResultSet,
-  type FieldMetadata,
-} from "@/Protocol/Packet/PacketResultSet";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("Protocol/Packet/PacketResultSet", () => {
@@ -19,7 +17,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
 
   interface PacketUnit {
     query: string;
-    metadata: Partial<FieldMetadata>;
+    metadata: Partial<Field>;
     input: string;
     output:
       | Buffer
@@ -351,7 +349,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
     },
   ];
 
-  describe.each(packetUnits)("getRows() and transform()", (packetUnit) => {
+  describe.each(packetUnits)("getRows()", (packetUnit) => {
     test(`field type "${packetUnit.query}" = ${packetUnit.input}`, async () => {
       const table = `test-${Math.random()}`;
       const createQuery = await connectionBase.query(
@@ -382,21 +380,15 @@ describe("Protocol/Packet/PacketResultSet", () => {
 
         for (const fieldProperty of Object.keys(field)) {
           if (fieldProperty in packetUnit.metadata) {
-            expect(
-              packetUnit.metadata[fieldProperty as keyof FieldMetadata]
-            ).toBe(field[fieldProperty as keyof FieldMetadata]);
+            expect(packetUnit.metadata[fieldProperty as keyof Field]).toBe(
+              field[fieldProperty as keyof Field]
+            );
           }
         }
 
         const [selectRow] = [...selectQuery.getRows()];
-        const selectRowTransformed = PacketResultSet.transform(
-          selectRow!,
-          metadata
-        );
 
-        expect(selectRowTransformed!["column"]).toStrictEqual(
-          packetUnit.output
-        );
+        expect(selectRow!["column"]).toStrictEqual(packetUnit.output);
       }
     });
   });

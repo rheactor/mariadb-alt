@@ -71,72 +71,59 @@ describe("/Connection", () => {
 
     type QuerySelectUnit = [
       string,
-      string | null,
       TimeFormat | bigint | number | string | null
     ];
 
     const querySelectUnits: QuerySelectUnit[] = [
-      ["NULL", null, null],
-      ["'abc'", "abc", "abc"],
-      ["123", "123", 123],
-      ["123.45", "123.45", 123.45],
-      ["1152921504606846975", "1152921504606846975", 1152921504606846975n],
-      ["HEX('example')", "6578616D706C65", "6578616D706C65"],
-      ["x'6578616D706C65'", "example", "example"],
-      ["'您好 (chinese)'", "您好 (chinese)", "您好 (chinese)"],
-      ["'नमस्ते (Hindi)'", "नमस्ते (Hindi)", "नमस्ते (Hindi)"],
-      ["'привет (Russian)'", "привет (Russian)", "привет (Russian)"],
-      ["TIME('999:00:00')", "838:59:59", TimeFormat.parse("838:59:59")],
-      ["TIME('-999:00:00')", "-838:59:59", TimeFormat.parse("-838:59:59")],
+      ["NULL", null],
+      ["'abc'", "abc"],
+      ["123", 123],
+      ["123.45", 123.45],
+      ["1152921504606846975", 1152921504606846975n],
+      ["HEX('example')", "6578616D706C65"],
+      ["x'6578616D706C65'", "example"],
+      ["'您好 (chinese)'", "您好 (chinese)"],
+      ["'नमस्ते (Hindi)'", "नमस्ते (Hindi)"],
+      ["'привет (Russian)'", "привет (Russian)"],
+      ["TIME('999:00:00')", TimeFormat.parse("838:59:59")],
+      ["TIME('-999:00:00')", TimeFormat.parse("-838:59:59")],
     ];
 
-    describe.each(querySelectUnits)(
-      "query()",
-      (input, output, outputNormalized) => {
-        let connectionBase: Connection;
+    describe.each(querySelectUnits)("query()", (input, outputNormalized) => {
+      let connectionBase: Connection;
 
-        beforeAll(() => {
-          connectionBase = TestConnection();
-        });
+      beforeAll(() => {
+        connectionBase = TestConnection();
+      });
 
-        test(`SELECT ${input}`, async () => {
-          const queryResult = await connectionBase.query(
-            `SELECT ${input} AS \`value\``
-          );
+      test(`SELECT ${input}`, async () => {
+        const queryResult = await connectionBase.query(
+          `SELECT ${input} AS \`value\``
+        );
 
-          expect(queryResult).toBeInstanceOf(PacketResultSet);
+        expect(queryResult).toBeInstanceOf(PacketResultSet);
 
-          if (queryResult instanceof PacketResultSet) {
-            const queryRows = [...queryResult.getRows()];
+        if (queryResult instanceof PacketResultSet) {
+          const queryRows = [...queryResult.getRows()];
 
-            expect(queryRows).toHaveLength(1);
+          expect(Object.keys(queryRows)).toHaveLength(1);
 
-            const queryRow = queryRows[0]!;
+          const queryRow = queryRows[0]!["value"];
 
-            expect(queryRow[0]?.toString() ?? null).toBe(output);
-
-            const rowValueNormalized = PacketResultSet.transform(
-              queryRow,
-              queryResult.getFields()
+          if (typeof outputNormalized === "bigint") {
+            expect((queryRow as bigint).toString()).toBe(
+              outputNormalized.toString()
             );
-
-            if (typeof outputNormalized === "bigint") {
-              expect((rowValueNormalized["value"] as bigint).toString()).toBe(
-                outputNormalized.toString()
-              );
-            } else {
-              expect(rowValueNormalized["value"]).toStrictEqual(
-                outputNormalized
-              );
-            }
+          } else {
+            expect(queryRow).toStrictEqual(outputNormalized);
           }
-        });
+        }
+      });
 
-        afterAll(() => {
-          connectionBase.close();
-        });
-      }
-    );
+      afterAll(() => {
+        connectionBase.close();
+      });
+    });
 
     describe("query()", () => {
       let connectionBase: Connection;

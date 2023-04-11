@@ -20,7 +20,7 @@ const enum Status {
   ERROR,
 }
 
-interface ConnectionOptions {
+export interface ConnectionOptions {
   /** Connection host. Default is "localhost". */
   host: string;
 
