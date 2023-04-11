@@ -154,9 +154,9 @@ export class PacketResultSet {
     }
   }
 
-  public *getRows() {
+  public *getRows<T extends object = Row>() {
     for (const row of this.getRowsUnprocessed()) {
-      yield PacketResultSet.transform(row, this.fields!);
+      yield PacketResultSet.transform(row, this.fields!) as T;
     }
   }
 }

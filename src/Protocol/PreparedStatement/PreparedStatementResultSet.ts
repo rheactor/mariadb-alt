@@ -27,7 +27,7 @@ export class PreparedStatementResultSet {
     return this.fields;
   }
 
-  public *getRows() {
+  public *getRows<T extends object = Row>() {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
@@ -86,7 +86,7 @@ export class PreparedStatementResultSet {
         }
       }
 
-      yield row;
+      yield row as T;
     }
   }
 }

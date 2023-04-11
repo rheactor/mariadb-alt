@@ -5,7 +5,7 @@ import { TimeFormat } from "@/Formats/TimeFormat";
 import { type Field } from "@/Protocol/Data/Field";
 import { FieldTypes } from "@/Protocol/Enumerations";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 
 describe("Protocol/Packet/PacketResultSet", () => {
@@ -350,6 +350,10 @@ describe("Protocol/Packet/PacketResultSet", () => {
   ];
 
   describe.each(packetUnits)("getRows()", (packetUnit) => {
+    interface ResultSet {
+      column: Row;
+    }
+
     test(`field type "${packetUnit.query}" = ${packetUnit.input}`, async () => {
       const table = `test-${Math.random()}`;
       const createQuery = await connectionBase.query(
@@ -386,9 +390,9 @@ describe("Protocol/Packet/PacketResultSet", () => {
           }
         }
 
-        const [selectRow] = [...selectQuery.getRows()];
+        const [selectRow] = [...selectQuery.getRows<ResultSet>()];
 
-        expect(selectRow!["column"]).toStrictEqual(packetUnit.output);
+        expect(selectRow!.column).toStrictEqual(packetUnit.output);
       }
     });
   });
