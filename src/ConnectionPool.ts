@@ -139,6 +139,7 @@ export class ConnectionPool {
     this.idleConnections.push(connection);
 
     connection.once("closed", () => {
+      connectionTimer.stop();
       this.connections.delete(connection);
       removeItem(this.idleConnections, connection);
     });

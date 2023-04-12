@@ -6,12 +6,6 @@ import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-export type PacketKind =
-  | PacketError
-  | PacketOk
-  | PacketProgress
-  | PacketResultSet;
-
 export class Packet {
   /** Packet 3-byte length. */
   public readonly length: number;

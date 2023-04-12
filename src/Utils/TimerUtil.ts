@@ -10,6 +10,7 @@ export class TimerUtil {
 
   public stop() {
     clearTimeout(this.timeout);
+    this.timeout = undefined;
   }
 
   public restart() {
