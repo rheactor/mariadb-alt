@@ -1,3 +1,4 @@
+import { PacketEOF } from "@/Protocol/Packet/PacketEOF";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
@@ -41,11 +42,16 @@ export class Packet {
 
   /** Create a PacketOK or PacketError, depending of data Buffer content. */
   public static fromResponse(data: Buffer) {
-    const bufferConsumer = new BufferConsumer(data, 4);
-    const bufferType = bufferConsumer.readUInt();
+    const bufferConsumer = new BufferConsumer(data);
+    const bufferLength = bufferConsumer.readUInt(3);
+    const bufferType = bufferConsumer.skip().readUInt();
 
-    if (bufferType === 0x00 || bufferType === 0xfe) {
+    if (bufferType === 0x00) {
       return new PacketOk(bufferConsumer.rest());
+    }
+
+    if (bufferType === 0xfe && bufferLength === 5) {
+      return new PacketEOF(bufferConsumer.rest());
     }
 
     if (bufferType !== 0xff) {

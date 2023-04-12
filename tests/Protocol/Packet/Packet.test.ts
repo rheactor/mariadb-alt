@@ -1,8 +1,10 @@
 import { Packet } from "@/Protocol/Packet/Packet";
+import { PacketEOF } from "@/Protocol/Packet/PacketEOF";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 
 describe("Protocol/Packet/Packet", () => {
   test("basic Packet", () => {
@@ -62,6 +64,55 @@ describe("Protocol/Packet/Packet", () => {
       expect(packetResponse.lastInsertId).toBe(0x302010);
       expect(packetResponse.serverStatus).toBe(0x0002);
       expect(packetResponse.warningCount).toBe(0x2010);
+    }
+  });
+
+  test("fromResponse() PacketEOF", () => {
+    expect.assertions(2);
+
+    const packetResponse = Packet.fromResponse(
+      Buffer.from([
+        // Packet length: must be exactly 5.
+        0x05, 0x00, 0x00,
+        // Packet sequence: 0.
+        0x00,
+        // EOF identifier.
+        0xfe,
+        // EOF warnings.
+        0x10, 0x20,
+        // EOF status flags.+
+        0x30, 0x40,
+      ])
+    );
+
+    if (packetResponse instanceof PacketEOF) {
+      expect(packetResponse.warningCount).toStrictEqual(0x2010);
+      expect(packetResponse.serverStatus).toStrictEqual(0x4030);
+    }
+  });
+
+  test("fromResponse() not a real PacketEOF", () => {
+    expect.assertions(1);
+
+    const packetResponse = Packet.fromResponse(
+      Buffer.from([
+        // Packet length >= 9: 9.
+        0x06, 0x00, 0x00,
+        // Packet sequence: 0.
+        0x00,
+        // Encoded int 8-bytes header:
+        0xfe,
+        // Encoded int value
+        0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
+      ])
+    );
+
+    if (packetResponse instanceof PacketResultSet) {
+      expect(packetResponse).toStrictEqual(
+        new PacketResultSet(
+          Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80])
+        )
+      );
     }
   });
 
