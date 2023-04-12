@@ -45,26 +45,6 @@ describe("Protocol/Packet/Packet", () => {
     expect(packetEmpty.body).toStrictEqual(Buffer.from("\x0E"));
   });
 
-  test("split a Packet", () => {
-    const packetExample = new Packet(
-      Packet.from(Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06]), 0)
-    );
-
-    const packets = packetExample.split(3) as [Packet, Packet, Packet];
-
-    expect(packets[0].length).toBe(3);
-    expect(packets[0].sequence).toBe(0);
-    expect(packets[0].body).toStrictEqual(Buffer.from("\0\x01\x02"));
-
-    expect(packets[1].length).toBe(3);
-    expect(packets[1].sequence).toBe(1);
-    expect(packets[1].body).toStrictEqual(Buffer.from("\x03\x04\x05"));
-
-    expect(packets[2].length).toBe(1);
-    expect(packets[2].sequence).toBe(2);
-    expect(packets[2].body).toStrictEqual(Buffer.from("\x06"));
-  });
-
   test("fromResponse() PacketOk", () => {
     expect.assertions(4);
 

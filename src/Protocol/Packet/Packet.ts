@@ -71,19 +71,4 @@ export class Packet {
   public static createPing(sequence: number) {
     return this.from(Buffer.from("\x0E"), sequence);
   }
-
-  /** Split this Packet into a lot of Packet[]. */
-  public split(length: number): Packet[] {
-    const packets: Packet[] = [];
-
-    for (let i = 0; i < this.length; i += length) {
-      packets.push(
-        new Packet(
-          Packet.from(this.body.subarray(i, i + length), packets.length)
-        )
-      );
-    }
-
-    return packets;
-  }
 }
