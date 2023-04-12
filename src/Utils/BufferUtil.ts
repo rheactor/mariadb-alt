@@ -244,21 +244,29 @@ export const readIntEncoded = (
   return bufferInt;
 };
 
+const toBigIntEncoded = (value: bigint) => {
+  const bufferBigInt = Buffer.allocUnsafe(9);
+
+  bufferBigInt.writeUInt8(0xfe);
+  bufferBigInt.writeBigUint64LE(value, 1);
+
+  return bufferBigInt;
+};
+
 export const toIntEncoded = (value: bigint | number | null) => {
   if (value === null) {
     return Buffer.from([0xfb]);
   }
 
   if (typeof value === "bigint") {
-    const bufferBigInt = Buffer.allocUnsafe(9);
-
-    bufferBigInt.writeUInt8(0xfe);
-    bufferBigInt.writeBigUint64LE(value, 1);
-
-    return bufferBigInt;
+    return toBigIntEncoded(value);
   }
 
   if (value > 0xfa) {
+    if (value > 0xffffff) {
+      return toBigIntEncoded(BigInt(value));
+    }
+
     const inputBigger = Number(value > 0xffff);
     const bufferInt = Buffer.allocUnsafe(3 + inputBigger);
 
