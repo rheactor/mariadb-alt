@@ -2,6 +2,7 @@ import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import {
   bufferXOR,
+  chunk,
   createUInt16LE,
   createUInt24LE,
   createUInt32LE,
@@ -531,6 +532,46 @@ describe("Utils/BufferUtil", () => {
   describe.each(nullBitmapsUnits)("generateNullBitmap()", (args, output) => {
     test(JSON.stringify(args), () => {
       expect(generateNullBitmap(args)).toStrictEqual(output);
+    });
+  });
+
+  type ChunkUnit = [Buffer, number, Buffer[]];
+
+  const chunkUnits: ChunkUnit[] = [
+    [Buffer.from(""), 3, [Buffer.from("")]],
+    [Buffer.from("a"), 3, [Buffer.from("a")]],
+    [Buffer.from("ab"), 3, [Buffer.from("ab")]],
+    [Buffer.from("abc"), 3, [Buffer.from("abc")]],
+    [Buffer.from("abcd"), 3, [Buffer.from("abc"), Buffer.from("d")]],
+    [Buffer.from("abcde"), 3, [Buffer.from("abc"), Buffer.from("de")]],
+    [Buffer.from("abcdef"), 3, [Buffer.from("abc"), Buffer.from("def")]],
+    [
+      Buffer.from("abcdef"),
+      2,
+      [Buffer.from("ab"), Buffer.from("cd"), Buffer.from("ef")],
+    ],
+    [
+      Buffer.from("abcde"),
+      2,
+      [Buffer.from("ab"), Buffer.from("cd"), Buffer.from("e")],
+    ],
+    [
+      Buffer.from("abcdef"),
+      1,
+      [
+        Buffer.from("a"),
+        Buffer.from("b"),
+        Buffer.from("c"),
+        Buffer.from("d"),
+        Buffer.from("e"),
+        Buffer.from("f"),
+      ],
+    ],
+  ];
+
+  describe.each(chunkUnits)("chunk()", (input, size, output) => {
+    test(`${input.toJSON().data} size ${size}`, () => {
+      expect(chunk(input, size)).toStrictEqual(output);
     });
   });
 });

@@ -355,3 +355,19 @@ export const generateNullBitmap = (args: unknown[]): Buffer => {
 
   return Buffer.from(nullBitmap);
 };
+
+export const chunk = (buffer: Buffer, size: number) => {
+  if (buffer.length < size) {
+    return [buffer];
+  }
+
+  const buffers: Buffer[] = [];
+
+  for (let i = 0; i < buffer.length; i += size) {
+    const blockSize = Math.min(buffer.length - i, size);
+
+    buffers.push(buffer.subarray(i, i + blockSize));
+  }
+
+  return buffers;
+};
