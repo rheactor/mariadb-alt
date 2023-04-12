@@ -2,9 +2,12 @@ import { Socket } from "node:net";
 
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
+import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
+import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
 import { Packet } from "@/Protocol/Packet/Packet";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
 import {
   PreparedStatementResponse,
   type ExecuteArgument as QueryArgument,
@@ -191,6 +194,44 @@ export class Connection extends ConnectionEvents {
     return this.commandQueue(Buffer.from(`\x03${sql}`)).then((data) =>
       Packet.fromResponse(data)
     );
+  }
+
+  public async query<T extends object = Row>(
+    sql: string,
+    args?: QueryArgument[]
+  ) {
+    return this.queryDetailed(sql, args).then((result) => {
+      if (
+        result instanceof PacketResultSet ||
+        result instanceof PreparedStatementResultSet
+      ) {
+        return result.getRows<T>();
+      }
+
+      if (result instanceof PacketError) {
+        throw new QueryError("query error", { cause: result });
+      }
+
+      throw new QueryError("unexpected query response type", {
+        cause: result,
+      });
+    });
+  }
+
+  public async execute(sql: string, args?: QueryArgument[]) {
+    return this.queryDetailed(sql, args).then((result) => {
+      if (result instanceof PacketOk) {
+        return result;
+      }
+
+      if (result instanceof PacketError) {
+        throw new ExecuteError("query error", { cause: result });
+      }
+
+      throw new ExecuteError("unexpected query response type", {
+        cause: result,
+      });
+    });
   }
 
   public async close() {

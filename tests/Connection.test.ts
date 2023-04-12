@@ -1,6 +1,8 @@
 import { type Connection } from "@/Connection";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
+import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
+import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
 import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
@@ -120,6 +122,22 @@ describe("/Connection", () => {
         }
       });
 
+      test(`SELECT ${input} via query()`, async () => {
+        const queryResult = await connectionBase.query<{
+          value: typeof outputNormalized;
+        }>(`SELECT ${input} AS \`value\``);
+
+        const [result] = [...queryResult];
+
+        if (typeof outputNormalized === "bigint") {
+          expect((result!.value as bigint).toString()).toBe(
+            outputNormalized.toString()
+          );
+        } else {
+          expect(result!.value).toStrictEqual(outputNormalized);
+        }
+      });
+
       afterAll(() => {
         connectionBase.close();
       });
@@ -132,7 +150,7 @@ describe("/Connection", () => {
         connectionBase = TestConnection();
       });
 
-      test(`Example`, async () => {
+      test(`create table`, async () => {
         const table = `test-${Math.random()}`;
 
         expect(
@@ -172,6 +190,86 @@ describe("/Connection", () => {
           expect(queryMetadata2.collation).toBe(Collations.utf8mb4_general_ci);
           expect(queryMetadata2.type).toBe(FieldTypes.VARCHAR);
           expect(queryMetadata2.flags).toBe(0);
+        }
+      });
+
+      test(`query() error (without prepared statement)`, async () => {
+        expect.assertions(2);
+
+        try {
+          await connectionBase.query("SELECT ?");
+        } catch (error) {
+          expect(error).toBeInstanceOf(QueryError);
+
+          if (error instanceof QueryError) {
+            expect(error.message).toBe("query error");
+          }
+        }
+      });
+
+      test(`query() error (prepared statement)`, async () => {
+        expect.assertions(2);
+
+        try {
+          await connectionBase.query("SELECT ?", []);
+        } catch (error) {
+          expect(error).toBeInstanceOf(QueryError);
+
+          if (error instanceof QueryError) {
+            expect(error.message).toBe("query error");
+          }
+        }
+      });
+
+      test(`query() unexpected response type`, async () => {
+        expect.assertions(2);
+
+        try {
+          await connectionBase.query("DO NULL");
+        } catch (error) {
+          expect(error).toBeInstanceOf(QueryError);
+
+          if (error instanceof QueryError) {
+            expect(error.message).toBe("unexpected query response type");
+          }
+        }
+      });
+
+      test(`execute()`, async () => {
+        const result = await connectionBase.execute("DO NULL");
+
+        expect(result).toBeInstanceOf(PacketOk);
+
+        if (result instanceof PacketOk) {
+          expect(result.affectedRows).toBe(0);
+        }
+      });
+
+      test(`execute() error`, async () => {
+        expect.assertions(2);
+
+        try {
+          await connectionBase.execute("SELECT ?");
+        } catch (error) {
+          expect(error).toBeInstanceOf(ExecuteError);
+
+          if (error instanceof ExecuteError) {
+            expect(error.message).toBe("query error");
+          }
+        }
+      });
+
+      test(`execute() unexpected response type`, async () => {
+        expect.assertions(2);
+
+        try {
+          await connectionBase.execute("SELECT 1");
+        } catch (error) {
+          expect(error).toBeInstanceOf(ExecuteError);
+
+          if (error instanceof ExecuteError) {
+            expect(error.message).toBe("unexpected query response type");
+          }
         }
       });
 
