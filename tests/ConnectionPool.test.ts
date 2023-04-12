@@ -18,7 +18,9 @@ describe("ConnectionPool", () => {
     });
 
     test("check sql_mode", async () => {
-      const query = await connectionPool.query("SELECT @@SESSION.sql_mode");
+      const query = await connectionPool.queryDetailed(
+        "SELECT @@SESSION.sql_mode"
+      );
 
       expect(query).toBeInstanceOf(PacketResultSet);
 
@@ -43,7 +45,7 @@ describe("ConnectionPool", () => {
     });
 
     test("query()", async () => {
-      const query = await connectionPool.query("SELECT 1");
+      const query = await connectionPool.queryDetailed("SELECT 1");
 
       expect(query).toBeInstanceOf(PacketResultSet);
 
@@ -72,13 +74,13 @@ describe("ConnectionPool", () => {
     test("query() simultaneous", async () => {
       expect.assertions(5);
 
-      const query1 = connectionPool.query(
+      const query1 = connectionPool.queryDetailed(
         "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
-      const query2 = connectionPool.query(
+      const query2 = connectionPool.queryDetailed(
         "SELECT NOW() AS time, NULL AS sleep"
       );
 
@@ -128,13 +130,13 @@ describe("ConnectionPool", () => {
     test("query() queued", async () => {
       expect.assertions(7);
 
-      const query1 = connectionPool.query(
+      const query1 = connectionPool.queryDetailed(
         "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
-      const query2 = connectionPool.query(
+      const query2 = connectionPool.queryDetailed(
         "SELECT NOW() AS time, NULL AS sleep"
       );
 
@@ -189,17 +191,17 @@ describe("ConnectionPool", () => {
     });
 
     test("connections", async () => {
-      const query1 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // from idle
+      const query1 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // from idle
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
       expect(connectionPool.debug.connectionsCount).toBe(1);
 
-      const query2 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // new connection
+      const query2 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // new connection
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
       expect(connectionPool.debug.connectionsCount).toBe(2);
 
-      const query3 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // queued acquisition
+      const query3 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // queued acquisition
 
       expect(connectionPool.debug.connectionsCount).toBe(2);
       expect(connectionPool.debug.acquisitionQueueSize).toBe(1);

@@ -84,7 +84,7 @@ describe("Protocol/PreparedStatement/PreparedStatement", () => {
 
   describe.each(queryUnits)("query()", (query, args, output) => {
     test(query, async () => {
-      const result = await connectionBase.query(query, args);
+      const result = await connectionBase.queryDetailed(query, args);
 
       expect(result).toBeInstanceOf(PreparedStatementResultSet);
 
@@ -141,7 +141,7 @@ describe("Protocol/PreparedStatement/PreparedStatement", () => {
 
   describe("query()", () => {
     test("SELECT fail", async () => {
-      const result = await connectionBase.query("SELECT!", [123]);
+      const result = await connectionBase.queryDetailed("SELECT!", [123]);
 
       expect(result).toBeInstanceOf(PacketErrorState);
 
@@ -154,7 +154,7 @@ describe("Protocol/PreparedStatement/PreparedStatement", () => {
     });
 
     test("SELECT ? without args must fail", async () => {
-      const result = await connectionBase.query("SELECT ?");
+      const result = await connectionBase.queryDetailed("SELECT ?");
 
       expect(result).toBeInstanceOf(PacketErrorState);
 

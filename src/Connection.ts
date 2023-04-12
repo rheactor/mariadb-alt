@@ -170,7 +170,7 @@ export class Connection extends ConnectionEvents {
     );
   }
 
-  public async query(sql: string, args?: QueryArgument[]) {
+  public async queryDetailed(sql: string, args?: QueryArgument[]) {
     if (args !== undefined && args.length > 0) {
       return this.commandQueue(Buffer.from(`\x16${sql}`)).then(
         async (packet) => {

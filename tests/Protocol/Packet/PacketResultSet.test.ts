@@ -356,13 +356,13 @@ describe("Protocol/Packet/PacketResultSet", () => {
 
     test(`field type "${packetUnit.query}" = ${packetUnit.input}`, async () => {
       const table = `test-${Math.random()}`;
-      const createQuery = await connectionBase.query(
+      const createQuery = await connectionBase.queryDetailed(
         `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${packetUnit.query} )`
       );
 
       expect(createQuery).toBeInstanceOf(PacketOk);
 
-      const insertQuery = await connectionBase.query(
+      const insertQuery = await connectionBase.queryDetailed(
         `INSERT INTO \`${table}\` (\`column\`) VALUES (${packetUnit.input})`
       );
 
@@ -372,7 +372,7 @@ describe("Protocol/Packet/PacketResultSet", () => {
         expect(insertQuery.affectedRows).toBe(1);
       }
 
-      const selectQuery = await connectionBase.query(
+      const selectQuery = await connectionBase.queryDetailed(
         `SELECT * FROM \`${table}\``
       );
 

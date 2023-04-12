@@ -96,8 +96,8 @@ describe("/Connection", () => {
         connectionBase = TestConnection();
       });
 
-      test(`SELECT ${input}`, async () => {
-        const queryResult = await connectionBase.query(
+      test(`SELECT ${input} via queryDetailed()`, async () => {
+        const queryResult = await connectionBase.queryDetailed(
           `SELECT ${input} AS \`value\``
         );
 
@@ -136,12 +136,12 @@ describe("/Connection", () => {
         const table = `test-${Math.random()}`;
 
         expect(
-          await connectionBase.query(
+          await connectionBase.queryDetailed(
             `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`
           )
         ).toBeInstanceOf(PacketOk);
 
-        const insertInto = await connectionBase.query(
+        const insertInto = await connectionBase.queryDetailed(
           `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`
         );
 
@@ -152,7 +152,7 @@ describe("/Connection", () => {
           expect(insertInto.lastInsertId).toBe(123);
         }
 
-        const query = await connectionBase.query(
+        const query = await connectionBase.queryDetailed(
           `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``
         );
 

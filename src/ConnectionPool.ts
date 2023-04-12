@@ -107,8 +107,10 @@ export class ConnectionPool {
   }
 
   /** Run a query with an idle connection. */
-  public async query(sql: string, args?: ExecuteArgument[]) {
-    return this.acquire(async (connection) => connection.query(sql, args));
+  public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
+    return this.acquire(async (connection) =>
+      connection.queryDetailed(sql, args)
+    );
   }
 
   public async close() {
