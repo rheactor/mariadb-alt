@@ -66,9 +66,4 @@ export class Packet {
 
     return new PacketError(bufferErrorCode, bufferConsumer.rest(-1));
   }
-
-  /** Creates a simple PING Packet instance. */
-  public static createPing(sequence: number) {
-    return this.from(Buffer.from("\x0E"), sequence);
-  }
 }

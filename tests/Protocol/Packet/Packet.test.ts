@@ -37,14 +37,6 @@ describe("Protocol/Packet/Packet", () => {
     expect(packetEmpty.body).toStrictEqual(Buffer.from(""));
   });
 
-  test("create PING Packet", () => {
-    const packetEmpty = new Packet(Packet.createPing(2));
-
-    expect(packetEmpty.length).toBe(1);
-    expect(packetEmpty.sequence).toBe(2);
-    expect(packetEmpty.body).toStrictEqual(Buffer.from("\x0E"));
-  });
-
   test("fromResponse() PacketOk", () => {
     expect.assertions(4);
 
