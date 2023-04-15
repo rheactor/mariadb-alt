@@ -48,6 +48,10 @@ export class BufferConsumer {
   public readIntEncoded(): bigint | number | null {
     const bufferInt = this.buffer.readUInt8(this.byteOffset++);
 
+    if (bufferInt === 0x00) {
+      return 0;
+    }
+
     if (bufferInt === 0xfb) {
       return null;
     }
