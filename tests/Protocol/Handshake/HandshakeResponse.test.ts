@@ -1,7 +1,8 @@
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("/Protocol/Handshake/HandshakeResponse", () => {
+describe(getTestName(__filename), () => {
   test("createHandshakeResponse() without password", () => {
     const handshake = new BufferConsumer(
       createHandshakeResponse(

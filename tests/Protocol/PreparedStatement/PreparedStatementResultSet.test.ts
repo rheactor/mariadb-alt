@@ -7,8 +7,9 @@ import { type Row } from "@/Protocol/Packet/PacketResultSet";
 import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/PreparedStatement/PreparedStatement", () => {
+describe(getTestName(__filename), () => {
   type QueryUnit = [string, ExecuteArgument[] | undefined, Row];
 
   const queryUnits: QueryUnit[] = [

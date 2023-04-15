@@ -1,6 +1,7 @@
 import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySQLNativePassword";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/Plugins/MySQLNativePassword", () => {
+describe(getTestName(__filename), () => {
   test("hashMySQLNativePassword()", () => {
     const authenticationSeed = Buffer.from([
       // Scramble #1.

@@ -1,7 +1,8 @@
 import { FieldTypes } from "@/Protocol/Enumerations";
 import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/PreparedStatement/PreparedStatementResponse", () => {
+describe(getTestName(__filename), () => {
   test("new PreparedStatementResponse", () => {
     // Query: "SELECT TRUE, ?".
     const preparedStatementResponse = new PreparedStatementResponse(

@@ -1,8 +1,9 @@
 import { Capabilities, ServerStatus } from "@/Protocol/Enumerations";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/Handshake/Handshake", () => {
+describe(getTestName(__filename), () => {
   test("read properties", () => {
     const packet = new Handshake(InitialHandshakePacketFixture.Example1);
 

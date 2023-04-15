@@ -7,8 +7,9 @@ import { FieldTypes } from "@/Protocol/Enumerations";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/Packet/PacketResultSet", () => {
+describe(getTestName(__filename), () => {
   let connectionBase: Connection;
 
   beforeAll(() => {

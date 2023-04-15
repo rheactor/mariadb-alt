@@ -21,8 +21,9 @@ import {
   toStringEncoded,
   toTimeEncoded,
 } from "@/Utils/BufferUtil";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Utils/BufferUtil", () => {
+describe(getTestName(__filename), () => {
   type ReadNTSUnit = [Buffer, Buffer, number?];
 
   const readNullTerminatedStringUnits: ReadNTSUnit[] = [

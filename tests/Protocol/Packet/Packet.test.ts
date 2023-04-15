@@ -5,8 +5,9 @@ import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Protocol/Packet/Packet", () => {
+describe(getTestName(__filename), () => {
   test("basic Packet", () => {
     const packetCOMPing = new Packet(Buffer.from("\x01\0\0\x10\x0E"));
 

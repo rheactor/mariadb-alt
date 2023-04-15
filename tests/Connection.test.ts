@@ -7,8 +7,9 @@ import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("/Connection", () => {
+describe(getTestName(__filename), () => {
   describe("connection ready", () => {
     test("authenticate", (done) => {
       expect.assertions(3);

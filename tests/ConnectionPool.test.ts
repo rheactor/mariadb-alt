@@ -2,9 +2,9 @@ import { type ConnectionPool } from "@/ConnectionPool";
 import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnectionPool } from "@Tests/Fixtures/TestConnection";
-import { delay } from "@Tests/Fixtures/Utils";
+import { delay, getTestName } from "@Tests/Fixtures/Utils";
 
-describe("ConnectionPool", () => {
+describe(getTestName(__filename), () => {
   interface TimeSleepResultSet {
     time: DateTimeFormat;
     sleep: number | null;

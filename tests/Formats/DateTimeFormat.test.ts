@@ -1,6 +1,7 @@
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { getTestName } from "@Tests/Fixtures/Utils";
 
-describe("Formats/DateTimeFormat", () => {
+describe(getTestName(__filename), () => {
   type ToNativeDateUnits = Array<[string, string, number?]>;
 
   const toNativeDateUnits: ToNativeDateUnits = [
