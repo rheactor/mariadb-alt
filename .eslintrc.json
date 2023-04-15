@@ -188,8 +188,8 @@
     "@typescript-eslint/no-unused-vars": [
       "warn",
       {
-        "varsIgnorePattern": "^_|^[Ii]gnored?",
-        "argsIgnorePattern": "^_|^[Ii]gnored?"
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_"
       }
     ],
     "@typescript-eslint/no-useless-empty-export": "warn",

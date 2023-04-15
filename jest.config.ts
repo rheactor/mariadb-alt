@@ -14,6 +14,7 @@ export const jestConfig = (sourcePath = "src"): Config => ({
       statements: 100,
     },
   },
+  testTimeout: 250,
 });
 
 export default jestConfig() as unknown;
