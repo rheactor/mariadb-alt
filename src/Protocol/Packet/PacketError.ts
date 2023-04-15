@@ -1,11 +1,19 @@
 export class PacketError {
-  public message: string;
+  public constructor(
+    public code: number,
+    public state: string,
+    public message: string
+  ) {}
 
-  public constructor(public code: number, packet: Buffer) {
-    this.message = packet.toString("binary");
+  public static from(packet: Buffer) {
+    return new PacketError(
+      packet.readUInt16LE(),
+      packet.subarray(3, 8).toString("binary"),
+      packet.subarray(8).toString("binary")
+    );
   }
 
   public static is(packet: Buffer) {
-    return packet.readUInt8(4) === 0xff;
+    return packet.readUInt8() === 0xff;
   }
 }
