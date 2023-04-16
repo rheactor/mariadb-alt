@@ -426,9 +426,9 @@ describe(getTestName(__filename), () => {
           0x01,
           // Field #1 catalog, database, table alias, table: empty.
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          // Field #1 column name: "unknown".
+          // Field #1 column name alias: "unknown".
           0x07, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e,
-          // Field #1 column name alias: empty.
+          // Field #1 column name: empty.
           0x00,
           // Field extended metadata length: 8.
           0x08,
