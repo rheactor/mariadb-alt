@@ -1,5 +1,5 @@
 import { Connection, type ConnectionOptions } from "@/Connection";
-import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
 import { removeItem } from "@/Utils/ArrayUtil";
 import { TimerUtil } from "@/Utils/TimerUtil";
 

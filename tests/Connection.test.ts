@@ -278,6 +278,74 @@ describe(getTestName(__filename), () => {
         connectionBase.close();
       });
     });
+
+    describe("query()", () => {
+      let packet65KB: Buffer;
+      let packet65KBOnLimit: Buffer;
+      let packet16MB: Buffer;
+      let packet16MBOnLimit: Buffer;
+      let connectionBase: Connection;
+
+      beforeAll(() => {
+        connectionBase = TestConnection();
+        packet16MB = Buffer.alloc(16 * 1024 ** 2).fill("0");
+        packet16MBOnLimit = packet16MB.subarray(0, packet16MB.length - 21);
+        packet65KB = packet16MB.subarray(0, 65 * 1024);
+        packet65KBOnLimit = packet65KB.subarray(0, 65 * 1024 - 1080);
+      });
+
+      test(`65KB packet chunked`, async () => {
+        const [result] = await connectionBase.query<{ packet: string }>(
+          `SELECT '${packet65KB.toString("binary")}' AS packet`
+        );
+
+        expect(result!.packet.length).toStrictEqual(packet65KB.length);
+        expect(result!.packet).toStrictEqual(packet65KB.toString("binary"));
+      });
+
+      test(`65KB packet chunked on limit`, async () => {
+        const [result] = await connectionBase.query<{ packet: string }>(
+          `SELECT '${packet65KBOnLimit.toString("binary")}' AS packet`
+        );
+
+        expect(result!.packet.length).toStrictEqual(packet65KBOnLimit.length);
+        expect(result!.packet).toStrictEqual(
+          packet65KBOnLimit.toString("binary")
+        );
+      });
+
+      test(`16MB packet on limit`, async () => {
+        const [result] = await connectionBase.query<{ packet: string }>(
+          `SELECT '${packet16MBOnLimit.toString("binary")}' AS packet`
+        );
+
+        expect(result!.packet.length).toStrictEqual(packet16MBOnLimit.length);
+        expect(result!.packet).toStrictEqual(
+          packet16MBOnLimit.toString("binary")
+        );
+      }, 5000);
+
+      test(`16MB packet (without prepared statement)`, async () => {
+        const [result] = await connectionBase.query<{ packet: number }>(
+          `SELECT LENGTH('${packet16MB.toString("binary")}') AS packet`
+        );
+
+        expect(result!.packet).toStrictEqual(packet16MB.length);
+      });
+
+      test(`16MB packet (prepared statement)`, async () => {
+        const [result] = await connectionBase.query<{ packet: number }>(
+          `SELECT LENGTH(?) AS packet`,
+          [packet16MB]
+        );
+
+        expect(result!.packet).toStrictEqual(packet16MB.length);
+      });
+
+      afterAll(() => {
+        connectionBase.close();
+      });
+    });
   });
 
   describe("connection error", () => {
