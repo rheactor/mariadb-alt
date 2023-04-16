@@ -216,7 +216,7 @@ describe(getTestName(__filename), () => {
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(1);
       expect(connectionPool.debug.connectionsCount).toBe(1);
-    });
+    }, 1000);
 
     afterAll(() => {
       connectionPool.close();

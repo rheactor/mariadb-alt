@@ -422,39 +422,33 @@ describe(getTestName(__filename), () => {
     test("unknown extended metadata", () => {
       const packetResultSet = new PacketResultSet(
         Buffer.from([
-          // Field definitions: 1
+          // Fields count: 1.
           0x01,
-          // Header (skipped)
-          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-          // Database: null
-          0xfb,
-          // Table alias: null
-          0xfb,
-          // Table: null
-          0xfb,
-          // Field #1 column name: "unknown"
+          // Field #1 catalog, database, table alias, table: empty.
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          // Field #1 column name: "unknown".
           0x07, 0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e,
-          // Field #1 column: skipped.
-          0xfb,
+          // Field #1 column name alias: empty.
+          0x00,
           // Field extended metadata length: 8.
           0x08,
-          // Field extended metadata #1 type: 0 (format)
+          // Field extended metadata #1 type: 0 (mean "format").
           0x00,
-          // Field extended metadata #1 value: "unknown"
+          // Field extended metadata #1 value: "unknown".
           0x75, 0x6e, 0x6b, 0x6e, 0x6f, 0x77, 0x6e,
-          // Length of fixed fields: always 0x0C
+          // Length of fixed fields: always 0x0C.
           0x0c,
-          // Collation
+          // Collation: just ignore.
           0x00, 0x00,
-          // Max column size
+          // Max column size: just ignore.
           0x00, 0x00, 0x00, 0x00,
-          // Field type
+          // Field type: just ignore.
           0x00,
-          // Field detail flag
+          // Field detail flag: just ignore.
           0x00, 0x00,
-          // Field decimals
+          // Field decimals: just ignore.
           0x00,
-          // Unused
+          // Unused.
           0x00, 0x00,
         ])
       );

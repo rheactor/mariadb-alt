@@ -4,7 +4,7 @@ import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
 import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
-import { Packet } from "@/Protocol/Packet/Packet";
+import { createPacket } from "@/Protocol/Packet/Packet";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
@@ -288,7 +288,7 @@ export class Connection extends ConnectionEvents {
       const reassemblerPush = reassembler.push.bind(reassembler);
 
       this.socket.on("data", reassemblerPush);
-      this.socket.write(Packet.from(command.buffer, command.sequence));
+      this.socket.write(createPacket(command.buffer, command.sequence));
     });
   }
 
