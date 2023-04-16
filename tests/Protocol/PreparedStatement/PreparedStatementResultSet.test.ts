@@ -2,9 +2,9 @@ import { type Connection } from "@/Connection";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
-import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
+import { PacketError } from "@/Protocol/Packet/PacketError";
 import { type Row } from "@/Protocol/Packet/PacketResultSet";
-import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
 import { getTestName } from "@Tests/Fixtures/Utils";
@@ -16,7 +16,7 @@ describe(getTestName(__filename), () => {
     ["SELECT TRUE, ?", [123], { TRUE: 1, "?": 123 }],
     ["SELECT TRUE AS a, ? AS b", [123], { a: 1, b: 123 }],
     ["SELECT ? AS a, FALSE as b", [123], { a: 123, b: 0 }],
-    ["SELECT ?", [-123], { "?": -123 }],
+    ["SELECT NULL, ?", [-123], { NULL: null, "?": -123 }],
     ["SELECT ?", [null], { "?": null }],
     ["SELECT ?", ["123"], { "?": "123" }],
     ["SELECT ?", [Buffer.from("123")], { "?": Buffer.from("123") }],
@@ -29,7 +29,6 @@ describe(getTestName(__filename), () => {
     ["SELECT ?", [1152921504606846975n], { "?": 1152921504606846975n }],
     ["SELECT ?", [-1152921504606846975n], { "?": -1152921504606846975n }],
     ["SELECT HEX(?)", ["example"], { "HEX(?)": "6578616D706C65" }],
-
     [
       "SELECT CONCAT(x'4578616D706C65', ?)",
       ["Example"],
@@ -97,38 +96,41 @@ describe(getTestName(__filename), () => {
 
   describe("getRows()", () => {
     test("code coverage", async () => {
-      const buffer = Buffer.from([
-        // Packet Length (1), Packet Number (1), Number of Fields (1):
-        0x01, 0x00, 0x00, 0x01, 0x01,
-        // Field packet:
-        // Packet Length (24), Packet Number (1), Catalog ("def"):
-        0x18, 0x00, 0x00, 0x02, 0x03, 0x64, 0x65, 0x66,
-        // Database (null), Table (null), Original Table (null):
-        0x00, 0x00, 0x00,
-        // Column name: "?", Original Name (null):
-        0x01, 0x3f, 0x00,
-        // Skip (1 byte), Length (always 12):
-        0x00, 0x0c,
-        // Encoding ("utf8mb4_general_ci"):
-        0x2d, 0x00,
-        // Length (12):
-        0x0c, 0x00, 0x00, 0x00,
-        // Field Type (0 = undefined):
-        0x00,
-        // Flags, Decimals (39), Skip (2 bytes):
-        0x01, 0x00, 0x27, 0x00, 0x00,
-        // Row Packet
-        // Packet Length (6), Packet Number (3), Response Code (OK):
-        0x06, 0x00, 0x00, 0x03, 0x00,
-        // Null Bitmap:
-        0x00,
-        // Value will not be defined intentionally here.
-        // EOF Packet
-        // Packet Length (7), Packet Number (4), Response Code (EOF):
-        0x07, 0x00, 0x00, 0x04, 0xfe,
-      ]);
+      const resultSet = new PreparedStatementResultSet(
+        Buffer.from([
+          // Number of Fields (1):
+          0x01,
 
-      const resultSet = new PreparedStatementResultSet(buffer);
+          // Field #1:
+          // Field headers: catalog ("def"), database, table alias, table: empty.
+          0x03, 0x64, 0x65, 0x66, 0x00, 0x00, 0x00,
+          // Column name alias: "?".
+          0x01, 0x3f,
+          // Column name: empty.
+          0x00,
+          // Extended metadata: empty.
+          0x00,
+          // Length: always 0x0c.
+          0x0c,
+          // Encoding ("utf8mb4_general_ci"):
+          0x2d, 0x00,
+          // Length (12):
+          0x0c, 0x00, 0x00, 0x00,
+          // Field type: 0 (undefined).
+          0x00,
+          // Flags: none, decimals: 39.
+          0x00, 0x00, 0x27,
+          // Unused.
+          0x00, 0x00,
+
+          // Row #1:
+          // Header:
+          0x00,
+          // Null bitmap: none.
+          0x00,
+          // Value is NULL, so no more data here.
+        ])
+      );
 
       expect(resultSet.fieldsCount).toBe(1);
 
@@ -144,9 +146,9 @@ describe(getTestName(__filename), () => {
     test("SELECT fail", async () => {
       const result = await connectionBase.queryDetailed("SELECT!", [123]);
 
-      expect(result).toBeInstanceOf(PacketErrorState);
+      expect(result).toBeInstanceOf(PacketError);
 
-      if (result instanceof PacketErrorState) {
+      if (result instanceof PacketError) {
         expect(result.code).toBe(1064);
         expect(result.message).toContain(
           "You have an error in your SQL syntax;"
@@ -157,9 +159,9 @@ describe(getTestName(__filename), () => {
     test("SELECT ? without args must fail", async () => {
       const result = await connectionBase.queryDetailed("SELECT ?");
 
-      expect(result).toBeInstanceOf(PacketErrorState);
+      expect(result).toBeInstanceOf(PacketError);
 
-      if (result instanceof PacketErrorState) {
+      if (result instanceof PacketError) {
         expect(result.code).toBe(1064);
         expect(result.message).toContain("'?'");
       }

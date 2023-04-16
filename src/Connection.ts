@@ -13,8 +13,14 @@ import {
   type PacketType,
 } from "@/Protocol/PacketReassembler/PacketReassembler";
 import { type Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
+import { ReassemblerPSResponse } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPSResponse";
+import { ReassemblerPSResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPSResultSet";
 import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
-import { type ExecuteArgument as QueryArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import {
+  createExecutePacket,
+  type ExecuteArgument,
+} from "@/Protocol/PreparedStatement/PreparedStatement";
+import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { EventEmitter } from "@/Utils/EventEmitter";
 
@@ -175,9 +181,24 @@ export class Connection extends ConnectionEvents {
     return this.commandQueue(Buffer.from([0x0e]));
   }
 
-  public async queryDetailed(sql: string, args?: QueryArgument[]) {
+  public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
-      // empty todo
+      return this.commandQueue(
+        Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
+        new ReassemblerPSResponse()
+      ).then(async (packet) => {
+        if (packet instanceof PacketError) {
+          return packet;
+        }
+
+        const response = packet as PreparedStatementResponse;
+
+        return this.commandQueue(
+          createExecutePacket(response, args),
+          new ReassemblerPSResultSet(),
+          true
+        );
+      });
     }
 
     return this.commandQueue(
@@ -188,7 +209,7 @@ export class Connection extends ConnectionEvents {
 
   public async query<T extends object = Row>(
     sql: string,
-    args?: QueryArgument[]
+    args?: ExecuteArgument[]
   ) {
     return this.queryDetailed(sql, args).then((result) => {
       if (
@@ -208,7 +229,7 @@ export class Connection extends ConnectionEvents {
     });
   }
 
-  public async execute(sql: string, args?: QueryArgument[]) {
+  public async execute(sql: string, args?: ExecuteArgument[]) {
     return this.queryDetailed(sql, args).then((result) => {
       if (result instanceof PacketOk) {
         return result;

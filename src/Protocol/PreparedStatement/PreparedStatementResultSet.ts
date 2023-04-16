@@ -12,7 +12,7 @@ export class PreparedStatementResultSet {
 
   public constructor(buffer: Buffer) {
     this.bufferConsumer = new BufferConsumer(buffer);
-    this.fieldsCount = Number(this.bufferConsumer.skip(4).readIntEncoded());
+    this.fieldsCount = Number(this.bufferConsumer.readIntEncoded());
   }
 
   public getFields() {
@@ -31,9 +31,9 @@ export class PreparedStatementResultSet {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
-    while (this.bufferConsumer.at(4) !== 0xfe) {
-      this.bufferConsumer.skip(5); // header
-      this.bufferConsumer.skip(Math.floor((this.fieldsCount + 7) / 8)); // Null Bitmap
+    while (!this.bufferConsumer.consumed()) {
+      // Skip Header OK (0x00) and Null Bitmap.
+      this.bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 7) / 8));
 
       const row: Row = {};
 

@@ -5,12 +5,19 @@ import {
   PushRecommendation,
   type Reassembler,
 } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
+import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { type PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 
 const PAYLOAD_LENGTH = 3;
 const SEQUENCE_LENGTH = 1;
 const HEADER_SIZE = PAYLOAD_LENGTH + SEQUENCE_LENGTH;
 
-export type PacketType = PacketError | PacketOk | PacketResultSet;
+export type PacketType =
+  | PacketError
+  | PacketOk
+  | PacketResultSet
+  | PreparedStatementResponse
+  | PreparedStatementResultSet;
 
 type OnDoneCallback = (packets: PacketType) => void;
 

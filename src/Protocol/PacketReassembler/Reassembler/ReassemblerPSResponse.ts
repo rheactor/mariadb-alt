@@ -1,19 +1,18 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {
   PushRecommendation,
   Reassembler,
 } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
+import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 
-export abstract class ReassemblerResultSetPartial extends Reassembler {
-  protected readonly packets: Buffer[] = [];
+export class ReassemblerPSResponse extends Reassembler {
+  private packet: Buffer | undefined = undefined;
 
   private intermediateEOFFound = false;
 
   // eslint-disable-next-line class-methods-use-this
   public is(packet: Buffer): boolean {
-    return !PacketOk.is(packet) && !PacketError.is(packet);
+    return packet.readUInt8(0) === 0x00;
   }
 
   public push(packet: Buffer): PushRecommendation {
@@ -27,14 +26,15 @@ export abstract class ReassemblerResultSetPartial extends Reassembler {
       return PushRecommendation.CONTINUE;
     }
 
-    this.packets.push(packet);
+    // We need just the first packet, and ignoring first-byte header (0x00).
+    if (this.packet === undefined) {
+      this.packet = packet.subarray(1);
+    }
 
     return PushRecommendation.CONTINUE;
   }
-}
 
-export class ReassemblerResultSet extends ReassemblerResultSetPartial {
   public get() {
-    return new PacketResultSet(Buffer.concat(this.packets));
+    return PreparedStatementResponse.from(this.packet!);
   }
 }
