@@ -1,5 +1,4 @@
 name: Build
-
 on: push
 
 jobs:
@@ -58,15 +57,23 @@ jobs:
           MARIADB_USER: user
           MARIADB_ROOT_PASSWORD: password
           MARIADB_PASSWORD: password
-          MARIADB_DATABASE: mariadb_alt
+          MARIADB_DATABASE: mariadb-alt
         options: >-
           --health-cmd="mariadb-admin ping"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+        volumes:
+          - ${{ github.workspace }}/build:/etc/mysql/conf.d
 
     steps:
       - uses: actions/checkout@v3
+
+      - name: Copy MariaDB configurations
+        run: sudo cp ${{ github.workspace }}/build/custom.cnf /etc/mysql/conf.d/custom.cnf
+
+      - name: Restart MariaDB
+        run: docker restart $(docker ps -q)
 
       - uses: actions/setup-node@v3
         with:
@@ -76,12 +83,12 @@ jobs:
 
       - run: npm run test:ci
         env:
-          TESTING_DATABASE: mariadb_alt
+          TESTING_DATABASE: mariadb-alt
           TESTING_USER: user
           TESTING_PASSWORD: password
 
       - run: npm run test:build:ci
         env:
-          TESTING_DATABASE: mariadb_alt
+          TESTING_DATABASE: mariadb-alt
           TESTING_USER: user
           TESTING_PASSWORD: password

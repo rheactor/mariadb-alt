@@ -11,11 +11,11 @@ const defaultConnection = {
   port: process.env.TESTING_PORT ?? 3306,
   user: process.env.TESTING_USER ?? "root",
   password: process.env.TESTING_PASSWORD,
-  database: process.env.TESTING_DATABASE ?? "mariadb_alt",
+  database: process.env.TESTING_DATABASE ?? "mariadb-alt",
 };
 
 const setSQLMode = (connection: Connection) => {
-  connection.queryDetailed(
+  connection.execute(
     'SET SESSION sql_mode = "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"'
   );
 };
