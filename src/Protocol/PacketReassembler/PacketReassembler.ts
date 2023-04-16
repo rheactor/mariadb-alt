@@ -78,6 +78,8 @@ export class PacketReassembler {
 
         return;
       }
+
+      throw new Error("malformed packet");
     }
   }
 }

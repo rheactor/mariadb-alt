@@ -10,6 +10,16 @@ import { TestConnection } from "@Tests/Fixtures/TestConnection";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
+  let connectionGlobal: Connection;
+
+  beforeAll(() => {
+    connectionGlobal = TestConnection();
+  });
+
+  afterAll(() => {
+    connectionGlobal.close();
+  });
+
   describe("connection ready", () => {
     test("authenticate", (done) => {
       expect.assertions(3);
@@ -35,19 +45,15 @@ describe(getTestName(__filename), () => {
     test("ping() command", async () => {
       expect.assertions(2);
 
-      const connectionBase = TestConnection();
-
-      const ping1 = expect(connectionBase.ping()).resolves.toBeInstanceOf(
+      const ping1 = expect(connectionGlobal.ping()).resolves.toBeInstanceOf(
         PacketOk
       );
 
-      const ping2 = expect(connectionBase.ping()).resolves.toBeInstanceOf(
+      const ping2 = expect(connectionGlobal.ping()).resolves.toBeInstanceOf(
         PacketOk
       );
 
       await Promise.all([ping1, ping2]);
-
-      connectionBase.close();
     });
 
     test("close() command", (done) => {
@@ -93,14 +99,8 @@ describe(getTestName(__filename), () => {
     ];
 
     describe.each(querySelectUnits)("query()", (input, outputNormalized) => {
-      let connectionBase: Connection;
-
-      beforeAll(() => {
-        connectionBase = TestConnection();
-      });
-
       test(`SELECT ${input} via queryDetailed()`, async () => {
-        const queryResult = await connectionBase.queryDetailed(
+        const queryResult = await connectionGlobal.queryDetailed(
           `SELECT ${input} AS \`value\``
         );
 
@@ -124,7 +124,7 @@ describe(getTestName(__filename), () => {
       });
 
       test(`SELECT ${input} via query()`, async () => {
-        const queryResult = await connectionBase.query<{
+        const queryResult = await connectionGlobal.query<{
           value: typeof outputNormalized;
         }>(`SELECT ${input} AS \`value\``);
 
@@ -138,29 +138,19 @@ describe(getTestName(__filename), () => {
           expect(result!.value).toStrictEqual(outputNormalized);
         }
       });
-
-      afterAll(() => {
-        connectionBase.close();
-      });
     });
 
     describe("query()", () => {
-      let connectionBase: Connection;
-
-      beforeAll(() => {
-        connectionBase = TestConnection();
-      });
-
       test(`create table`, async () => {
         const table = `test-${Math.random()}`;
 
         expect(
-          await connectionBase.queryDetailed(
+          await connectionGlobal.queryDetailed(
             `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`
           )
         ).toBeInstanceOf(PacketOk);
 
-        const insertInto = await connectionBase.queryDetailed(
+        const insertInto = await connectionGlobal.queryDetailed(
           `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`
         );
 
@@ -171,7 +161,7 @@ describe(getTestName(__filename), () => {
           expect(insertInto.lastInsertId).toBe(123);
         }
 
-        const query = await connectionBase.queryDetailed(
+        const query = await connectionGlobal.queryDetailed(
           `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``
         );
 
@@ -198,7 +188,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(2);
 
         try {
-          await connectionBase.query("SELECT ?");
+          await connectionGlobal.query("SELECT ?");
         } catch (error) {
           expect(error).toBeInstanceOf(QueryError);
 
@@ -212,7 +202,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(2);
 
         try {
-          await connectionBase.query("SELECT ?", []);
+          await connectionGlobal.query("SELECT ?", []);
         } catch (error) {
           expect(error).toBeInstanceOf(QueryError);
 
@@ -226,7 +216,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(2);
 
         try {
-          await connectionBase.query("DO NULL");
+          await connectionGlobal.query("DO NULL");
         } catch (error) {
           expect(error).toBeInstanceOf(QueryError);
 
@@ -237,7 +227,7 @@ describe(getTestName(__filename), () => {
       });
 
       test(`execute()`, async () => {
-        const result = await connectionBase.execute("DO NULL");
+        const result = await connectionGlobal.execute("DO NULL");
 
         expect(result).toBeInstanceOf(PacketOk);
 
@@ -250,7 +240,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(2);
 
         try {
-          await connectionBase.execute("SELECT ?");
+          await connectionGlobal.execute("SELECT ?");
         } catch (error) {
           expect(error).toBeInstanceOf(ExecuteError);
 
@@ -264,7 +254,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(2);
 
         try {
-          await connectionBase.execute("SELECT 1");
+          await connectionGlobal.execute("SELECT 1");
         } catch (error) {
           expect(error).toBeInstanceOf(ExecuteError);
 
@@ -273,10 +263,6 @@ describe(getTestName(__filename), () => {
           }
         }
       });
-
-      afterAll(() => {
-        connectionBase.close();
-      });
     });
 
     describe("query()", () => {
@@ -284,10 +270,8 @@ describe(getTestName(__filename), () => {
       let packet65KBOnLimit: Buffer;
       let packet16MB: Buffer;
       let packet16MBOnLimit: Buffer;
-      let connectionBase: Connection;
 
       beforeAll(() => {
-        connectionBase = TestConnection();
         packet16MB = Buffer.alloc(16 * 1024 ** 2).fill("0");
         packet16MBOnLimit = packet16MB.subarray(0, packet16MB.length - 21);
         packet65KB = packet16MB.subarray(0, 65 * 1024);
@@ -295,7 +279,7 @@ describe(getTestName(__filename), () => {
       });
 
       test(`65KB packet chunked`, async () => {
-        const [result] = await connectionBase.query<{ packet: string }>(
+        const [result] = await connectionGlobal.query<{ packet: string }>(
           `SELECT '${packet65KB.toString("binary")}' AS packet`
         );
 
@@ -304,7 +288,7 @@ describe(getTestName(__filename), () => {
       });
 
       test(`65KB packet chunked on limit`, async () => {
-        const [result] = await connectionBase.query<{ packet: string }>(
+        const [result] = await connectionGlobal.query<{ packet: string }>(
           `SELECT '${packet65KBOnLimit.toString("binary")}' AS packet`
         );
 
@@ -315,7 +299,7 @@ describe(getTestName(__filename), () => {
       });
 
       test(`16MB packet on limit`, async () => {
-        const [result] = await connectionBase.query<{ packet: string }>(
+        const [result] = await connectionGlobal.query<{ packet: string }>(
           `SELECT '${packet16MBOnLimit.toString("binary")}' AS packet`
         );
 
@@ -326,25 +310,21 @@ describe(getTestName(__filename), () => {
       }, 5000);
 
       test(`16MB packet (without prepared statement)`, async () => {
-        const [result] = await connectionBase.query<{ packet: number }>(
+        const [result] = await connectionGlobal.query<{ packet: number }>(
           `SELECT LENGTH('${packet16MB.toString("binary")}') AS packet`
         );
 
         expect(result!.packet).toStrictEqual(packet16MB.length);
-      });
+      }, 5000);
 
       test(`16MB packet (prepared statement)`, async () => {
-        const [result] = await connectionBase.query<{ packet: number }>(
+        const [result] = await connectionGlobal.query<{ packet: number }>(
           `SELECT LENGTH(?) AS packet`,
           [packet16MB]
         );
 
         expect(result!.packet).toStrictEqual(packet16MB.length);
-      });
-
-      afterAll(() => {
-        connectionBase.close();
-      });
+      }, 5000);
     });
   });
 

@@ -61,8 +61,8 @@ class ConnectionCommand {
   public constructor(
     public readonly buffer: Buffer,
     public resolve: (data: PacketType) => void,
-    public reassembler: Reassembler | undefined = undefined,
-    public sequence = 0
+    public reassembler: Reassembler | undefined,
+    public sequence: number
   ) {}
 }
 
@@ -335,17 +335,21 @@ export class Connection extends ConnectionEvents {
             this.status = Status.READY;
             this.emit("authenticated", this);
             this.commandRun();
-          } else if (response instanceof PacketError) {
-            this.status = Status.ERROR;
-            this.emit(
-              "error",
-              this,
-              new Error(response.message, {
-                cause: response,
-              })
-            );
-            this.close();
+
+            return;
           }
+
+          // if (response instanceof PacketError)
+          this.status = Status.ERROR;
+          this.emit(
+            "error",
+            this,
+            new Error((response as PacketError).message, {
+              cause: response,
+            })
+          );
+
+          this.close();
         },
         undefined,
         1

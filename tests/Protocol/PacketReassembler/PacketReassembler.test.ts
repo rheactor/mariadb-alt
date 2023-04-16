@@ -208,4 +208,16 @@ describe(getTestName(__filename), () => {
       });
     }
   );
+
+  describe("PacketReassembler()", () => {
+    test("malformed packet", () => {
+      const reassembler = new PacketReassembler(() => {
+        // empty
+      });
+
+      expect(() =>
+        reassembler.push(Buffer.from([0x01, 0x00, 0x00, 0x00, 0x01]))
+      ).toThrowError("malformed packet");
+    });
+  });
 });
