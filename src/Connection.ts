@@ -9,9 +9,12 @@ import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
 import {
-  PreparedStatementResponse,
-  type ExecuteArgument as QueryArgument,
-} from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+  PacketReassembler,
+  type PacketType,
+} from "@/Protocol/PacketReassembler/PacketReassembler";
+import { type Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
+import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
+import { type ExecuteArgument as QueryArgument } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { EventEmitter } from "@/Utils/EventEmitter";
 
@@ -48,10 +51,13 @@ type ConnectionEventsCommon =
   | "closed"
   | "connected";
 
-interface ConnectionCommand {
-  buffer: Buffer;
-  sequence: number;
-  resolve(data: Buffer): void;
+class ConnectionCommand {
+  public constructor(
+    public readonly buffer: Buffer,
+    public resolve: (data: PacketType) => void,
+    public reassembler: Reassembler | undefined = undefined,
+    public sequence = 0
+  ) {}
 }
 
 abstract class ConnectionEvents {
@@ -104,8 +110,6 @@ abstract class ConnectionEvents {
 export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
 
-  public initialHandshake?: Handshake;
-
   private connected = false;
 
   private readonly commands: ConnectionCommand[] = [];
@@ -134,7 +138,7 @@ export class Connection extends ConnectionEvents {
     });
 
     socket.once("data", (data) => {
-      this.processResponse(data);
+      this.authenticate(data);
     });
 
     socket.once("error", (err) => {
@@ -168,31 +172,17 @@ export class Connection extends ConnectionEvents {
   }
 
   public async ping() {
-    return this.commandQueue(Buffer.from([0x0e])).then((data) =>
-      Packet.fromResponse(data)
-    );
+    return this.commandQueue(Buffer.from([0x0e]));
   }
 
   public async queryDetailed(sql: string, args?: QueryArgument[]) {
     if (args !== undefined && args.length > 0) {
-      return this.commandQueue(Buffer.from(`\x16${sql}`)).then(
-        async (packet) => {
-          if (PacketError.is(packet)) {
-            return Packet.fromResponse(packet);
-          }
-
-          return new PreparedStatementResultSet(
-            await this.commandQueue(
-              new PreparedStatementResponse(packet).execute(args),
-              true
-            )
-          );
-        }
-      );
+      // empty todo
     }
 
-    return this.commandQueue(Buffer.from(`\x03${sql}`)).then((data) =>
-      Packet.fromResponse(data)
+    return this.commandQueue(
+      Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
+      new ReassemblerResultSet()
     );
   }
 
@@ -242,12 +232,24 @@ export class Connection extends ConnectionEvents {
     this.socket.end();
   }
 
-  private async commandQueue(buffer: Buffer, prioritize = false, sequence = 0) {
-    return new Promise<Buffer>((resolve) => {
+  private async commandQueue(
+    buffer: Buffer,
+    reassembler: Reassembler | undefined = undefined,
+    prioritize = false,
+    sequence = 0
+  ) {
+    return new Promise<PacketType>((resolve) => {
+      const command = new ConnectionCommand(
+        buffer,
+        resolve,
+        reassembler,
+        sequence
+      );
+
       if (prioritize) {
-        this.commands.unshift({ buffer, resolve, sequence });
+        this.commands.unshift(command);
       } else {
-        this.commands.push({ buffer, resolve, sequence });
+        this.commands.push(command);
       }
 
       this.commandRun();
@@ -255,69 +257,78 @@ export class Connection extends ConnectionEvents {
   }
 
   private commandRun() {
-    if (this.status === Status.READY) {
-      const command = this.commands.shift();
-
-      if (!command) {
-        return;
-      }
-
-      this.status = Status.EXECUTING;
-
-      this.socket.once("data", (data) => {
-        this.status = Status.READY;
-
-        command.resolve(data);
-
-        this.commandRun();
-      });
-
-      this.socket.write(Packet.from(command.buffer, command.sequence));
+    if (this.status !== Status.READY) {
+      return;
     }
+
+    const command = this.commands.shift();
+
+    if (!command) {
+      return;
+    }
+
+    this.status = Status.EXECUTING;
+
+    // eslint-disable-next-line promise/catch-or-return
+    this.send(command).finally(() => {
+      this.status = Status.READY;
+      this.commandRun();
+    });
   }
 
-  private processResponse(data: Buffer) {
-    const initialHandshakePacket = new Packet(data);
+  private async send(command: ConnectionCommand) {
+    return new Promise<void>((resolve) => {
+      const reassembler = new PacketReassembler((data) => {
+        this.socket.off("data", reassemblerPush);
 
-    this.initialHandshake = new Handshake(initialHandshakePacket.body);
+        command.resolve(data);
+        resolve();
+      }, command.reassembler);
 
-    this.socket.once("data", (serverData) => {
-      const serverResponse = Packet.fromResponse(serverData) as
-        | PacketError
-        | PacketOk;
+      const reassemblerPush = reassembler.push.bind(reassembler);
 
-      if (serverResponse instanceof PacketOk) {
-        this.status = Status.READY;
-        this.emit("authenticated", this);
-        this.commandRun();
-      } else {
-        this.status = Status.ERROR;
-        this.emit(
-          "error",
-          this,
-          new Error(serverResponse.message, {
-            cause: serverResponse,
-          })
-        );
-        this.close();
-      }
+      this.socket.on("data", reassemblerPush);
+      this.socket.write(Packet.from(command.buffer, command.sequence));
     });
+  }
 
-    const handshakeResponse = Packet.from(
-      createHandshakeResponse(
-        this.initialHandshake.authSeed,
-        this.initialHandshake.authPluginName,
-        this.options.user,
-        this.options.password ?? "",
-        this.options.database,
-        0xffffffff
-      ),
-      initialHandshakePacket.sequence + 1
-    );
-
+  private authenticate(data: Buffer) {
     this.status = Status.AUTHENTICATING;
     this.emit("authenticating", this);
 
-    this.socket.write(handshakeResponse);
+    const handshake = new Handshake(data.subarray(4));
+    const handshakeResponse = createHandshakeResponse(
+      handshake.authSeed,
+      handshake.authPluginName,
+      this.options.user,
+      this.options.password ?? "",
+      this.options.database,
+      0xffffffff
+    );
+
+    this.send(
+      new ConnectionCommand(
+        handshakeResponse,
+        (response) => {
+          if (response instanceof PacketOk) {
+            this.status = Status.READY;
+            this.emit("authenticated", this);
+            this.commandRun();
+          } else if (response instanceof PacketError) {
+            this.status = Status.ERROR;
+            this.emit(
+              "error",
+              this,
+              new Error(response.message, {
+                cause: response,
+              })
+            );
+            this.close();
+          }
+        },
+        undefined,
+        1
+      )
+    );
   }
 }

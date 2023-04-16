@@ -42,7 +42,7 @@ const readFieldExtended = (bufferConsumer: BufferConsumer) => {
 
 export const readField = (bufferConsumer: BufferConsumer) => {
   bufferConsumer
-    .skip(8) // header + catalog
+    .skip(4) // catalog
     .skipStringEncoded() // database
     .skipStringEncoded() // table alias
     .skipStringEncoded(); // table

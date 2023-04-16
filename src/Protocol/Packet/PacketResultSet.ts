@@ -5,7 +5,7 @@ import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-type RowUnprocessed = Array<Buffer | null>;
+export type RowUnprocessed = Array<Buffer | null>;
 
 export type Row = Record<
   string,
@@ -141,9 +141,7 @@ export class PacketResultSet {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
-    while (this.bufferConsumer.at(4) !== 0xfe) {
-      this.bufferConsumer.skip(4); // header
-
+    while (!this.bufferConsumer.consumed()) {
       const row: RowUnprocessed = [];
 
       for (let i = 0; i < fieldsLength; i++) {

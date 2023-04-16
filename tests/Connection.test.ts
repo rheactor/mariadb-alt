@@ -3,7 +3,7 @@ import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
 import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
 import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
-import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
+import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
@@ -309,7 +309,7 @@ describe(getTestName(__filename), () => {
         expect(connection.isError()).toBe(true);
         expect(error.message).toContain("random-user");
 
-        if (error.cause instanceof PacketErrorState) {
+        if (error.cause instanceof PacketError) {
           expect(error.cause.code).toBe(1045);
         }
       });
@@ -330,7 +330,7 @@ describe(getTestName(__filename), () => {
         expect(connection.isError()).toBe(true);
         expect(error.message).toContain("denied for user");
 
-        if (error.cause instanceof PacketErrorState) {
+        if (error.cause instanceof PacketError) {
           expect(error.cause.code).toBe(1045);
         }
       });

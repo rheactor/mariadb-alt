@@ -1,9 +1,6 @@
 import { Packet } from "@/Protocol/Packet/Packet";
-import { PacketEOF } from "@/Protocol/Packet/PacketEOF";
 import { PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { getTestName } from "@Tests/Fixtures/Utils";
 

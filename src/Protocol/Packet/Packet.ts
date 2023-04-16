@@ -1,10 +1,4 @@
-import { PacketEOF } from "@/Protocol/Packet/PacketEOF";
-import { PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketErrorState } from "@/Protocol/Packet/PacketErrorState";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketProgress } from "@/Protocol/Packet/PacketProgress";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { chunk } from "@/Utils/BufferUtil";
 
 export class Packet {
   /** Packet 3-byte length. */
@@ -23,47 +17,35 @@ export class Packet {
     this.length = this.body.length;
   }
 
-  /** Creates a new Packet. */
-  public static from(body: Buffer, sequence: number) {
-    const buffer = Buffer.alloc(4 + body.length);
+  /** Creates the packet buffer. */
+  public static from(input: Buffer, sequence: number) {
+    const packets: Buffer[] = [];
 
-    buffer.writeIntLE(body.length, 0, 3);
-    buffer.writeInt8(sequence, 3);
-    buffer.set(body, 4);
+    for (const buffer of chunk(input, 0xffffff)) {
+      const packet = Buffer.alloc(4 + buffer.length);
 
-    return buffer;
-  }
+      packet.writeUIntLE(buffer.length, 0, 3);
+      packet.writeUInt8((sequence + packets.length) & 0xff, 3);
+      packet.set(buffer, 4);
 
-  /** Create a PacketOK or PacketError, depending of data Buffer content. */
-  public static fromResponse(data: Buffer) {
-    const bufferConsumer = new BufferConsumer(data);
-    const bufferLength = bufferConsumer.readUInt(3);
-    const bufferType = bufferConsumer.skip().readUInt();
-
-    if (bufferType === 0x00) {
-      return new PacketOk(bufferConsumer.rest());
+      packets.push(packet);
     }
 
-    if (bufferType === 0xfe && bufferLength === 5) {
-      return new PacketEOF(bufferConsumer.rest());
+    // When the packet is sent exactly at the chunk boundary (16MB),
+    // we need to send an additional empty packet.
+    if ((input.length & 0xffffff) === 0xffffff) {
+      packets.push(
+        Buffer.from([
+          // Length: 0 bytes.
+          0,
+          0,
+          0,
+          // Sequence: next.
+          (sequence + packets.length) & 0xff,
+        ])
+      );
     }
 
-    if (bufferType !== 0xff) {
-      return new PacketResultSet(bufferConsumer.rest(-1));
-    }
-
-    const bufferErrorCode = bufferConsumer.readUInt(2);
-
-    if (bufferErrorCode === 0xffff) {
-      return new PacketProgress(bufferConsumer.rest());
-    }
-
-    const bufferStateMarker = bufferConsumer.readString(1);
-
-    if (bufferStateMarker.at(0) === 0x23) {
-      return new PacketErrorState(bufferErrorCode, bufferConsumer.rest());
-    }
-
-    return new PacketError(bufferErrorCode, bufferConsumer.rest(-1));
+    return Buffer.concat(packets);
   }
 }
