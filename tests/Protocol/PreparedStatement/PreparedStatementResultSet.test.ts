@@ -13,6 +13,8 @@ describe(getTestName(__filename), () => {
   type QueryUnit = [string, ExecuteArgument | undefined, Row];
 
   const queryUnits: QueryUnit[] = [
+    ["SELECT TRUE, ?", true, { TRUE: 1, "?": 1 }],
+    ["SELECT FALSE, ?", false, { FALSE: 0, "?": 0 }],
     ["SELECT ?", 0, { "?": 0 }],
     ["SELECT ?", 0xff, { "?": 0xff }],
     ["SELECT ?", -0x7f, { "?": -0x7f }],

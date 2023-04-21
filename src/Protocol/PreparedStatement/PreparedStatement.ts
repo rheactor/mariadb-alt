@@ -17,6 +17,7 @@ export type ExecuteArgument =
   | DateTimeFormat
   | TimeFormat
   | bigint
+  | boolean
   | number
   | string
   | null
@@ -173,6 +174,9 @@ export const createExecutePacket = (
         )
       );
       types.push(createTypeBuffer(FieldTypes.TIME));
+    } else if (typeof parameter === "boolean") {
+      values.push(Buffer.from([Number(parameter)]));
+      types.push(createTypeBuffer(FieldTypes.TINYINT));
     } else {
       // if (parameter instanceof Buffer)
       values.push(toStringEncoded(parameter));
