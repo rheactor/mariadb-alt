@@ -32,8 +32,13 @@ interface ConnectionPoolOptions {
 type AcquireCallback<T> = (connection: Connection) => Promise<T>;
 
 interface AcquisitionQueued<T> {
+  options: AcquireOptions;
   acquireCallback: AcquireCallback<T>;
   resolve(data: unknown): void;
+}
+
+interface AcquireOptions {
+  renew?: boolean;
 }
 
 interface ConnectionPoolDebug {
@@ -87,7 +92,10 @@ export class ConnectionPool {
   }
 
   /** Acquire an exclusive idle connection. */
-  public async acquire<T>(acquireCallback: AcquireCallback<T>): Promise<T> {
+  public async acquire<T>(
+    acquireCallback: AcquireCallback<T>,
+    options: AcquireOptions = {}
+  ): Promise<T> {
     const connection = this.idleConnections.pop();
 
     if (connection === undefined) {
@@ -99,8 +107,16 @@ export class ConnectionPool {
       }
 
       return new Promise((resolve) => {
-        this.acquisitionQueue.push({ acquireCallback, resolve });
+        this.acquisitionQueue.push({ options, acquireCallback, resolve });
       });
+    }
+
+    if (options.renew === true) {
+      return connection
+        .close()
+        .then(async () =>
+          this.acquireWith<T>(acquireCallback, this.initializeConnection())
+        );
     }
 
     return this.acquireWith<T>(acquireCallback, connection);
@@ -163,7 +179,10 @@ export class ConnectionPool {
       const acquisitionQueued = this.acquisitionQueue.shift();
 
       if (acquisitionQueued !== undefined) {
-        const result = await this.acquire(acquisitionQueued.acquireCallback);
+        const result = await this.acquire(
+          acquisitionQueued.acquireCallback,
+          acquisitionQueued.options
+        );
 
         acquisitionQueued.resolve(result);
       }

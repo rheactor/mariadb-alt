@@ -222,4 +222,49 @@ describe(getTestName(__filename), () => {
       connectionPool.close();
     });
   });
+
+  describe.only("connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({
+        idleConnections: 1,
+        connections: 1,
+      });
+    });
+
+    test("force idle connection to be renewed", async () => {
+      const referenceValue = Math.random();
+
+      // From IDLE, that will requires to be awaited because of 1 connection idle limit.
+      const query1 = connectionPool.acquire(async (connection) =>
+        connection.execute("SET @REFERENCE_VALUE := ?", [referenceValue])
+      );
+
+      // Check if reference value stills is the same from previous acquire: it must be, because the connection is the same.
+      const query2 = connectionPool.acquire(async (connection) =>
+        connection.query<{ "@REFERENCE_VALUE": number }>(
+          "SELECT @REFERENCE_VALUE"
+        )
+      );
+
+      // Force renew, so reference value must be null now.
+      const query3 = connectionPool.acquire(
+        async (connection) =>
+          connection.query<{ "@REFERENCE_VALUE": null }>(
+            "SELECT @REFERENCE_VALUE"
+          ),
+        { renew: true }
+      );
+
+      const [, result2, result3] = await Promise.all([query1, query2, query3]);
+
+      expect([...result2][0]?.["@REFERENCE_VALUE"]).toBe(referenceValue);
+      expect([...result3][0]?.["@REFERENCE_VALUE"]).toBe(null);
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
 });
