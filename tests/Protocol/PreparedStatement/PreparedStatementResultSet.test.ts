@@ -10,68 +10,82 @@ import { TestConnection } from "@Tests/Fixtures/TestConnection";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
-  type QueryUnit = [string, ExecuteArgument[] | undefined, Row];
+  type QueryUnit = [string, ExecuteArgument | undefined, Row];
 
   const queryUnits: QueryUnit[] = [
-    ["SELECT TRUE, ?", [123], { TRUE: 1, "?": 123 }],
-    ["SELECT TRUE AS a, ? AS b", [123], { a: 1, b: 123 }],
-    ["SELECT ? AS a, FALSE as b", [123], { a: 123, b: 0 }],
-    ["SELECT NULL, ?", [-123], { NULL: null, "?": -123 }],
-    ["SELECT ?", [null], { "?": null }],
-    ["SELECT ?", ["123"], { "?": "123" }],
-    ["SELECT ?", [Buffer.from("123")], { "?": Buffer.from("123") }],
-    ["SELECT 123, ?", [null], { 123: 123, "?": null }],
-    ["SELECT ?, 123", [null], { 123: 123, "?": null }],
-    ["SELECT ? AS a, ? AS b", [null, 123], { a: null, b: 123 }],
-    ["SELECT ? AS a, ? AS b", [123, null], { a: 123, b: null }],
-    ["SELECT ?", [123.45], { "?": 123.45 }],
-    ["SELECT ?", [-123.45], { "?": -123.45 }],
-    ["SELECT ?", [1152921504606846975n], { "?": 1152921504606846975n }],
-    ["SELECT ?", [-1152921504606846975n], { "?": -1152921504606846975n }],
-    ["SELECT HEX(?)", ["example"], { "HEX(?)": "6578616D706C65" }],
+    ["SELECT ?", 0, { "?": 0 }],
+    ["SELECT ?", 0xff, { "?": 0xff }],
+    ["SELECT ?", -0x7f, { "?": -0x7f }],
+    ["SELECT ?", -0xff, { "?": -0xff }],
+    ["SELECT ?", 0xffff, { "?": 0xffff }],
+    ["SELECT ?", -0x7fff, { "?": -0x7fff }],
+    ["SELECT ?", -0xffff, { "?": -0xffff }],
+    ["SELECT ?", 0xffffff, { "?": 0xffffff }],
+    ["SELECT ?", -0x7fffff, { "?": -0x7fffff }],
+    ["SELECT ?", -0xffffff, { "?": -0xffffff }],
+    ["SELECT ?", 0xffffffff, { "?": 0xffffffff }],
+    ["SELECT ?", -0x7fffffff, { "?": -0x7fffffff }],
+    ["SELECT ?", -0xffffffff, { "?": -0xffffffffn }],
+    ["SELECT ?", 0xffffffffffn, { "?": 0xffffffffffn }],
+    ["SELECT ?", -0x7fffffffffn, { "?": -0x7fffffffffn }],
+    ["SELECT ?", 0xffffffffffffffffn, { "?": 0xffffffffffffffffn }],
+    ["SELECT ?", -0x7fffffffffffffffn, { "?": -0x7fffffffffffffffn }],
+    ["SELECT TRUE AS a, ? AS b", 123, { a: 1, b: 123 }],
+    ["SELECT ? AS a, FALSE as b", 123, { a: 123, b: 0 }],
+    ["SELECT NULL, ?", -123, { NULL: null, "?": -123 }],
+    ["SELECT ?", null, { "?": null }],
+    ["SELECT ?", "123", { "?": "123" }],
+    ["SELECT ?", Buffer.from("123"), { "?": Buffer.from("123") }],
+    ["SELECT 123, ?", null, { 123: 123, "?": null }],
+    ["SELECT ?, 123", null, { 123: 123, "?": null }],
+    ["SELECT ?", 123.45, { "?": 123.45 }],
+    ["SELECT ?", -123.45, { "?": -123.45 }],
+    ["SELECT ?", 1152921504606846975n, { "?": 1152921504606846975n }],
+    ["SELECT ?", -1152921504606846975n, { "?": -1152921504606846975n }],
+    ["SELECT HEX(?)", "example", { "HEX(?)": "6578616D706C65" }],
     [
       "SELECT CONCAT(x'4578616D706C65', ?)",
-      ["Example"],
+      "Example",
       { "CONCAT(x'4578616D706C65', ?)": "ExampleExample" },
     ],
     [
       "SELECT ?",
-      [new Date("2023-04-03T10:20:30.1234")],
+      new Date("2023-04-03T10:20:30.1234"),
       { "?": DateTimeFormat.parse("2023-04-03 10:20:30.123") },
     ],
     [
       "SELECT ?",
-      [new Date("2023-04-03T10:20:30.00012")],
+      new Date("2023-04-03T10:20:30.00012"),
       { "?": DateTimeFormat.parse("2023-04-03 10:20:30") },
     ],
     [
       "SELECT ?",
-      [DateTimeFormat.parse("2023-04-03 10:20:30.123456")],
+      DateTimeFormat.parse("2023-04-03 10:20:30.123456"),
       { "?": DateTimeFormat.parse("2023-04-03 10:20:30.123456") },
     ],
     [
       "SELECT ?",
-      [DateFormat.parse("2023-04-03")],
+      DateFormat.parse("2023-04-03"),
       { "?": DateTimeFormat.parse("2023-04-03 00:00:00") },
     ],
     [
       "SELECT ?",
-      [TimeFormat.parse("00:00:00")],
+      TimeFormat.parse("00:00:00"),
       { "?": TimeFormat.parse("00:00:00") },
     ],
     [
       "SELECT ?",
-      [TimeFormat.parse("10:20:30.123456")],
+      TimeFormat.parse("10:20:30.123456"),
       { "?": TimeFormat.parse("10:20:30.123456") },
     ],
     [
       "SELECT ?",
-      [TimeFormat.parse("838:59:59")],
+      TimeFormat.parse("838:59:59"),
       { "?": TimeFormat.parse("838:59:59") },
     ],
     [
       "SELECT ?",
-      [TimeFormat.parse("-838:59:59")],
+      TimeFormat.parse("-838:59:59"),
       { "?": TimeFormat.parse("-838:59:59") },
     ],
   ];
@@ -82,9 +96,9 @@ describe(getTestName(__filename), () => {
     connectionBase = TestConnection();
   });
 
-  describe.each(queryUnits)("query()", (query, args, output) => {
-    test(query, async () => {
-      const result = await connectionBase.queryDetailed(query, args);
+  describe.each(queryUnits)("query()", (query, input, output) => {
+    test(`${query}: ${String(input)}`, async () => {
+      const result = await connectionBase.queryDetailed(query, [input]);
 
       expect(result).toBeInstanceOf(PreparedStatementResultSet);
 

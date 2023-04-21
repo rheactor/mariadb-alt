@@ -47,10 +47,25 @@ export class PreparedStatementResultSet {
 
           case FieldTypes.INT:
             row[field.name] =
-              (field.flags & FieldFlags.UNSIGNED) === 0
+              (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.bufferConsumer.readUInt(4)
                 : this.bufferConsumer.readInt(4);
             break;
+
+          case FieldTypes.SMALLINT:
+            row[field.name] =
+              (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
+                ? this.bufferConsumer.readUInt(2)
+                : this.bufferConsumer.readInt(2);
+            break;
+
+          case FieldTypes.TINYINT:
+            row[field.name] =
+              (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
+                ? this.bufferConsumer.readUInt()
+                : this.bufferConsumer.readInt();
+            break;
+
           case FieldTypes.DECIMAL:
             row[field.name] = Number(
               this.bufferConsumer.readStringEncoded()!.toString()
@@ -69,7 +84,7 @@ export class PreparedStatementResultSet {
 
           case FieldTypes.BIGINT:
             row[field.name] =
-              (field.flags & FieldFlags.UNSIGNED) === 0
+              (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.bufferConsumer.readUBigInt()
                 : this.bufferConsumer.readBigInt();
             break;

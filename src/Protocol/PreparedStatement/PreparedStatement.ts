@@ -26,7 +26,7 @@ const enum TypeFlag {
   UNSIGNED = 128,
 }
 
-const createTypeBuffer = (type: number, unsigned = false): Buffer => {
+const createTypeBuffer = (type: number, unsigned = true): Buffer => {
   return Buffer.from([type, unsigned ? TypeFlag.UNSIGNED : 0]);
 };
 
@@ -52,11 +52,68 @@ export const createExecutePacket = (
       types.push(createTypeBuffer(FieldTypes.NULL));
     } else if (typeof parameter === "number") {
       if (Number.isSafeInteger(parameter)) {
-        const value = Buffer.alloc(4);
+        let value: Buffer;
+        let type: Buffer;
 
-        value.writeInt32LE(parameter);
+        // BIGINT > 0xFFFFFFFF
+        if (parameter > 0xffffffff) {
+          value = Buffer.alloc(8);
+          value.writeBigUInt64LE(BigInt(parameter));
+
+          type = createTypeBuffer(FieldTypes.BIGINT);
+        }
+        // INT, MEDIUMINT > 0xFFFF
+        else if (parameter > 0xffff) {
+          value = Buffer.alloc(4);
+          value.writeUInt32LE(parameter);
+
+          type = createTypeBuffer(FieldTypes.INT);
+        }
+        // SMALLINT > 0xFF
+        else if (parameter > 0xff) {
+          value = Buffer.alloc(2);
+          value.writeUInt16LE(parameter);
+
+          type = createTypeBuffer(FieldTypes.SMALLINT);
+        }
+        // TINYINT >= 0
+        else if (parameter >= 0) {
+          value = Buffer.alloc(1);
+          value.writeUInt8(parameter);
+
+          type = createTypeBuffer(FieldTypes.TINYINT);
+        }
+        // Negative TINYINT >= -0x7F
+        else if (parameter >= -0x7f) {
+          value = Buffer.alloc(1);
+          value.writeInt8(parameter);
+
+          type = createTypeBuffer(FieldTypes.TINYINT, false);
+        }
+        // Negative SMALLINT >= -0x7FFF
+        else if (parameter >= -0x7fff) {
+          value = Buffer.alloc(2);
+          value.writeInt16LE(parameter);
+
+          type = createTypeBuffer(FieldTypes.SMALLINT, false);
+        }
+        // Negative INT, MEDIUMINT >= -0x7FFFFFFF
+        else if (parameter >= -0x7fffffff) {
+          value = Buffer.alloc(4);
+          value.writeInt32LE(parameter);
+
+          type = createTypeBuffer(FieldTypes.INT, false);
+        }
+        // Negative BIGINT else
+        else {
+          value = Buffer.alloc(8);
+          value.writeBigInt64LE(BigInt(parameter));
+
+          type = createTypeBuffer(FieldTypes.BIGINT, false);
+        }
+
         values.push(value);
-        types.push(createTypeBuffer(FieldTypes.INT, parameter < 0));
+        types.push(type);
       } else {
         values.push(toStringEncoded(parameter.toString()));
         types.push(createTypeBuffer(FieldTypes.DECIMAL));
@@ -67,9 +124,14 @@ export const createExecutePacket = (
     } else if (typeof parameter === "bigint") {
       const value = Buffer.alloc(8);
 
-      value.writeBigInt64LE(parameter);
+      if (parameter >= 0) {
+        value.writeBigUInt64LE(parameter);
+      } else {
+        value.writeBigInt64LE(parameter);
+      }
+
       values.push(value);
-      types.push(createTypeBuffer(FieldTypes.BIGINT, parameter < 0n));
+      types.push(createTypeBuffer(FieldTypes.BIGINT, parameter >= 0));
     } else if (parameter instanceof Date) {
       values.push(
         toDatetimeEncoded(
