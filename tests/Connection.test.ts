@@ -236,6 +236,16 @@ describe(getTestName(__filename), () => {
         }
       });
 
+      test(`execute() PS without fields`, async () => {
+        const result = await connectionGlobal.execute("DO ?", [null]);
+
+        expect(result).toBeInstanceOf(PacketOk);
+
+        if (result instanceof PacketOk) {
+          expect(result.affectedRows).toBe(0);
+        }
+      });
+
       test(`execute() error`, async () => {
         expect.assertions(2);
 

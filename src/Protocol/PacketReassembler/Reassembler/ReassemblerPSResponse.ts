@@ -12,7 +12,13 @@ export class ReassemblerPSResponse extends Reassembler {
 
   // eslint-disable-next-line class-methods-use-this
   public is(packet: Buffer): boolean {
-    return packet.readUInt8(0) === 0x00;
+    if (packet.readUInt8(0) === 0x00) {
+      this.intermediateEOFFound = packet.readUint8(5) === 0;
+
+      return true;
+    }
+
+    return false;
   }
 
   public push(packet: Buffer): PushRecommendation {
