@@ -245,12 +245,17 @@ export class Connection extends ConnectionEvents {
     });
   }
 
-  public async close() {
-    if (this.connected) {
-      await this.commandQueue(Buffer.from([0x01]));
+  public async close(): Promise<void> {
+    if (!this.connected) {
+      this.socket.end();
+
+      return undefined;
     }
 
-    this.socket.end();
+    return new Promise((resolve) => {
+      this.socket.once("end", resolve);
+      this.commandQueue(Buffer.from([0x01]));
+    });
   }
 
   private async commandQueue(

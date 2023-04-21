@@ -56,7 +56,7 @@ describe(getTestName(__filename), () => {
       await Promise.all([ping1, ping2]);
     });
 
-    test("close() command", (done) => {
+    test("close() command before authentication", (done) => {
       expect.assertions(2);
 
       const connectionBase = TestConnection();
@@ -68,14 +68,32 @@ describe(getTestName(__filename), () => {
 
       connectionBase
         .close()
-        .then(() => {
-          expect(true).toBe(true);
-
-          return null;
-        })
+        .then(() => expect(true).toBe(true)) // no connected
         .catch(() => {
           /** empty */
         });
+    });
+
+    test("close() command after authentication", (done) => {
+      expect.assertions(3);
+
+      const connectionBase = TestConnection();
+
+      connectionBase.once("closed", () => {
+        expect(true).toBe(true);
+        done();
+      });
+
+      connectionBase.once("authenticated", () => {
+        expect(true).toBe(true);
+
+        connectionBase
+          .close()
+          .then(() => expect(true).toBe(true)) //  connected
+          .catch(() => {
+            /** empty */
+          });
+      });
     });
 
     type QuerySelectUnit = [
