@@ -96,6 +96,30 @@ describe(getTestName(__filename), () => {
       });
     });
 
+    describe("afterAuthenticated() option", () => {
+      let connectionBase: Connection;
+
+      beforeAll(() => {
+        connectionBase = TestConnection({
+          afterAuthenticated() {
+            this.execute("SET @REFERENCE_VALUE := ?", ["example"]);
+          },
+        });
+      });
+
+      test("test if reference value was set", async () => {
+        expect([
+          ...(await connectionBase.query<{ REFERENCE_VALUE: number }>(
+            "SELECT @REFERENCE_VALUE"
+          )),
+        ]).toStrictEqual([{ "@REFERENCE_VALUE": Buffer.from("example") }]);
+      });
+
+      afterAll(() => {
+        connectionBase.close();
+      });
+    });
+
     type QuerySelectUnit = [
       string,
       TimeFormat | bigint | number | string | null

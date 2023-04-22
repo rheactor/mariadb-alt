@@ -47,6 +47,9 @@ export interface ConnectionOptions {
 
   /** Connection database. Default is none. */
   database: string;
+
+  /** Do something with the connection after it is authenticated. */
+  afterAuthenticated?(this: Connection): void;
 }
 
 type ConnectionEventsError = "error";
@@ -118,7 +121,7 @@ export class Connection extends ConnectionEvents {
 
   private connected = false;
 
-  private readonly commands: ConnectionCommand[] = [];
+  private commands: ConnectionCommand[] = [];
 
   private readonly socket: Socket;
 
@@ -339,6 +342,15 @@ export class Connection extends ConnectionEvents {
           if (response instanceof PacketOk) {
             this.status = Status.READY;
             this.emit("authenticated", this);
+
+            if (this.options.afterAuthenticated) {
+              const queuedCommands = this.commands;
+
+              this.commands = [];
+              this.options.afterAuthenticated.call(this);
+              this.commands = queuedCommands;
+            }
+
             this.commandRun();
 
             return;
