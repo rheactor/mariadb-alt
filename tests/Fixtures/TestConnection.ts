@@ -14,19 +14,11 @@ const defaultConnection = {
   database: process.env.TESTING_DATABASE ?? "mariadb-alt",
 };
 
-const setSQLMode = (connection: Connection) => {
-  connection.execute(
-    'SET SESSION sql_mode = "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"'
-  );
-};
-
 export const TestConnection = (options?: TestConnectionOptions) => {
   const connection = new Connection({
     ...defaultConnection,
     ...(options ?? {}),
   });
-
-  setSQLMode(connection);
 
   return connection;
 };
@@ -38,10 +30,6 @@ type TestConnectionOptionsPool = Omit<ConnectionOptionsPool, "database"> &
 
 export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
   const connection = new ConnectionPool({
-    afterAuthenticated() {
-      setSQLMode(this);
-    },
-
     connections: 2,
 
     ...defaultConnection,

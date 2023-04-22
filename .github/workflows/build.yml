@@ -83,13 +83,13 @@ jobs:
           --health-timeout=5s
           --health-retries=3
         volumes:
-          - ${{ github.workspace }}/build:/etc/mysql/conf.d
+          - ${{ github.workspace }}/.github/build:/etc/mysql/conf.d
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Copy MariaDB configurations
-        run: sudo cp ${{ github.workspace }}/build/custom.cnf /etc/mysql/conf.d/custom.cnf
+        run: sudo cp ${{ github.workspace }}/.github/build/custom.cnf /etc/mysql/conf.d/custom.cnf
 
       - name: Restart MariaDB
         run: docker restart $(docker ps -q)
