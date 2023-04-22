@@ -85,10 +85,11 @@ export class PreparedStatementResultSet {
             break;
 
           case FieldTypes.BIGINT:
-            row[field.name] =
+            row[field.name] = toNumber(
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUBigInt()
-                : this.#bufferConsumer.readBigInt();
+                : this.#bufferConsumer.readBigInt()
+            )!;
             break;
 
           case FieldTypes.DATETIME:
