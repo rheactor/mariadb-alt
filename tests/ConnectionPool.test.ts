@@ -261,6 +261,63 @@ describe(getTestName(__filename), () => {
 
     beforeAll(() => {
       connectionPool = TestConnectionPool({
+        connections: 1,
+      });
+    });
+
+    test("force connections over-limit using .immediate=true option", async () => {
+      expect.assertions(15);
+
+      const query1 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.01)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
+
+      const query2 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.02)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
+
+      const query3 = connectionPool.acquire(
+        async (connection) => connection.query("SELECT SLEEP(0.03)"),
+        { immediate: true }
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(2);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
+
+      const query4 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.04)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(2);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(2);
+
+      await Promise.all([query1, query2, query3, query4]);
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
+
+  describe("connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({
         afterAuthenticated() {
           this.execute("SET @REFERENCE_VALUE = 123");
         },

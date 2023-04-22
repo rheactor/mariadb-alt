@@ -12,6 +12,13 @@ interface ConnectionPoolOptions {
   connections: number;
 
   /**
+   * Connections hard-limit.
+   * When you force acquire(..., { immediate: true }), hard-limit will be checked.
+   * Default is undefined ("unlimited").
+   */
+  connectionsHardLimit?: number;
+
+  /**
    * Connection release time when idle in ms.
    * Set as `undefined` means never release by idle timeout.
    * Default is 60000 (1 minute).
@@ -35,6 +42,7 @@ interface AcquisitionQueued<T> {
 
 interface AcquireOptions {
   renew?: boolean;
+  immediate?: boolean;
 }
 
 interface ConnectionPoolDebug {
@@ -95,7 +103,15 @@ export class ConnectionPool {
     const connection = this.#idleConnections.pop();
 
     if (connection === undefined) {
-      if (this.#connections.size < this.#options.connections) {
+      if (
+        // Immediate acquisitions must happen immediately.
+        // But still needs respect hard-limit, if set.
+        (options.immediate === true &&
+          (this.#options.connectionsHardLimit === undefined ||
+            this.#connections.size < this.#options.connectionsHardLimit)) ||
+        // Else, just consider soft-limit connections.
+        this.#connections.size < this.#options.connections
+      ) {
         return this.#acquireWith<T>(
           acquireCallback,
           this.#initializeConnection()
@@ -182,6 +198,12 @@ export class ConnectionPool {
     removeItem(this.#idleConnections, connection);
 
     return acquireCallback(connection).finally(async () => {
+      if (this.#connections.size > this.#options.connections) {
+        connection.close();
+
+        return;
+      }
+
       this.#idleConnections.push(connection);
       connectionTimer.restart();
 
