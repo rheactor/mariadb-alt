@@ -34,7 +34,7 @@ export class PreparedStatementResultSet {
 
     while (!this.#bufferConsumer.consumed()) {
       // Skip Header OK (0x00) and Null Bitmap.
-      this.#bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 7) / 8));
+      this.#bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 9) / 8));
 
       const row: Row = {};
 

@@ -10,6 +10,12 @@ import { TestConnection } from "@Tests/Fixtures/TestConnection";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
+  let connectionBase: Connection;
+
+  beforeAll(() => {
+    connectionBase = TestConnection();
+  });
+
   type QueryUnit = [string, ExecuteArgument | undefined, Row];
 
   const queryUnits: QueryUnit[] = [
@@ -104,12 +110,6 @@ describe(getTestName(__filename), () => {
     ],
   ];
 
-  let connectionBase: Connection;
-
-  beforeAll(() => {
-    connectionBase = TestConnection();
-  });
-
   describe.each(queryUnits)("query()", (query, input, output) => {
     test(`${query}: ${String(input)}`, async () => {
       const result = await connectionBase.queryDetailed(query, [input]);
@@ -120,6 +120,39 @@ describe(getTestName(__filename), () => {
         expect([...result.getRows()][0]!).toStrictEqual(output);
       }
     });
+  });
+
+  describe("query()", () => {
+    test(`SELECT ?, ? with NULL`, async () => {
+      const [...result] = await connectionBase.query(
+        "SELECT NULL AS a, ? AS b, 123 AS c, ? AS d, NULL AS e",
+        [null, null]
+      );
+
+      expect(result).toStrictEqual([
+        { a: null, b: null, c: 123, d: null, e: null },
+      ]);
+    });
+  });
+
+  type NullBitmapUnit = [number];
+
+  const nullBitmapUnits: NullBitmapUnit[] = Array(20).map((_value, index) => [
+    index,
+  ]);
+
+  describe.each(nullBitmapUnits)("query()", (nullBitmapSize) => {
+    test.only(`Null Bitmap size = ${nullBitmapSize}`, async () => {
+      const parameters = Buffer.allocUnsafe(nullBitmapSize * 2 - 1).fill("?,");
+      const parametersValues = Array(nullBitmapSize).fill(9);
+
+      const [...result] = await connectionBase.query(
+        `SELECT ${parameters.toString()}`,
+        parametersValues
+      );
+
+      expect(result).toStrictEqual([{ "?": 9 }]);
+    }, 1000);
   });
 
   describe("getRows()", () => {
