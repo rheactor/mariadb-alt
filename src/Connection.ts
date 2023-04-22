@@ -2,6 +2,7 @@ import { Socket } from "node:net";
 
 import { ExecuteError } from "@/Errors/ExecuteError";
 import { QueryError } from "@/Errors/QueryError";
+import { TooManyArgumentsError } from "@/Errors/TooManyArgumentsError";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { createPacket } from "@/Protocol/Packet/Packet";
@@ -192,6 +193,12 @@ export class Connection extends ConnectionEvents {
 
   public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
+      if (args.length > 0xffff) {
+        throw new TooManyArgumentsError(
+          `Prepared Statements supports only ${0xffff} arguments`
+        );
+      }
+
       return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
         new ReassemblerPSResponse()

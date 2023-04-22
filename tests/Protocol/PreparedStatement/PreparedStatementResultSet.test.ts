@@ -133,6 +133,17 @@ describe(getTestName(__filename), () => {
         { a: null, b: null, c: 123, d: null, e: null },
       ]);
     });
+
+    test("SELECT 64K arguments", async () => {
+      const parameters = Array(0xffff).fill(9);
+
+      const [...result] = await connectionBase.query(
+        `SELECT ${parameters.map(() => "?").join(",")}`,
+        parameters
+      );
+
+      expect(result).toStrictEqual([{ "?": 9 }]);
+    }, 0);
   });
 
   type NullBitmapUnit = [number];
@@ -142,7 +153,7 @@ describe(getTestName(__filename), () => {
   ]);
 
   describe.each(nullBitmapUnits)("query()", (nullBitmapSize) => {
-    test.only(`Null Bitmap size = ${nullBitmapSize}`, async () => {
+    test(`Null Bitmap size = ${nullBitmapSize}`, async () => {
       const parameters = Buffer.allocUnsafe(nullBitmapSize * 2 - 1).fill("?,");
       const parametersValues = Array(nullBitmapSize).fill(9);
 
@@ -226,6 +237,16 @@ describe(getTestName(__filename), () => {
         expect(result.code).toBe(1064);
         expect(result.message).toContain("'?'");
       }
+    });
+
+    test("SELECT +64K arguments must throw error", async () => {
+      const parameters = Array(0xffff + 1).fill(null);
+
+      expect(async () =>
+        connectionBase.queryDetailed("DO NULL", parameters)
+      ).rejects.toThrowError(
+        "Prepared Statements supports only 65535 arguments"
+      );
     });
   });
 
