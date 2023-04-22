@@ -123,16 +123,24 @@ export const createExecutePacket = (
       values.push(toStringEncoded(parameter));
       types.push(createTypeBuffer(FieldTypes.VARCHAR));
     } else if (typeof parameter === "bigint") {
-      const value = Buffer.alloc(8);
+      if (
+        parameter >= -0x7fffffffffffffffn &&
+        parameter <= 0xffffffffffffffffn
+      ) {
+        const value = Buffer.alloc(8);
 
-      if (parameter >= 0) {
-        value.writeBigUInt64LE(parameter);
+        if (parameter >= 0) {
+          value.writeBigUInt64LE(parameter);
+        } else {
+          value.writeBigInt64LE(parameter);
+        }
+
+        values.push(value);
+        types.push(createTypeBuffer(FieldTypes.BIGINT, parameter >= 0));
       } else {
-        value.writeBigInt64LE(parameter);
+        values.push(toStringEncoded(parameter.toString()));
+        types.push(createTypeBuffer(FieldTypes.DECIMAL));
       }
-
-      values.push(value);
-      types.push(createTypeBuffer(FieldTypes.BIGINT, parameter >= 0));
     } else if (parameter instanceof Date) {
       values.push(
         toDatetimeEncoded(

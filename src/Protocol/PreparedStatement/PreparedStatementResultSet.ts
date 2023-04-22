@@ -2,6 +2,7 @@ import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { type Row } from "@/Protocol/Packet/PacketResultSet";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { toNumber } from "@/Utils/NumberUtil";
 
 export class PreparedStatementResultSet {
   public fieldsCount: number;
@@ -67,9 +68,9 @@ export class PreparedStatementResultSet {
             break;
 
           case FieldTypes.DECIMAL:
-            row[field.name] = Number(
+            row[field.name] = toNumber(
               this.#bufferConsumer.readStringEncoded()!.toString()
-            );
+            )!;
             break;
 
           case FieldTypes.VARCHAR:

@@ -32,6 +32,16 @@ describe(getTestName(__filename), () => {
     ["SELECT ?", -0x7fffffffffn, { "?": -0x7fffffffffn }],
     ["SELECT ?", 0xffffffffffffffffn, { "?": 0xffffffffffffffffn }],
     ["SELECT ?", -0x7fffffffffffffffn, { "?": -0x7fffffffffffffffn }],
+    ["SELECT ?", -0xffffffffffffffffn, { "?": -0xffffffffffffffffn }],
+    ["SELECT ?", 0xffffffffffffffffffn, { "?": 0xffffffffffffffffffn }],
+    ["SELECT ?", -0xffffffffffffffffffn, { "?": -0xffffffffffffffffffn }],
+    [
+      "SELECT ?", // 66 digits, over 65 digits limit of DECIMAL() will works:
+      999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999n,
+      {
+        "?": 999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999_999n,
+      },
+    ],
     ["SELECT TRUE AS a, ? AS b", 123, { a: 1, b: 123 }],
     ["SELECT ? AS a, FALSE as b", 123, { a: 123, b: 0 }],
     ["SELECT NULL, ?", -123, { NULL: null, "?": -123 }],
