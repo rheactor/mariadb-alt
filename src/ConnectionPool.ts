@@ -22,11 +22,6 @@ interface ConnectionPoolOptions {
    * Default is half of `connections` options.
    */
   idleConnections: number;
-
-  /**
-   * Do something with the connection after it is initialized.
-   */
-  afterInitialize?(connection: Connection): void;
 }
 
 type AcquireCallback<T> = (connection: Connection) => Promise<T>;
@@ -142,6 +137,7 @@ export class ConnectionPool {
       user: this.options.user,
       password: this.options.password,
       database: this.options.database,
+      afterAuthenticated: this.options.afterAuthenticated,
     });
 
     const connectionTimer = new TimerUtil(() => {
@@ -150,7 +146,6 @@ export class ConnectionPool {
       }
     }, this.options.idleTimeout);
 
-    this.options.afterInitialize?.(connection);
     this.connections.set(connection, connectionTimer);
     this.idleConnections.push(connection);
 

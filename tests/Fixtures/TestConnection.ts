@@ -38,8 +38,8 @@ type TestConnectionOptionsPool = Omit<ConnectionOptionsPool, "database"> &
 
 export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
   const connection = new ConnectionPool({
-    afterInitialize(conn: Connection) {
-      setSQLMode(conn);
+    afterAuthenticated() {
+      setSQLMode(this);
     },
 
     connections: 2,

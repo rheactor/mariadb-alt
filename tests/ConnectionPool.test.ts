@@ -10,7 +10,7 @@ describe(getTestName(__filename), () => {
     sleep: number | null;
   }
 
-  describe("option.afterInitialize", () => {
+  describe("option.afterAuthenticated", () => {
     let connectionPool: ConnectionPool;
 
     beforeAll(() => {
@@ -223,7 +223,7 @@ describe(getTestName(__filename), () => {
     });
   });
 
-  describe.only("connections", () => {
+  describe("connections", () => {
     let connectionPool: ConnectionPool;
 
     beforeAll(() => {
@@ -261,6 +261,33 @@ describe(getTestName(__filename), () => {
 
       expect([...result2][0]?.["@REFERENCE_VALUE"]).toBe(referenceValue);
       expect([...result3][0]?.["@REFERENCE_VALUE"]).toBe(null);
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
+
+  describe("connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({
+        afterAuthenticated() {
+          this.execute("SET @REFERENCE_VALUE = 123");
+        },
+      });
+    });
+
+    test("afterAuthenticated() must return reference value", async () => {
+      const result = await connectionPool.queryDetailed(
+        "SELECT @REFERENCE_VALUE AS a"
+      );
+
+      expect(result).toBeInstanceOf(PacketResultSet);
+      expect([...(result as PacketResultSet).getRows()][0]).toStrictEqual({
+        a: 123n,
+      });
     });
 
     afterAll(() => {
