@@ -268,9 +268,13 @@ describe(getTestName(__filename), () => {
     });
 
     test("afterAuthenticated() must return reference value", async () => {
+      await connectionPool.execute(
+        "SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2"
+      );
+
       const result = await connectionPool.query("SELECT @REFERENCE_VALUE AS a");
 
-      expect([...result][0]).toStrictEqual({ a: 123n });
+      expect([...result][0]).toStrictEqual({ a: 246n });
     });
 
     afterAll(() => {

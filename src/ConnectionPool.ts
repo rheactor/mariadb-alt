@@ -132,6 +132,10 @@ export class ConnectionPool {
     return this.acquire(async (connection) => connection.query<T>(sql, args));
   }
 
+  public async execute(sql: string, args?: ExecuteArgument[]) {
+    return this.acquire(async (connection) => connection.execute(sql, args));
+  }
+
   public async close() {
     return Promise.all(
       [...this.#connections.keys()].map(async (connection) =>
