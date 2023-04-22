@@ -1,4 +1,5 @@
 import { Connection, type ConnectionOptions } from "@/Connection";
+import { type Row } from "@/Protocol/Packet/PacketResultSet";
 import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
 import { removeItem } from "@/Utils/ArrayUtil";
 import { TimerUtil } from "@/Utils/TimerUtil";
@@ -122,6 +123,13 @@ export class ConnectionPool {
     return this.acquire(async (connection) =>
       connection.queryDetailed(sql, args)
     );
+  }
+
+  public async query<T extends object = Row>(
+    sql: string,
+    args?: ExecuteArgument[]
+  ) {
+    return this.acquire(async (connection) => connection.query<T>(sql, args));
   }
 
   public async close() {

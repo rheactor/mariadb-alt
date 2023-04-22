@@ -1,6 +1,5 @@
 import { type ConnectionPool } from "@/ConnectionPool";
 import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnectionPool } from "@Tests/Fixtures/TestConnection";
 import { delay, getTestName } from "@Tests/Fixtures/Utils";
 
@@ -18,18 +17,14 @@ describe(getTestName(__filename), () => {
     });
 
     test("check sql_mode", async () => {
-      const query = await connectionPool.queryDetailed(
-        "SELECT @@SESSION.sql_mode"
-      );
+      const [result] = await connectionPool.query<{
+        "@@SESSION.sql_mode": string;
+      }>("SELECT @@SESSION.sql_mode");
 
-      expect(query).toBeInstanceOf(PacketResultSet);
-
-      if (query instanceof PacketResultSet) {
-        expect(query.getRows().next().value).toStrictEqual({
-          "@@SESSION.sql_mode":
-            "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION",
-        });
-      }
+      expect(result).toStrictEqual({
+        "@@SESSION.sql_mode":
+          "STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION",
+      });
     });
 
     afterAll(() => {
@@ -45,13 +40,9 @@ describe(getTestName(__filename), () => {
     });
 
     test("query()", async () => {
-      const query = await connectionPool.queryDetailed("SELECT 1");
+      const [result] = await connectionPool.query<{ "1": number }>("SELECT 1");
 
-      expect(query).toBeInstanceOf(PacketResultSet);
-
-      if (query instanceof PacketResultSet) {
-        expect(query.getRows().next().value).toStrictEqual({ "1": 1 });
-      }
+      expect(result).toStrictEqual({ "1": 1 });
     });
 
     afterAll(() => {
@@ -72,15 +63,15 @@ describe(getTestName(__filename), () => {
     });
 
     test("query() simultaneous", async () => {
-      expect.assertions(5);
+      expect.assertions(4);
 
-      const query1 = connectionPool.queryDetailed(
+      const query1 = connectionPool.query<TimeSleepResultSet>(
         "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
-      const query2 = connectionPool.queryDetailed(
+      const query2 = connectionPool.query<TimeSleepResultSet>(
         "SELECT NOW() AS time, NULL AS sleep"
       );
 
@@ -89,19 +80,12 @@ describe(getTestName(__filename), () => {
 
       await Promise.all([query1, query2])
         .then(([result1, result2]) => {
-          if (
-            result1 instanceof PacketResultSet &&
-            result2 instanceof PacketResultSet
-          ) {
-            expect(true).toBe(true);
+          const set1 = [...result1][0]!;
+          const set2 = [...result2][0]!;
 
-            const set1 = [...result1.getRows<TimeSleepResultSet>()][0]!;
-            const set2 = [...result2.getRows<TimeSleepResultSet>()][0]!;
-
-            expect(set2.time.toNativeDate().getTime()).toBeLessThan(
-              set1.time.toNativeDate().getTime()
-            );
-          }
+          expect(set2.time.toNativeDate().getTime()).toBeLessThan(
+            set1.time.toNativeDate().getTime()
+          );
 
           return true;
         })
@@ -128,15 +112,15 @@ describe(getTestName(__filename), () => {
     });
 
     test("query() queued", async () => {
-      expect.assertions(7);
+      expect.assertions(6);
 
-      const query1 = connectionPool.queryDetailed(
+      const query1 = connectionPool.query<TimeSleepResultSet>(
         "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
-      const query2 = connectionPool.queryDetailed(
+      const query2 = connectionPool.query<TimeSleepResultSet>(
         "SELECT NOW() AS time, NULL AS sleep"
       );
 
@@ -148,19 +132,12 @@ describe(getTestName(__filename), () => {
           expect(connectionPool.debug.idleConnectionsCount).toBe(1);
           expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
 
-          if (
-            result1 instanceof PacketResultSet &&
-            result2 instanceof PacketResultSet
-          ) {
-            expect(true).toBe(true);
+          const set1 = [...result1][0]!;
+          const set2 = [...result2][0]!;
 
-            const set1 = [...result1.getRows<TimeSleepResultSet>()][0]!;
-            const set2 = [...result2.getRows<TimeSleepResultSet>()][0]!;
-
-            expect(set2.time.toNativeDate().getTime()).toBeGreaterThan(
-              set1.time.toNativeDate().getTime()
-            );
-          }
+          expect(set2.time.toNativeDate().getTime()).toBeGreaterThan(
+            set1.time.toNativeDate().getTime()
+          );
 
           return true;
         })
@@ -191,17 +168,17 @@ describe(getTestName(__filename), () => {
     });
 
     test("connections", async () => {
-      const query1 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // from idle
+      const query1 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // from idle
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
       expect(connectionPool.debug.connectionsCount).toBe(1);
 
-      const query2 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // new connection
+      const query2 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // new connection
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
       expect(connectionPool.debug.connectionsCount).toBe(2);
 
-      const query3 = connectionPool.queryDetailed("SELECT NOW(), SLEEP(0.1)"); // queued acquisition
+      const query3 = connectionPool.query("SELECT NOW(), SLEEP(0.1)"); // queued acquisition
 
       expect(connectionPool.debug.connectionsCount).toBe(2);
       expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
@@ -291,14 +268,9 @@ describe(getTestName(__filename), () => {
     });
 
     test("afterAuthenticated() must return reference value", async () => {
-      const result = await connectionPool.queryDetailed(
-        "SELECT @REFERENCE_VALUE AS a"
-      );
+      const result = await connectionPool.query("SELECT @REFERENCE_VALUE AS a");
 
-      expect(result).toBeInstanceOf(PacketResultSet);
-      expect([...(result as PacketResultSet).getRows()][0]).toStrictEqual({
-        a: 123n,
-      });
+      expect([...result][0]).toStrictEqual({ a: 123n });
     });
 
     afterAll(() => {
