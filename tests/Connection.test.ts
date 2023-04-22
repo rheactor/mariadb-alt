@@ -1,8 +1,8 @@
 import { type Connection } from "@/Connection";
+import { ExecuteError } from "@/Errors/ExecuteError";
+import { QueryError } from "@/Errors/QueryError";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
-import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
-import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";

@@ -1,9 +1,9 @@
 import { Socket } from "node:net";
 
+import { ExecuteError } from "@/Errors/ExecuteError";
+import { QueryError } from "@/Errors/QueryError";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
-import { ExecuteError } from "@/Protocol/Packet/Errors/ExecuteError";
-import { QueryError } from "@/Protocol/Packet/Errors/QueryError";
 import { createPacket } from "@/Protocol/Packet/Packet";
 import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
