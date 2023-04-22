@@ -6,14 +6,14 @@ import {
 import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 
 export class ReassemblerPSResponse extends Reassembler {
-  private packet: Buffer | undefined = undefined;
+  #packet: Buffer | undefined = undefined;
 
-  private intermediateEOFFound = false;
+  #intermediateEOFFound = false;
 
   // eslint-disable-next-line class-methods-use-this
   public is(packet: Buffer): boolean {
     if (packet.readUInt8(0) === 0x00) {
-      this.intermediateEOFFound = packet.readUint8(5) === 0;
+      this.#intermediateEOFFound = packet.readUint8(5) === 0;
 
       return true;
     }
@@ -23,24 +23,24 @@ export class ReassemblerPSResponse extends Reassembler {
 
   public push(packet: Buffer): PushRecommendation {
     if (PacketOk.isEOF(packet)) {
-      if (this.intermediateEOFFound) {
+      if (this.#intermediateEOFFound) {
         return PushRecommendation.EOF;
       }
 
-      this.intermediateEOFFound = true;
+      this.#intermediateEOFFound = true;
 
       return PushRecommendation.CONTINUE;
     }
 
     // We need just the first packet, and ignoring first-byte header (0x00).
-    if (this.packet === undefined) {
-      this.packet = packet.subarray(1);
+    if (this.#packet === undefined) {
+      this.#packet = packet.subarray(1);
     }
 
     return PushRecommendation.CONTINUE;
   }
 
   public get() {
-    return PreparedStatementResponse.from(this.packet!);
+    return PreparedStatementResponse.from(this.#packet!);
   }
 }

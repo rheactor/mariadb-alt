@@ -6,34 +6,34 @@ import { BufferConsumer } from "@/Utils/BufferConsumer";
 export class PreparedStatementResultSet {
   public fieldsCount: number;
 
-  private fields: Field[] | undefined;
+  #fields: Field[] | undefined;
 
-  private readonly bufferConsumer: BufferConsumer;
+  readonly #bufferConsumer: BufferConsumer;
 
   public constructor(buffer: Buffer) {
-    this.bufferConsumer = new BufferConsumer(buffer);
-    this.fieldsCount = Number(this.bufferConsumer.readIntEncoded());
+    this.#bufferConsumer = new BufferConsumer(buffer);
+    this.fieldsCount = Number(this.#bufferConsumer.readIntEncoded());
   }
 
   public getFields() {
-    if (this.fields === undefined) {
-      this.fields = [];
+    if (this.#fields === undefined) {
+      this.#fields = [];
 
       for (let i = 0; i < this.fieldsCount; i++) {
-        this.fields.push(readField(this.bufferConsumer));
+        this.#fields.push(readField(this.#bufferConsumer));
       }
     }
 
-    return this.fields;
+    return this.#fields;
   }
 
   public *getRows<T extends object = Row>() {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
-    while (!this.bufferConsumer.consumed()) {
+    while (!this.#bufferConsumer.consumed()) {
       // Skip Header OK (0x00) and Null Bitmap.
-      this.bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 7) / 8));
+      this.#bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 7) / 8));
 
       const row: Row = {};
 
@@ -48,54 +48,54 @@ export class PreparedStatementResultSet {
           case FieldTypes.INT:
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
-                ? this.bufferConsumer.readUInt(4)
-                : this.bufferConsumer.readInt(4);
+                ? this.#bufferConsumer.readUInt(4)
+                : this.#bufferConsumer.readInt(4);
             break;
 
           case FieldTypes.SMALLINT:
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
-                ? this.bufferConsumer.readUInt(2)
-                : this.bufferConsumer.readInt(2);
+                ? this.#bufferConsumer.readUInt(2)
+                : this.#bufferConsumer.readInt(2);
             break;
 
           case FieldTypes.TINYINT:
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
-                ? this.bufferConsumer.readUInt()
-                : this.bufferConsumer.readInt();
+                ? this.#bufferConsumer.readUInt()
+                : this.#bufferConsumer.readInt();
             break;
 
           case FieldTypes.DECIMAL:
             row[field.name] = Number(
-              this.bufferConsumer.readStringEncoded()!.toString()
+              this.#bufferConsumer.readStringEncoded()!.toString()
             );
             break;
 
           case FieldTypes.VARCHAR:
-            row[field.name] = this.bufferConsumer
+            row[field.name] = this.#bufferConsumer
               .readStringEncoded()!
               .toString();
             break;
 
           case FieldTypes.BLOB:
           case FieldTypes.LONGBLOB:
-            row[field.name] = this.bufferConsumer.readStringEncoded();
+            row[field.name] = this.#bufferConsumer.readStringEncoded();
             break;
 
           case FieldTypes.BIGINT:
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
-                ? this.bufferConsumer.readUBigInt()
-                : this.bufferConsumer.readBigInt();
+                ? this.#bufferConsumer.readUBigInt()
+                : this.#bufferConsumer.readBigInt();
             break;
 
           case FieldTypes.DATETIME:
-            row[field.name] = this.bufferConsumer.readDatetimeEncoded();
+            row[field.name] = this.#bufferConsumer.readDatetimeEncoded();
             break;
 
           case FieldTypes.TIME:
-            row[field.name] = this.bufferConsumer.readTimeEncoded();
+            row[field.name] = this.#bufferConsumer.readTimeEncoded();
             break;
 
           default: // empty

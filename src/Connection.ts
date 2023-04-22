@@ -70,7 +70,7 @@ class ConnectionCommand {
 }
 
 abstract class ConnectionEvents {
-  private readonly eventsEmitter = new EventEmitter();
+  readonly #eventsEmitter = new EventEmitter();
 
   public on(
     eventName: ConnectionEventsError,
@@ -87,7 +87,7 @@ abstract class ConnectionEvents {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     listener: (...args: any[]) => void
   ): void {
-    this.eventsEmitter.on(eventName, listener);
+    this.#eventsEmitter.on(eventName, listener);
   }
 
   public once(
@@ -105,27 +105,27 @@ abstract class ConnectionEvents {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     listener: (...args: any[]) => void
   ): void {
-    this.eventsEmitter.once(eventName, listener);
+    this.#eventsEmitter.once(eventName, listener);
   }
 
   public emit(
     eventName: ConnectionEventsCommon | ConnectionEventsError,
     ...args: Parameters<EventEmitter["emit"]>[1]
   ): void {
-    this.eventsEmitter.emit(eventName, ...args);
+    this.#eventsEmitter.emit(eventName, ...args);
   }
 }
 
 export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
 
-  private connected = false;
+  #connected = false;
 
-  private commands: ConnectionCommand[] = [];
+  #commands: ConnectionCommand[] = [];
 
-  private readonly socket: Socket;
+  readonly #socket: Socket;
 
-  private readonly options: ConnectionOptions;
+  readonly #options: ConnectionOptions;
 
   #wasUsed = false;
 
@@ -134,7 +134,7 @@ export class Connection extends ConnectionEvents {
   ) {
     super();
 
-    this.options = {
+    this.#options = {
       host: "localhost",
       port: 3306,
       user: "root",
@@ -144,12 +144,12 @@ export class Connection extends ConnectionEvents {
     const socket = new Socket();
 
     socket.once("connect", () => {
-      this.connected = true;
+      this.#connected = true;
       this.emit("connected", this);
     });
 
     socket.once("data", (data) => {
-      this.authenticate(data);
+      this.#authenticate(data);
     });
 
     socket.once("error", (err) => {
@@ -161,9 +161,9 @@ export class Connection extends ConnectionEvents {
       this.emit("closed", this);
     });
 
-    socket.connect(this.options.port, this.options.host);
+    socket.connect(this.#options.port, this.#options.host);
 
-    this.socket = socket;
+    this.#socket = socket;
   }
 
   public get wasUsed() {
@@ -171,7 +171,7 @@ export class Connection extends ConnectionEvents {
   }
 
   public isConnected() {
-    return this.connected;
+    return this.#connected;
   }
 
   public isError() {
@@ -187,12 +187,12 @@ export class Connection extends ConnectionEvents {
   }
 
   public async ping() {
-    return this.commandQueue(Buffer.from([0x0e]));
+    return this.#commandQueue(Buffer.from([0x0e]));
   }
 
   public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
-      return this.commandQueue(
+      return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
         new ReassemblerPSResponse()
       ).then(async (packet) => {
@@ -202,7 +202,7 @@ export class Connection extends ConnectionEvents {
 
         const response = packet as PreparedStatementResponse;
 
-        return this.commandQueue(
+        return this.#commandQueue(
           createExecutePacket(response, args),
           new ReassemblerPSResultSet(),
           true
@@ -210,7 +210,7 @@ export class Connection extends ConnectionEvents {
       });
     }
 
-    return this.commandQueue(
+    return this.#commandQueue(
       Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
       new ReassemblerResultSet()
     );
@@ -255,19 +255,19 @@ export class Connection extends ConnectionEvents {
   }
 
   public async close(): Promise<void> {
-    if (!this.connected) {
-      this.socket.end();
+    if (!this.#connected) {
+      this.#socket.end();
 
       return undefined;
     }
 
     return new Promise((resolve) => {
-      this.socket.once("end", resolve);
-      this.commandQueue(Buffer.from([0x01]));
+      this.#socket.once("end", resolve);
+      this.#commandQueue(Buffer.from([0x01]));
     });
   }
 
-  private async commandQueue(
+  async #commandQueue(
     buffer: Buffer,
     reassembler: Reassembler | undefined = undefined,
     prioritize = false,
@@ -282,21 +282,21 @@ export class Connection extends ConnectionEvents {
       );
 
       if (prioritize) {
-        this.commands.unshift(command);
+        this.#commands.unshift(command);
       } else {
-        this.commands.push(command);
+        this.#commands.push(command);
       }
 
-      this.commandRun();
+      this.#commandRun();
     });
   }
 
-  private commandRun() {
+  #commandRun() {
     if (this.status !== Status.READY) {
       return;
     }
 
-    const command = this.commands.shift();
+    const command = this.#commands.shift();
 
     if (!command) {
       return;
@@ -306,16 +306,16 @@ export class Connection extends ConnectionEvents {
     this.#wasUsed = true;
 
     // eslint-disable-next-line promise/catch-or-return
-    this.send(command).finally(() => {
+    this.#send(command).finally(() => {
       this.status = Status.READY;
-      this.commandRun();
+      this.#commandRun();
     });
   }
 
-  private async send(command: ConnectionCommand) {
+  async #send(command: ConnectionCommand) {
     return new Promise<void>((resolve) => {
       const reassembler = new PacketReassembler((data) => {
-        this.socket.off("data", reassemblerPush);
+        this.#socket.off("data", reassemblerPush);
 
         command.resolve(data);
         resolve();
@@ -323,12 +323,12 @@ export class Connection extends ConnectionEvents {
 
       const reassemblerPush = reassembler.push.bind(reassembler);
 
-      this.socket.on("data", reassemblerPush);
-      this.socket.write(createPacket(command.buffer, command.sequence));
+      this.#socket.on("data", reassemblerPush);
+      this.#socket.write(createPacket(command.buffer, command.sequence));
     });
   }
 
-  private authenticate(data: Buffer) {
+  #authenticate(data: Buffer) {
     this.status = Status.AUTHENTICATING;
     this.emit("authenticating", this);
 
@@ -336,13 +336,13 @@ export class Connection extends ConnectionEvents {
     const handshakeResponse = createHandshakeResponse(
       handshake.authSeed,
       handshake.authPluginName,
-      this.options.user,
-      this.options.password ?? "",
-      this.options.database,
+      this.#options.user,
+      this.#options.password ?? "",
+      this.#options.database,
       0xffffffff
     );
 
-    this.send(
+    this.#send(
       new ConnectionCommand(
         handshakeResponse,
         (response) => {
@@ -350,16 +350,16 @@ export class Connection extends ConnectionEvents {
             this.status = Status.READY;
             this.emit("authenticated", this);
 
-            if (this.options.afterAuthenticated) {
-              const queuedCommands = this.commands;
+            if (this.#options.afterAuthenticated) {
+              const queuedCommands = this.#commands;
 
-              this.commands = [];
-              this.options.afterAuthenticated.call(this);
+              this.#commands = [];
+              this.#options.afterAuthenticated.call(this);
               this.#wasUsed = false;
-              this.commands = queuedCommands;
+              this.#commands = queuedCommands;
             }
 
-            this.commandRun();
+            this.#commandRun();
 
             return;
           }

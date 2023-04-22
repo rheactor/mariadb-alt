@@ -9,7 +9,7 @@ import {
 export abstract class ReassemblerResultSetPartial extends Reassembler {
   protected readonly packets: Buffer[] = [];
 
-  private intermediateEOFFound = false;
+  #intermediateEOFFound = false;
 
   // eslint-disable-next-line class-methods-use-this
   public is(packet: Buffer): boolean {
@@ -18,11 +18,11 @@ export abstract class ReassemblerResultSetPartial extends Reassembler {
 
   public push(packet: Buffer): PushRecommendation {
     if (PacketOk.isEOF(packet)) {
-      if (this.intermediateEOFFound) {
+      if (this.#intermediateEOFFound) {
         return PushRecommendation.EOF;
       }
 
-      this.intermediateEOFFound = true;
+      this.#intermediateEOFFound = true;
 
       return PushRecommendation.CONTINUE;
     }

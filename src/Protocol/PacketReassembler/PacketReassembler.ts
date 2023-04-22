@@ -22,44 +22,58 @@ export type PacketType =
 type OnDoneCallback = (packets: PacketType) => void;
 
 export class PacketReassembler {
-  private packetIncomplete: Buffer | undefined = undefined;
+  #packetIncomplete: Buffer | undefined = undefined;
 
-  private reassemblerValidated: boolean | undefined = undefined;
+  #reassemblerValidated: boolean | undefined = undefined;
+
+  readonly #onDoneCallback: OnDoneCallback;
+
+  readonly #reassembler?: Reassembler | undefined;
 
   public constructor(
-    private readonly onDoneCallback: OnDoneCallback,
-    private readonly reassembler?: Reassembler | undefined
-  ) {}
+    onDoneCallback: OnDoneCallback,
+    reassembler?: Reassembler | undefined
+  ) {
+    this.#onDoneCallback = onDoneCallback;
+    this.#reassembler = reassembler;
+  }
 
   public push(buffer: Buffer) {
-    this.packetIncomplete =
-      this.packetIncomplete === undefined
+    this.#packetIncomplete =
+      this.#packetIncomplete === undefined
         ? buffer
-        : Buffer.concat([this.packetIncomplete, buffer]);
+        : Buffer.concat([this.#packetIncomplete, buffer]);
 
-    while (this.packetIncomplete.length >= HEADER_SIZE) {
-      const payloadLength = this.packetIncomplete.readUIntLE(0, PAYLOAD_LENGTH);
+    while (this.#packetIncomplete.length >= HEADER_SIZE) {
+      const payloadLength = this.#packetIncomplete.readUIntLE(
+        0,
+        PAYLOAD_LENGTH
+      );
       const packetLength = payloadLength + HEADER_SIZE;
 
-      if (this.packetIncomplete.length < packetLength) {
+      if (this.#packetIncomplete.length < packetLength) {
         break;
       }
 
-      const payload = this.packetIncomplete.subarray(HEADER_SIZE, packetLength);
+      const payload = this.#packetIncomplete.subarray(
+        HEADER_SIZE,
+        packetLength
+      );
 
-      if (this.reassembler) {
-        if (this.reassemblerValidated === undefined) {
-          this.reassemblerValidated = this.reassembler.is(payload);
+      if (this.#reassembler) {
+        if (this.#reassemblerValidated === undefined) {
+          this.#reassemblerValidated = this.#reassembler.is(payload);
         }
 
-        if (this.reassemblerValidated) {
-          if (this.reassembler.push(payload) === PushRecommendation.EOF) {
-            this.onDoneCallback(this.reassembler.get());
+        if (this.#reassemblerValidated) {
+          if (this.#reassembler.push(payload) === PushRecommendation.EOF) {
+            this.#onDoneCallback(this.#reassembler.get());
 
             return;
           }
 
-          this.packetIncomplete = this.packetIncomplete.subarray(packetLength);
+          this.#packetIncomplete =
+            this.#packetIncomplete.subarray(packetLength);
 
           continue;
         }
@@ -67,14 +81,14 @@ export class PacketReassembler {
 
       // Packet Error:
       if (PacketError.is(payload)) {
-        this.onDoneCallback(PacketError.from(payload.subarray(1)));
+        this.#onDoneCallback(PacketError.from(payload.subarray(1)));
 
         return;
       }
 
       // Packet OK:
       if (PacketOk.is(payload)) {
-        this.onDoneCallback(PacketOk.from(payload.subarray(1)));
+        this.#onDoneCallback(PacketOk.from(payload.subarray(1)));
 
         return;
       }

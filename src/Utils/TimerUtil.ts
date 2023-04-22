@@ -1,21 +1,24 @@
 export class TimerUtil {
-  private timeout: ReturnType<typeof setTimeout> | undefined;
+  #timeout: ReturnType<typeof setTimeout> | undefined;
 
-  public constructor(
-    private readonly callback: () => void,
-    private readonly ms: number | undefined
-  ) {
+  readonly #callback: () => void;
+
+  readonly #ms: number | undefined;
+
+  public constructor(callback: () => void, ms: number | undefined) {
+    this.#callback = callback;
+    this.#ms = ms;
     this.restart();
   }
 
   public stop() {
-    clearTimeout(this.timeout);
-    this.timeout = undefined;
+    clearTimeout(this.#timeout);
+    this.#timeout = undefined;
   }
 
   public restart() {
-    if (this.ms !== undefined) {
-      this.timeout = setTimeout(this.callback, this.ms);
+    if (this.#ms !== undefined) {
+      this.#timeout = setTimeout(this.#callback, this.#ms);
     }
   }
 }

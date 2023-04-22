@@ -48,19 +48,19 @@ interface ConnectionPoolDebug {
 }
 
 export class ConnectionPool {
-  private readonly connections = new Map<Connection, TimerUtil>();
+  readonly #connections = new Map<Connection, TimerUtil>();
 
-  private readonly idleConnections: Connection[] = [];
+  readonly #idleConnections: Connection[] = [];
 
-  private readonly acquisitionQueue: Array<AcquisitionQueued<unknown>> = [];
+  readonly #acquisitionQueue: Array<AcquisitionQueued<unknown>> = [];
 
-  private readonly options: ConnectionOptions & ConnectionPoolOptions;
+  readonly #options: ConnectionOptions & ConnectionPoolOptions;
 
   public constructor(
     options: ConstructorParameters<typeof Connection>[0] &
       Partial<ConnectionPoolOptions>
   ) {
-    this.options = {
+    this.#options = {
       host: "localhost",
       port: 3306,
       user: "root",
@@ -73,16 +73,16 @@ export class ConnectionPool {
       ...options,
     };
 
-    for (let i = 0; i < this.options.idleConnections; i++) {
-      this.initializeConnection();
+    for (let i = 0; i < this.#options.idleConnections; i++) {
+      this.#initializeConnection();
     }
   }
 
   public get debug(): ConnectionPoolDebug {
     return {
-      connectionsCount: this.connections.size,
-      idleConnectionsCount: this.idleConnections.length,
-      acquisitionQueueSize: this.acquisitionQueue.length,
+      connectionsCount: this.#connections.size,
+      idleConnectionsCount: this.#idleConnections.length,
+      acquisitionQueueSize: this.#acquisitionQueue.length,
     };
   }
 
@@ -91,18 +91,18 @@ export class ConnectionPool {
     acquireCallback: AcquireCallback<T>,
     options: AcquireOptions = {}
   ): Promise<T> {
-    const connection = this.idleConnections.pop();
+    const connection = this.#idleConnections.pop();
 
     if (connection === undefined) {
-      if (this.connections.size < this.options.connections) {
-        return this.acquireWith<T>(
+      if (this.#connections.size < this.#options.connections) {
+        return this.#acquireWith<T>(
           acquireCallback,
-          this.initializeConnection()
+          this.#initializeConnection()
         );
       }
 
       return new Promise((resolve) => {
-        this.acquisitionQueue.push({ options, acquireCallback, resolve });
+        this.#acquisitionQueue.push({ options, acquireCallback, resolve });
       });
     }
 
@@ -110,11 +110,11 @@ export class ConnectionPool {
       return connection
         .close()
         .then(async () =>
-          this.acquireWith<T>(acquireCallback, this.initializeConnection())
+          this.#acquireWith<T>(acquireCallback, this.#initializeConnection())
         );
     }
 
-    return this.acquireWith<T>(acquireCallback, connection);
+    return this.#acquireWith<T>(acquireCallback, connection);
   }
 
   /** Run a query with an idle connection. */
@@ -126,52 +126,54 @@ export class ConnectionPool {
 
   public async close() {
     return Promise.all(
-      [...this.connections.keys()].map(async (connection) => connection.close())
+      [...this.#connections.keys()].map(async (connection) =>
+        connection.close()
+      )
     );
   }
 
-  private initializeConnection() {
+  #initializeConnection() {
     const connection = new Connection({
-      host: this.options.host,
-      port: this.options.port,
-      user: this.options.user,
-      password: this.options.password,
-      database: this.options.database,
-      afterAuthenticated: this.options.afterAuthenticated,
+      host: this.#options.host,
+      port: this.#options.port,
+      user: this.#options.user,
+      password: this.#options.password,
+      database: this.#options.database,
+      afterAuthenticated: this.#options.afterAuthenticated,
     });
 
     const connectionTimer = new TimerUtil(() => {
-      if (this.idleConnections.length > this.options.idleConnections) {
+      if (this.#idleConnections.length > this.#options.idleConnections) {
         connection.close();
       }
-    }, this.options.idleTimeout);
+    }, this.#options.idleTimeout);
 
-    this.connections.set(connection, connectionTimer);
-    this.idleConnections.push(connection);
+    this.#connections.set(connection, connectionTimer);
+    this.#idleConnections.push(connection);
 
     connection.once("closed", () => {
       connectionTimer.stop();
-      this.connections.delete(connection);
-      removeItem(this.idleConnections, connection);
+      this.#connections.delete(connection);
+      removeItem(this.#idleConnections, connection);
     });
 
     return connection;
   }
 
-  private async acquireWith<T>(
+  async #acquireWith<T>(
     acquireCallback: AcquireCallback<T>,
     connection: Connection
   ) {
-    const connectionTimer = this.connections.get(connection)!;
+    const connectionTimer = this.#connections.get(connection)!;
 
     connectionTimer.stop();
-    removeItem(this.idleConnections, connection);
+    removeItem(this.#idleConnections, connection);
 
     return acquireCallback(connection).finally(async () => {
-      this.idleConnections.push(connection);
+      this.#idleConnections.push(connection);
       connectionTimer.restart();
 
-      const acquisitionQueued = this.acquisitionQueue.shift();
+      const acquisitionQueued = this.#acquisitionQueue.shift();
 
       if (acquisitionQueued !== undefined) {
         const result = await this.acquire(

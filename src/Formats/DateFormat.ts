@@ -9,7 +9,7 @@ export class DateFormat {
 
   public year!: number;
 
-  private zeroed!: boolean;
+  #zeroed!: boolean;
 
   private constructor() {
     // empty
@@ -21,7 +21,7 @@ export class DateFormat {
     instance.year = year;
     instance.month = month;
     instance.day = day;
-    instance.zeroed = year === 0 && month === 0 && day === 0;
+    instance.#zeroed = year === 0 && month === 0 && day === 0;
 
     return instance;
   }
@@ -33,7 +33,7 @@ export class DateFormat {
     instance.year = Number(dateParsed[1]);
     instance.month = Math.max(1, Number(dateParsed[2]));
     instance.day = Math.max(1, Number(dateParsed[3]));
-    instance.zeroed = date === "0000-00-00";
+    instance.#zeroed = date === "0000-00-00";
 
     return instance;
   }
@@ -51,6 +51,6 @@ export class DateFormat {
   }
 
   public isZeroed() {
-    return this.zeroed;
+    return this.#zeroed;
   }
 }

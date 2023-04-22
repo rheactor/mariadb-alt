@@ -23,12 +23,12 @@ export type Row = Record<
 >;
 
 export class PacketResultSet {
-  private readonly bufferConsumer: BufferConsumer;
+  readonly #bufferConsumer: BufferConsumer;
 
-  private fields: Field[] | undefined;
+  #fields: Field[] | undefined;
 
   public constructor(buffer: Buffer) {
-    this.bufferConsumer = new BufferConsumer(buffer);
+    this.#bufferConsumer = new BufferConsumer(buffer);
   }
 
   public static transform(row: RowUnprocessed, fields: Field[]): Row {
@@ -125,28 +125,28 @@ export class PacketResultSet {
   }
 
   public getFields() {
-    if (this.fields === undefined) {
-      this.fields = [];
+    if (this.#fields === undefined) {
+      this.#fields = [];
 
-      const fieldsCount = Number(this.bufferConsumer.readIntEncoded());
+      const fieldsCount = Number(this.#bufferConsumer.readIntEncoded());
 
       for (let i = 0; i < fieldsCount; i++) {
-        this.fields.push(readField(this.bufferConsumer));
+        this.#fields.push(readField(this.#bufferConsumer));
       }
     }
 
-    return this.fields;
+    return this.#fields;
   }
 
   public *getRowsUnprocessed() {
     const fields = this.getFields();
     const fieldsLength = fields.length;
 
-    while (!this.bufferConsumer.consumed()) {
+    while (!this.#bufferConsumer.consumed()) {
       const row: RowUnprocessed = [];
 
       for (let i = 0; i < fieldsLength; i++) {
-        row.push(this.bufferConsumer.readStringEncoded());
+        row.push(this.#bufferConsumer.readStringEncoded());
       }
 
       yield row;
@@ -155,7 +155,7 @@ export class PacketResultSet {
 
   public *getRows<T extends object = Row>() {
     for (const row of this.getRowsUnprocessed()) {
-      yield PacketResultSet.transform(row, this.fields!) as T;
+      yield PacketResultSet.transform(row, this.#fields!) as T;
     }
   }
 }

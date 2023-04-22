@@ -7,46 +7,53 @@ import {
 } from "@/Utils/BufferUtil";
 
 export class BufferConsumer {
-  public constructor(private readonly buffer: Buffer, private byteOffset = 0) {}
+  readonly #buffer: Buffer;
+
+  #byteOffset = 0;
+
+  public constructor(buffer: Buffer, byteOffset = 0) {
+    this.#buffer = buffer;
+    this.#byteOffset = byteOffset;
+  }
 
   public at(byteOffset = 0): number {
-    return this.buffer.readUInt8(this.byteOffset + byteOffset);
+    return this.#buffer.readUInt8(this.#byteOffset + byteOffset);
   }
 
   public readUInt(byteLength = 1): number {
-    const bufferInt = this.buffer.readUIntLE(this.byteOffset, byteLength);
+    const bufferInt = this.#buffer.readUIntLE(this.#byteOffset, byteLength);
 
-    this.byteOffset += byteLength;
+    this.#byteOffset += byteLength;
 
     return bufferInt;
   }
 
   public readInt(byteLength = 1): number {
-    const bufferInt = this.buffer.readIntLE(this.byteOffset, byteLength);
+    const bufferInt = this.#buffer.readIntLE(this.#byteOffset, byteLength);
 
-    this.byteOffset += byteLength;
+    this.#byteOffset += byteLength;
 
     return bufferInt;
   }
 
   public readUBigInt(): bigint {
-    const bufferInt = this.buffer.readBigUInt64LE(this.byteOffset);
+    const bufferInt = this.#buffer.readBigUInt64LE(this.#byteOffset);
 
-    this.byteOffset += 8;
+    this.#byteOffset += 8;
 
     return bufferInt;
   }
 
   public readBigInt(): bigint {
-    const bufferInt = this.buffer.readBigInt64LE(this.byteOffset);
+    const bufferInt = this.#buffer.readBigInt64LE(this.#byteOffset);
 
-    this.byteOffset += 8;
+    this.#byteOffset += 8;
 
     return bufferInt;
   }
 
   public readIntEncoded(): bigint | number | null {
-    const bufferInt = this.buffer.readUInt8(this.byteOffset++);
+    const bufferInt = this.#buffer.readUInt8(this.#byteOffset++);
 
     if (bufferInt === 0x00) {
       return 0;
@@ -65,9 +72,9 @@ export class BufferConsumer {
     }
 
     if (bufferInt === 0xfe) {
-      const bufferBigInt = this.buffer.readBigUInt64LE(this.byteOffset);
+      const bufferBigInt = this.#buffer.readBigUInt64LE(this.#byteOffset);
 
-      this.byteOffset += 8;
+      this.#byteOffset += 8;
 
       return bufferBigInt;
     }
@@ -76,24 +83,27 @@ export class BufferConsumer {
   }
 
   public readBoolean(): boolean {
-    return Boolean(this.buffer.readInt8(this.byteOffset++));
+    return Boolean(this.#buffer.readInt8(this.#byteOffset++));
   }
 
   public readNullTerminatedString(): Buffer {
-    const bufferString = readNullTerminatedString(this.buffer, this.byteOffset);
+    const bufferString = readNullTerminatedString(
+      this.#buffer,
+      this.#byteOffset
+    );
 
-    this.byteOffset += bufferString.length + 1;
+    this.#byteOffset += bufferString.length + 1;
 
     return bufferString;
   }
 
   public readString(bytes: number, nullTerminated = false): Buffer {
-    const bufferString = this.buffer.subarray(
-      this.byteOffset,
-      this.byteOffset + bytes
+    const bufferString = this.#buffer.subarray(
+      this.#byteOffset,
+      this.#byteOffset + bytes
     );
 
-    this.byteOffset += bytes + +nullTerminated;
+    this.#byteOffset += bytes + +nullTerminated;
 
     return bufferString;
   }
@@ -109,12 +119,12 @@ export class BufferConsumer {
       return Buffer.from("");
     }
 
-    const bufferString = this.buffer.subarray(
-      this.byteOffset,
-      this.byteOffset + Number(bufferInt)
+    const bufferString = this.#buffer.subarray(
+      this.#byteOffset,
+      this.#byteOffset + Number(bufferInt)
     );
 
-    this.byteOffset += bufferString.length;
+    this.#byteOffset += bufferString.length;
 
     return bufferString;
   }
@@ -128,20 +138,20 @@ export class BufferConsumer {
   }
 
   public rest(offsetShift = 0): Buffer {
-    return this.buffer.subarray(this.byteOffset + offsetShift);
+    return this.#buffer.subarray(this.#byteOffset + offsetShift);
   }
 
   public slice(bytes: number): Buffer {
-    const bufferSliced = this.buffer.subarray(
-      this.byteOffset,
-      (this.byteOffset += bytes)
+    const bufferSliced = this.#buffer.subarray(
+      this.#byteOffset,
+      (this.#byteOffset += bytes)
     );
 
     return bufferSliced;
   }
 
   public skip(bytes = 1) {
-    this.byteOffset += bytes;
+    this.#byteOffset += bytes;
 
     return this;
   }
@@ -153,12 +163,12 @@ export class BufferConsumer {
       return this;
     }
 
-    this.byteOffset += Number(bufferInt);
+    this.#byteOffset += Number(bufferInt);
 
     return this;
   }
 
   public consumed() {
-    return this.byteOffset === this.buffer.length;
+    return this.#byteOffset === this.#buffer.length;
   }
 }
