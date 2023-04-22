@@ -74,6 +74,7 @@ export const FieldTypes = {
   VARCHAR: 253,
   CHAR: 254,
   BLOB: 252,
+  LONGBLOB: 251,
 
   BIT: 16,
 

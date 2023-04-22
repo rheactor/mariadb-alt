@@ -101,6 +101,7 @@ export class PacketResultSet {
           break;
 
         case FieldTypes.BLOB:
+        case FieldTypes.LONGBLOB:
           rowTransformed[column.name] = column.json
             ? JSON.parse(cell!.toString())
             : cell!;

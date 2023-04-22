@@ -202,6 +202,46 @@ describe(getTestName(__filename), () => {
         }
       });
 
+      test(`query() returning LONGBLOB`, async () => {
+        await connectionGlobal.execute('SET @LONGBLOB_REFERENCE := "example"');
+
+        const results = await connectionGlobal.query<{
+          "@LONGBLOB_REFERENCE": string;
+        }>("SELECT @LONGBLOB_REFERENCE");
+
+        expect([...results][0]?.["@LONGBLOB_REFERENCE"]).toStrictEqual(
+          Buffer.from("example")
+        );
+      });
+
+      test(`query() PS returning LONGBLOB`, async () => {
+        await connectionGlobal.execute("SET @LONGBLOB_REFERENCE := ?", [
+          "example1",
+        ]);
+
+        const results = await connectionGlobal.query<{
+          a: Buffer;
+          b: string;
+          c: number;
+        }>("SELECT @LONGBLOB_REFERENCE AS a, ? AS b, 123 AS c", ["example2"]);
+
+        expect([...results][0]).toStrictEqual({
+          a: Buffer.from("example1"),
+          b: "example2",
+          c: 123,
+        });
+      });
+
+      test(`query() PS returning BIGINT`, async () => {
+        await connectionGlobal.execute("SET @BIGINT_REFERENCE := ?", [123]);
+
+        const results = await connectionGlobal.query<{ a: number }>(
+          "SELECT @BIGINT_REFERENCE AS a"
+        );
+
+        expect([...results][0]).toStrictEqual({ a: 123n });
+      });
+
       test(`query() error (without prepared statement)`, async () => {
         expect.assertions(2);
 

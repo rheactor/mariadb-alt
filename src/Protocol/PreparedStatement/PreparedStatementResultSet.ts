@@ -79,6 +79,7 @@ export class PreparedStatementResultSet {
             break;
 
           case FieldTypes.BLOB:
+          case FieldTypes.LONGBLOB:
             row[field.name] = this.bufferConsumer.readStringEncoded();
             break;
 
