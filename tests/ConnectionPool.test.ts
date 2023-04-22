@@ -1,5 +1,6 @@
 import { type ConnectionPool } from "@/ConnectionPool";
 import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnectionPool } from "@Tests/Fixtures/TestConnection";
 import { delay, getTestName } from "@Tests/Fixtures/Utils";
 
@@ -40,9 +41,13 @@ describe(getTestName(__filename), () => {
     });
 
     test("query()", async () => {
-      const [result] = await connectionPool.query<{ "1": number }>("SELECT 1");
+      const query = await connectionPool.queryDetailed("SELECT 1");
 
-      expect(result).toStrictEqual({ "1": 1 });
+      expect(query).toBeInstanceOf(PacketResultSet);
+
+      if (query instanceof PacketResultSet) {
+        expect([...query.getRows()]).toStrictEqual([{ "1": 1 }]);
+      }
     });
 
     afterAll(() => {
@@ -300,6 +305,64 @@ describe(getTestName(__filename), () => {
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
       expect(connectionPool.debug.connectionsCount).toBe(2);
       expect(connectionPool.debug.acquisitionQueueSize).toBe(2);
+
+      await Promise.all([query1, query2, query3, query4]);
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(1);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
+    });
+
+    afterAll(() => {
+      connectionPool.close();
+    });
+  });
+
+  describe("connections", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool({
+        connections: 1,
+        connectionsHardLimit: 1,
+      });
+    });
+
+    test("force connections over-limit using .immediate=true option, but respecting hard-limit", async () => {
+      expect.assertions(15);
+
+      const query1 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.01)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
+
+      const query2 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.02)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
+
+      const query3 = connectionPool.acquire(
+        async (connection) => connection.query("SELECT SLEEP(0.03)"),
+        { immediate: true }
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(2);
+
+      const query4 = connectionPool.acquire(async (connection) =>
+        connection.query("SELECT SLEEP(0.04)")
+      );
+
+      expect(connectionPool.debug.idleConnectionsCount).toBe(0);
+      expect(connectionPool.debug.connectionsCount).toBe(1);
+      expect(connectionPool.debug.acquisitionQueueSize).toBe(3);
 
       await Promise.all([query1, query2, query3, query4]);
 
