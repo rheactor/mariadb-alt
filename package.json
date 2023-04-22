@@ -12,6 +12,7 @@
     "eslint": "eslint ./src ./tests",
     "eslint:fix": "eslint --fix ./src ./tests",
     "tsc": "tsc --noEmit",
+    "code:analysis": "npm run prettier && npm run eslint && npm run tsc",
     "test": "jest --detect-open-handles",
     "test:ci": "jest --detect-open-handles --ci",
     "test:build": "npm run build && jest --config ./jest.config.build.ts --detect-open-handles",
