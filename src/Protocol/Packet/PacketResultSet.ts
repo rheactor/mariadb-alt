@@ -5,7 +5,7 @@ import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
-export type RowUnprocessed = Array<Buffer | null>;
+type RowUnprocessed = Array<Buffer | null>;
 
 export type Row = Record<
   string,

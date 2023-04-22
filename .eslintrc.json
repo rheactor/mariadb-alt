@@ -106,6 +106,7 @@
         "prev": ["return", "class", "export"],
         "next": "*"
       },
+      { "blankLine": "any", "prev": "export", "next": "export" },
       {
         "blankLine": "always",
         "prev": "*",
@@ -125,11 +126,7 @@
       { "blankLine": "any", "prev": "case", "next": "case" },
       { "blankLine": "always", "prev": "*", "next": ["const", "let"] },
       { "blankLine": "always", "prev": ["const", "let"], "next": "*" },
-      {
-        "blankLine": "any",
-        "prev": ["const", "let"],
-        "next": ["const", "let"]
-      }
+      { "blankLine": "any", "prev": ["const", "let"], "next": ["const", "let"] }
     ],
     "prefer-arrow-callback": "warn",
     "prefer-const": "warn",
