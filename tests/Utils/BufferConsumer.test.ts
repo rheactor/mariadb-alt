@@ -257,12 +257,4 @@ describe(getTestName(__filename), () => {
       Buffer.from("mysql_native_password")
     );
   });
-
-  test("rest()", () => {
-    const bufferConsumer = new BufferConsumer(Buffer.from("0123"), 1);
-
-    expect(bufferConsumer.rest()).toStrictEqual(Buffer.from("123"));
-    expect(bufferConsumer.rest(1)).toStrictEqual(Buffer.from("23"));
-    expect(bufferConsumer.rest(-1)).toStrictEqual(Buffer.from("0123"));
-  });
 });

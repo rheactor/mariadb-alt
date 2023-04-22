@@ -1,4 +1,3 @@
-import { Capabilities, ServerStatus } from "@/Protocol/Enumerations";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { InitialHandshakePacketFixture } from "@Tests/Fixtures/InitialHandshakePacket";
 import { getTestName } from "@Tests/Fixtures/Utils";
@@ -17,16 +16,6 @@ describe(getTestName(__filename), () => {
     expect(packet.authPluginNameLength).toBe(0x15);
     expect(packet.authPluginName).toStrictEqual(
       Buffer.from("mysql_native_password")
-    );
-
-    expect(packet.hasCapability(Capabilities.CLIENT_MYSQL)).toBe(false);
-    expect(packet.hasCapability(Capabilities.SECURE_CONNECTION)).toBe(true);
-
-    expect(packet.hasServerStatus(ServerStatus.SERVER_QUERY_WAS_SLOW)).toBe(
-      false
-    );
-    expect(packet.hasServerStatus(ServerStatus.SERVER_STATUS_AUTOCOMMIT)).toBe(
-      true
     );
   });
 });

@@ -54,12 +54,4 @@ export class Handshake {
 
     this.authPluginName = bufferConsumer.readNullTerminatedString();
   }
-
-  public hasCapability(capability: bigint) {
-    return (this.capabilities & capability) !== 0n;
-  }
-
-  public hasServerStatus(status: number) {
-    return (this.serverStatus & status) !== 0;
-  }
 }

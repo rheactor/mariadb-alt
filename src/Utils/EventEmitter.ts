@@ -32,21 +32,6 @@ export class EventEmitter {
       .set(eventId, { eventId: eventId++, callback, once: true });
   }
 
-  /** Remove an event listener by and and/or callback implementation. */
-  public off(event: string, callback?: EventCallback) {
-    if (callback === undefined) {
-      this.#events.delete(event);
-    } else {
-      const events = this.#events.get(event);
-
-      events?.forEach((ev) => {
-        if (ev.callback === callback) {
-          events.delete(ev.eventId);
-        }
-      });
-    }
-  }
-
   /** Emit an event by name. */
   public emit(
     event: string,

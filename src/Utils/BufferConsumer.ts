@@ -137,10 +137,6 @@ export class BufferConsumer {
     return readTimeEncoded(this.slice(this.at() + 1));
   }
 
-  public rest(offsetShift = 0): Buffer {
-    return this.#buffer.subarray(this.#byteOffset + offsetShift);
-  }
-
   public slice(bytes: number): Buffer {
     const bufferSliced = this.#buffer.subarray(
       this.#byteOffset,

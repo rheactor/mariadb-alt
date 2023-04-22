@@ -12,72 +12,12 @@ export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
   return data.subarray(byteOffset, nullIndexOf);
 };
 
-export const readNullTerminatedStringEscaped = (
-  data: Buffer,
-  byteOffset?: number
-) => {
-  const buffers: Buffer[] = [];
-
-  let byteOffsetCurrent = byteOffset;
-
-  for (;;) {
-    const nullIndexOf = data.indexOf("\0", byteOffsetCurrent);
-
-    if (nullIndexOf === -1) {
-      throw Error("expected a NULL-terminated string");
-    }
-
-    const nullEscaped = data.at(nullIndexOf + 1) === 0;
-
-    buffers.push(data.subarray(byteOffsetCurrent, nullIndexOf + +nullEscaped));
-
-    if (nullEscaped) {
-      byteOffsetCurrent = nullIndexOf + 2;
-      continue;
-    }
-
-    break;
-  }
-
-  return Buffer.concat(buffers);
-};
-
 export const toNullTerminatedStringEscaped = (data: string | null) => {
   if (data === "" || data === null) {
     return Buffer.from([0x00]);
   }
 
   return Buffer.from(`${data.replaceAll("\x00", "\x00\x00")}\x00`);
-};
-
-export const readStringEncoded = (
-  data: Buffer,
-  byteOffset = 0
-): Buffer | null => {
-  const bufferInt = readIntEncoded(data, byteOffset);
-
-  if (bufferInt === null) {
-    return null;
-  }
-
-  if (bufferInt === 0) {
-    return Buffer.from("");
-  }
-
-  const bufferType = data.readUInt8(byteOffset);
-  const bufferOffset =
-    bufferType === 0xfc
-      ? 3
-      : bufferType === 0xfd
-      ? 4
-      : bufferType === 0xfe
-      ? 9
-      : 1;
-
-  return data.subarray(
-    byteOffset + bufferOffset,
-    byteOffset + bufferOffset + Number(bufferInt)
-  );
 };
 
 export const toStringEncoded = (value: Buffer | string | null) => {
@@ -219,31 +159,6 @@ export const readTimeEncoded = (buffer: Buffer): TimeFormat => {
   return TimeFormat.from(hours, minutes, seconds, 0);
 };
 
-export const readIntEncoded = (
-  data: Buffer,
-  byteOffset = 0
-): bigint | number | null => {
-  const bufferInt = data.readUInt8(byteOffset);
-
-  if (bufferInt === 0xfb) {
-    return null;
-  }
-
-  if (bufferInt === 0xfc) {
-    return data.readUInt16LE(byteOffset + 1);
-  }
-
-  if (bufferInt === 0xfd) {
-    return data.readUintLE(byteOffset + 1, 3);
-  }
-
-  if (bufferInt === 0xfe) {
-    return data.readBigUInt64LE(byteOffset + 1);
-  }
-
-  return bufferInt;
-};
-
 const toBigIntEncoded = (value: bigint) => {
   const bufferBigInt = Buffer.allocUnsafe(9);
 
@@ -301,53 +216,12 @@ export const createUInt16LE = (value: number) => {
   return buffer;
 };
 
-export const createUInt24LE = (value: number) => {
-  const buffer = Buffer.allocUnsafe(3);
-
-  buffer.writeUIntLE(value, 0, 3);
-
-  return buffer;
-};
-
 export const createUInt32LE = (value: number) => {
   const buffer = Buffer.allocUnsafe(4);
 
   buffer.writeUInt32LE(value);
 
   return buffer;
-};
-
-export const createUInt64LE = (value: bigint) => {
-  const buffer = Buffer.allocUnsafe(8);
-
-  buffer.writeBigUInt64LE(value);
-
-  return buffer;
-};
-
-export const getFieldsPositions = (
-  nullBitmap: Buffer,
-  fieldsCount: number
-): number[] => {
-  const positions: number[] = [];
-
-  nullBitmapLoop: for (let i = 0; i < nullBitmap.length; i++) {
-    const nullBitmapCurrent = nullBitmap[i]!;
-
-    for (let j = 0; j < 8; j++) {
-      const position = i * 8 + j;
-
-      if (position >= fieldsCount) {
-        break nullBitmapLoop;
-      }
-
-      if ((nullBitmapCurrent & (1 << j)) === 0) {
-        positions.push(position);
-      }
-    }
-  }
-
-  return positions;
 };
 
 export const generateNullBitmap = (args: unknown[]): Buffer => {

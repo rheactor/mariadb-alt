@@ -26,19 +26,6 @@ describe(getTestName(__filename), () => {
     events.emit("test", 1, 2, 3);
   });
 
-  test("on(), off(), emit()", () => {
-    expect.assertions(0);
-
-    const events = new EventEmitter();
-
-    events.on("test", () => {
-      expect(true).toBe(false);
-    });
-
-    events.off("test");
-    events.emit("test");
-  });
-
   test("on() multiple declarations", () => {
     expect.assertions(2);
 
@@ -97,31 +84,5 @@ describe(getTestName(__filename), () => {
     expect.assertions(0);
 
     new EventEmitter().emit("test");
-  });
-
-  test("off() with callback", () => {
-    let count = 0;
-
-    const events = new EventEmitter();
-    const increase = () => count++;
-
-    events.on("test", () => {
-      count++;
-    });
-    events.on("test", increase);
-
-    events.emit("test");
-
-    expect(count).toBe(2);
-
-    events.off("test", increase);
-    events.emit("test");
-
-    expect(count).toBe(3);
-
-    events.off("test");
-    events.emit("test");
-
-    expect(count).toBe(3);
   });
 });

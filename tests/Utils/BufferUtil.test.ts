@@ -4,16 +4,10 @@ import {
   bufferXOR,
   chunk,
   createUInt16LE,
-  createUInt24LE,
   createUInt32LE,
-  createUInt64LE,
   generateNullBitmap,
-  getFieldsPositions,
   readDatetimeEncoded,
-  readIntEncoded,
   readNullTerminatedString,
-  readNullTerminatedStringEscaped,
-  readStringEncoded,
   readTimeEncoded,
   toDatetimeEncoded,
   toIntEncoded,
@@ -55,40 +49,6 @@ describe(getTestName(__filename), () => {
     });
   });
 
-  const readNullTerminatedStringEscapedUnits: ReadNTSUnit[] = [
-    ...readNullTerminatedStringUnits,
-    [Buffer.from("AA\0BB\0"), Buffer.from("AA")],
-    [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from("AA\0BB\0CC")],
-    [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from("A\0BB\0CC"), 1],
-    [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from("\0BB\0CC"), 2],
-    [Buffer.from("AA\0\0BB\0\0CC\0"), Buffer.from(""), 3],
-  ];
-
-  describe.each(readNullTerminatedStringEscapedUnits)(
-    "readNullTerminatedStringEscaped()",
-    (input, output, byteOffset) => {
-      const inputJSON = JSON.stringify(input.toString("binary"));
-
-      test(`${inputJSON} at ${byteOffset ?? 0}`, () => {
-        expect(
-          readNullTerminatedStringEscaped(input, byteOffset)
-        ).toStrictEqual(output);
-      });
-    }
-  );
-
-  describe("readNullTerminatedStringEscaped()", () => {
-    test("expects a NULL-terminated string", () => {
-      expect(() =>
-        readNullTerminatedStringEscaped(Buffer.from(""))
-      ).toThrowError("expected a NULL-terminated string");
-
-      expect(() =>
-        readNullTerminatedStringEscaped(Buffer.from("AA\0\0AA"))
-      ).toThrowError("expected a NULL-terminated string");
-    });
-  });
-
   type ToNTSUnit = [string | null, Buffer];
 
   const toNullTerminatedStringEscapedUnits: ToNTSUnit[] = [
@@ -103,37 +63,6 @@ describe(getTestName(__filename), () => {
     (input, output) => {
       test(`${JSON.stringify(input?.toString() ?? "null")}`, () => {
         expect(toNullTerminatedStringEscaped(input)).toStrictEqual(output);
-      });
-    }
-  );
-
-  type ReadIntEncodedUnit = [
-    Buffer,
-    ReturnType<typeof readIntEncoded>,
-    number?
-  ];
-
-  const readIntEncodedUnits: ReadIntEncodedUnit[] = [
-    [Buffer.from([0x00]), 0],
-    [Buffer.from([0x10]), 16],
-    [Buffer.from([0xfa]), 250],
-    [Buffer.from([0xfb]), null],
-    [Buffer.from([0x00, 0xfb]), null, 1],
-    [Buffer.from([0xfc, 0x10, 0x20]), 0x2010],
-    [Buffer.from([0xfd, 0x10, 0x20, 0x30]), 0x302010],
-    [
-      Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]),
-      0x80706050_40302010n,
-    ],
-  ];
-
-  describe.each(readIntEncodedUnits)(
-    "readIntEncoded()",
-    (input, output, byteOffset) => {
-      const inputString = JSON.stringify(input.toString("hex"));
-
-      test(`0x${inputString} at ${byteOffset ?? 0}`, () => {
-        expect(readIntEncoded(input, byteOffset)).toStrictEqual(output);
       });
     }
   );
@@ -329,54 +258,9 @@ describe(getTestName(__filename), () => {
     });
   });
 
-  type ReadStringEncodedUnit = [Buffer, Buffer | null, number?];
-
   const bufferStr1 = Buffer.from("a");
   const bufferStr250 = Buffer.allocUnsafe(250).fill("a");
   const bufferStr255 = Buffer.allocUnsafe(255).fill("b");
-  const bufferStr400 = Buffer.allocUnsafe(400).fill("c");
-
-  const readStringEncodedUnits: ReadStringEncodedUnit[] = [
-    [Buffer.from([0xfb]), null],
-    [Buffer.from([0x00]), Buffer.from("")],
-    [Buffer.from([0xff, 0x00]), Buffer.from(""), 1],
-    [Buffer.concat([Buffer.from([0x01]), bufferStr1]), bufferStr1],
-    [Buffer.concat([Buffer.from([0xfa]), bufferStr250]), bufferStr250],
-    [
-      Buffer.concat([Buffer.from([0xfc, 0xfa, 0x00]), bufferStr250]),
-      bufferStr250,
-    ],
-    [
-      Buffer.concat([Buffer.from([0xfc, 0xff, 0x00]), bufferStr255]),
-      bufferStr255,
-    ],
-    [
-      Buffer.concat([Buffer.from([0xfd, 0x90, 0x01, 0x00]), bufferStr400]),
-      bufferStr400,
-    ],
-    [
-      Buffer.concat([Buffer.from([0xfd, 0x00, 0x90, 0x01]), bufferStr400]),
-      bufferStr400,
-    ],
-    [
-      Buffer.concat([
-        Buffer.from([0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x90, 0x01]),
-        bufferStr400,
-      ]),
-      bufferStr400,
-    ],
-  ];
-
-  describe.each(readStringEncodedUnits)(
-    "readStringEncoded()",
-    (input, output, byteOffset) => {
-      test(`Buffer of length ${output?.length ?? "null"} at ${
-        byteOffset ?? 0
-      }`, () => {
-        expect(readStringEncoded(input, byteOffset)).toStrictEqual(output);
-      });
-    }
-  );
 
   type ToStringEncodedUnit = [Buffer | string | null, Buffer];
 
@@ -427,23 +311,11 @@ describe(getTestName(__filename), () => {
     });
   });
 
-  describe("createUInt{16, 24, 32, 64}LE()", () => {
+  describe("createUInt{16, 32}LE()", () => {
     test("createUInt16LE()", () => {
       expect(createUInt16LE(0x0000)).toStrictEqual(Buffer.from([0x00, 0x00]));
       expect(createUInt16LE(0x1020)).toStrictEqual(Buffer.from([0x20, 0x10]));
       expect(createUInt16LE(0xffff)).toStrictEqual(Buffer.from([0xff, 0xff]));
-    });
-
-    test("createUInt24LE()", () => {
-      expect(createUInt24LE(0x000000)).toStrictEqual(
-        Buffer.from([0x00, 0x00, 0x00])
-      );
-      expect(createUInt24LE(0x102030)).toStrictEqual(
-        Buffer.from([0x30, 0x20, 0x10])
-      );
-      expect(createUInt24LE(0xffffff)).toStrictEqual(
-        Buffer.from([0xff, 0xff, 0xff])
-      );
     });
 
     test("createUInt32LE()", () => {
@@ -457,53 +329,7 @@ describe(getTestName(__filename), () => {
         Buffer.from([0xff, 0xff, 0xff, 0xff])
       );
     });
-
-    test("createUInt64LE()", () => {
-      expect(createUInt64LE(0x0000000000000000n)).toStrictEqual(
-        Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-      );
-      expect(createUInt64LE(0x1020304050607080n)).toStrictEqual(
-        Buffer.from([0x80, 0x70, 0x60, 0x50, 0x40, 0x30, 0x20, 0x10])
-      );
-      expect(createUInt64LE(0xf0f0f0f0f0f0f0f0n)).toStrictEqual(
-        Buffer.from([0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0, 0xf0])
-      );
-    });
   });
-
-  type FieldsPositionsUnit = [Buffer, number, number[]];
-
-  const fieldsPositionsUnits: FieldsPositionsUnit[] = [
-    [Buffer.from([0b0000_0000]), 1, [0]],
-    [Buffer.from([0b0000_0001]), 1, []],
-    [Buffer.from([0b0000_0000]), 2, [0, 1]],
-    [Buffer.from([0b0000_0010]), 2, [0]],
-    [Buffer.from([0b0000_0001]), 2, [1]],
-    [Buffer.from([0b0000_0011]), 2, []],
-    [Buffer.from([0b1111_1111]), 8, []],
-    [Buffer.from([0b0000_0000]), 8, [0, 1, 2, 3, 4, 5, 6, 7]],
-    [Buffer.from([0b0000_0000, 0b1111_1111]), 16, [0, 1, 2, 3, 4, 5, 6, 7]],
-    [Buffer.from([0b1111_1111, 0b1111_1111]), 16, []],
-    [Buffer.from([0b0101_0101, 0b0101_0101]), 16, [1, 3, 5, 7, 9, 11, 13, 15]],
-    [Buffer.from([0b0101_0101, 0b0000_0001]), 10, [1, 3, 5, 7, 9]],
-    [Buffer.from([0b0101_0101, 0b0000_0011]), 10, [1, 3, 5, 7]],
-  ];
-
-  describe.each(fieldsPositionsUnits)(
-    "getNullBitmapPositions()",
-    (nullBitmap, fieldsCount, output) => {
-      const nullBitmapTitle = nullBitmap
-        .toJSON()
-        .data[0]?.toString(2)
-        .padStart(8, "0");
-
-      test(`${nullBitmapTitle} with ${fieldsCount} field(s)`, () => {
-        expect(getFieldsPositions(nullBitmap, fieldsCount)).toStrictEqual(
-          output
-        );
-      });
-    }
-  );
 
   type NullBitmapUnit = [unknown[], Buffer];
 

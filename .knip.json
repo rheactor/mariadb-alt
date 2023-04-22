@@ -1,0 +1,4 @@
+{
+  "$schema": "https://unpkg.com/knip@2/schema.json",
+  "ignore": ["./jest.config.build.ts", "./**/*.d.ts", "./tests/Fixtures"]
+}
