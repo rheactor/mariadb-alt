@@ -106,7 +106,7 @@ export class ConnectionPool {
       });
     }
 
-    if (options.renew === true) {
+    if (options.renew === true && connection.wasUsed) {
       return connection
         .close()
         .then(async () =>

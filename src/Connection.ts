@@ -127,6 +127,8 @@ export class Connection extends ConnectionEvents {
 
   private readonly options: ConnectionOptions;
 
+  #wasUsed = false;
+
   public constructor(
     options: Partial<ConnectionOptions> & Pick<ConnectionOptions, "database">
   ) {
@@ -162,6 +164,10 @@ export class Connection extends ConnectionEvents {
     socket.connect(this.options.port, this.options.host);
 
     this.socket = socket;
+  }
+
+  public get wasUsed() {
+    return this.#wasUsed;
   }
 
   public isConnected() {
@@ -297,6 +303,7 @@ export class Connection extends ConnectionEvents {
     }
 
     this.status = Status.EXECUTING;
+    this.#wasUsed = true;
 
     // eslint-disable-next-line promise/catch-or-return
     this.send(command).finally(() => {
@@ -348,6 +355,7 @@ export class Connection extends ConnectionEvents {
 
               this.commands = [];
               this.options.afterAuthenticated.call(this);
+              this.#wasUsed = false;
               this.commands = queuedCommands;
             }
 
