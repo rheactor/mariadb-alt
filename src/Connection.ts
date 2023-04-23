@@ -66,7 +66,7 @@ class ConnectionCommand {
     public readonly buffer: Buffer,
     public resolve: (data: PacketType) => void,
     public reject: (error: Error) => void,
-    public reassembler: Reassembler | undefined,
+    public reassembler: Reassembler | false | undefined,
     public sequence: number
   ) {}
 }
@@ -214,7 +214,16 @@ export class Connection extends ConnectionEvents {
           createExecutePacket(response, args),
           new ReassemblerPSResultSet(),
           true
-        );
+        ).then((data) => {
+          const statementClose = Buffer.allocUnsafe(5);
+
+          statementClose.writeUInt8(0x19);
+          statementClose.writeUInt32LE(response.statementId, 1);
+
+          this.#commandQueue(statementClose, false);
+
+          return data;
+        });
       });
     }
 
@@ -277,8 +286,8 @@ export class Connection extends ConnectionEvents {
 
   async #commandQueue(
     buffer: Buffer,
-    reassembler: Reassembler | undefined = undefined,
-    prioritize = false,
+    reassembler: Reassembler | false | undefined = undefined,
+    priority = false,
     sequence = 0
   ) {
     return new Promise<PacketType>((resolve, reject) => {
@@ -290,7 +299,7 @@ export class Connection extends ConnectionEvents {
         sequence
       );
 
-      if (prioritize) {
+      if (priority) {
         this.#commands.unshift(command);
       } else {
         this.#commands.push(command);
@@ -322,6 +331,12 @@ export class Connection extends ConnectionEvents {
   }
 
   async #send(command: ConnectionCommand) {
+    if (command.reassembler === false) {
+      this.#socket.write(createPacket(command.buffer, command.sequence));
+
+      return undefined;
+    }
+
     return new Promise<void>((resolve) => {
       const reassembler = new PacketReassembler((data) => {
         this.#socket.off("data", reassemblerPush);
@@ -333,7 +348,7 @@ export class Connection extends ConnectionEvents {
         }
 
         resolve();
-      }, command.reassembler);
+      }, command.reassembler as Exclude<typeof command.reassembler, false>);
 
       const reassemblerPush = reassembler.push.bind(reassembler);
 
