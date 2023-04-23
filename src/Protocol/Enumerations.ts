@@ -3,12 +3,17 @@ export const CapabilitiesBase = {
   CLIENT_MYSQL: 1 << 0,
   FOUND_ROWS: 1 << 1,
   CONNECT_WITH_DB: 1 << 3,
+  // UNUSED: 1 << 4,
   COMPRESS: 1 << 5,
+  // UNUSED: 1 << 6,
   LOCAL_FILES: 1 << 7,
+  // UNUSED: 1 << 8,
   CLIENT_PROTOCOL_41: 1 << 9,
   CLIENT_INTERACTIVE: 1 << 10,
   SSL: 1 << 11,
+  // UNUSED: 1 << 12,
   TRANSACTIONS: 1 << 13,
+  // UNUSED: 1 << 14,
   SECURE_CONNECTION: 1 << 15,
 };
 

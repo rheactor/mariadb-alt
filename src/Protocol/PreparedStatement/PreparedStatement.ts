@@ -4,6 +4,14 @@ import { TimeFormat } from "@/Formats/TimeFormat";
 import { FieldTypes } from "@/Protocol/Enumerations";
 import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 import {
+  createInt16LE,
+  createInt32LE,
+  createInt64LE,
+  createInt8,
+  createUInt16LE,
+  createUInt32LE,
+  createUInt64LE,
+  createUInt8,
   generateNullBitmap,
   toDatetimeEncoded,
   toStringEncoded,
@@ -53,68 +61,46 @@ export const createExecutePacket = (
       types.push(createTypeBuffer(FieldTypes.NULL));
     } else if (typeof parameter === "number") {
       if (Number.isSafeInteger(parameter)) {
-        let value: Buffer;
-        let type: Buffer;
-
         // BIGINT > 0xFFFFFFFF
         if (parameter > 0xffffffff) {
-          value = Buffer.alloc(8);
-          value.writeBigUInt64LE(BigInt(parameter));
-
-          type = createTypeBuffer(FieldTypes.BIGINT);
+          values.push(createUInt64LE(BigInt(parameter)));
+          types.push(createTypeBuffer(FieldTypes.BIGINT));
         }
         // INT, MEDIUMINT > 0xFFFF
         else if (parameter > 0xffff) {
-          value = Buffer.alloc(4);
-          value.writeUInt32LE(parameter);
-
-          type = createTypeBuffer(FieldTypes.INT);
+          values.push(createUInt32LE(parameter));
+          types.push(createTypeBuffer(FieldTypes.INT));
         }
         // SMALLINT > 0xFF
         else if (parameter > 0xff) {
-          value = Buffer.alloc(2);
-          value.writeUInt16LE(parameter);
-
-          type = createTypeBuffer(FieldTypes.SMALLINT);
+          values.push(createUInt16LE(parameter));
+          types.push(createTypeBuffer(FieldTypes.SMALLINT));
         }
         // TINYINT >= 0
         else if (parameter >= 0) {
-          value = Buffer.alloc(1);
-          value.writeUInt8(parameter);
-
-          type = createTypeBuffer(FieldTypes.TINYINT);
+          values.push(createUInt8(parameter));
+          types.push(createTypeBuffer(FieldTypes.TINYINT));
         }
         // Negative TINYINT >= -0x7F
         else if (parameter >= -0x7f) {
-          value = Buffer.alloc(1);
-          value.writeInt8(parameter);
-
-          type = createTypeBuffer(FieldTypes.TINYINT, false);
+          values.push(createInt8(parameter));
+          types.push(createTypeBuffer(FieldTypes.TINYINT, false));
         }
         // Negative SMALLINT >= -0x7FFF
         else if (parameter >= -0x7fff) {
-          value = Buffer.alloc(2);
-          value.writeInt16LE(parameter);
-
-          type = createTypeBuffer(FieldTypes.SMALLINT, false);
+          values.push(createInt16LE(parameter));
+          types.push(createTypeBuffer(FieldTypes.SMALLINT, false));
         }
         // Negative INT, MEDIUMINT >= -0x7FFFFFFF
         else if (parameter >= -0x7fffffff) {
-          value = Buffer.alloc(4);
-          value.writeInt32LE(parameter);
-
-          type = createTypeBuffer(FieldTypes.INT, false);
+          values.push(createInt32LE(parameter));
+          types.push(createTypeBuffer(FieldTypes.INT, false));
         }
         // Negative BIGINT else
         else {
-          value = Buffer.alloc(8);
-          value.writeBigInt64LE(BigInt(parameter));
-
-          type = createTypeBuffer(FieldTypes.BIGINT, false);
+          values.push(createInt64LE(BigInt(parameter)));
+          types.push(createTypeBuffer(FieldTypes.BIGINT, false));
         }
-
-        values.push(value);
-        types.push(type);
       } else {
         values.push(toStringEncoded(parameter.toString()));
         types.push(createTypeBuffer(FieldTypes.DECIMAL));
@@ -127,15 +113,9 @@ export const createExecutePacket = (
         parameter >= -0x7fffffffffffffffn &&
         parameter <= 0xffffffffffffffffn
       ) {
-        const value = Buffer.alloc(8);
-
-        if (parameter >= 0) {
-          value.writeBigUInt64LE(parameter);
-        } else {
-          value.writeBigInt64LE(parameter);
-        }
-
-        values.push(value);
+        values.push(
+          parameter >= 0 ? createUInt64LE(parameter) : createInt64LE(parameter)
+        );
         types.push(createTypeBuffer(FieldTypes.BIGINT, parameter >= 0));
       } else {
         values.push(toStringEncoded(parameter.toString()));

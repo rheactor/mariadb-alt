@@ -208,6 +208,22 @@ export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
   return bufferResult;
 };
 
+export const createUInt8 = (value: number) => {
+  const buffer = Buffer.allocUnsafe(1);
+
+  buffer.writeUInt8(value);
+
+  return buffer;
+};
+
+export const createInt8 = (value: number) => {
+  const buffer = Buffer.allocUnsafe(1);
+
+  buffer.writeInt8(value);
+
+  return buffer;
+};
+
 export const createUInt16LE = (value: number) => {
   const buffer = Buffer.allocUnsafe(2);
 
@@ -216,10 +232,42 @@ export const createUInt16LE = (value: number) => {
   return buffer;
 };
 
+export const createInt16LE = (value: number) => {
+  const buffer = Buffer.allocUnsafe(2);
+
+  buffer.writeInt16LE(value);
+
+  return buffer;
+};
+
 export const createUInt32LE = (value: number) => {
   const buffer = Buffer.allocUnsafe(4);
 
   buffer.writeUInt32LE(value);
+
+  return buffer;
+};
+
+export const createInt32LE = (value: number) => {
+  const buffer = Buffer.allocUnsafe(4);
+
+  buffer.writeInt32LE(value);
+
+  return buffer;
+};
+
+export const createUInt64LE = (value: bigint) => {
+  const buffer = Buffer.allocUnsafe(8);
+
+  buffer.writeBigUInt64LE(value);
+
+  return buffer;
+};
+
+export const createInt64LE = (value: bigint) => {
+  const buffer = Buffer.allocUnsafe(8);
+
+  buffer.writeBigInt64LE(value);
 
   return buffer;
 };
