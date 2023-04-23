@@ -125,7 +125,7 @@ export class ConnectionPool {
 
     if (options.renew === true && connection.wasUsed) {
       return connection
-        .close()
+        .reset()
         .then(async () =>
           this.#acquireWith<T>(acquireCallback, this.#initializeConnection())
         );

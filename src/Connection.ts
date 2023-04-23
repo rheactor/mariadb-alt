@@ -280,6 +280,10 @@ export class Connection extends ConnectionEvents {
     });
   }
 
+  public async reset() {
+    return this.#commandQueue(Buffer.from([0x1f]));
+  }
+
   async #commandQueue(
     buffer: Buffer,
     reassembler: Reassembler | false | undefined = undefined,
