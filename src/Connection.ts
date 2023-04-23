@@ -361,9 +361,7 @@ export class Connection extends ConnectionEvents {
     const handshakeResponse = createHandshakeResponse(
       handshake.authSeed,
       handshake.authPluginName,
-      this.#options.user,
-      this.#options.password ?? "",
-      this.#options.database,
+      this.#options,
       0xffffffff
     );
 

@@ -1,3 +1,4 @@
+import { type ConnectionOptions } from "@/Connection";
 import {
   capabilitiesBase,
   capabilitiesExtended,
@@ -15,16 +16,15 @@ import {
 export const createHandshakeResponse = (
   authSeed: Buffer,
   authPluginName: Buffer,
-  user: string,
-  password: string,
-  database: string,
+  options: Pick<ConnectionOptions, "database" | "password" | "user">,
   maxPacketSize: number
 ) => {
-  const bufferAuthentication = password
-    ? toStringEncoded(
-        hashMySQLNativePassword(authSeed, password).toString("binary")
-      )
-    : Buffer.from([0]);
+  const bufferAuthentication =
+    options.password === undefined || options.password === ""
+      ? Buffer.from([0])
+      : toStringEncoded(
+          hashMySQLNativePassword(authSeed, options.password).toString("binary")
+        );
 
   return Buffer.concat([
     createUInt16LE(capabilitiesBase),
@@ -33,9 +33,9 @@ export const createHandshakeResponse = (
     Buffer.from([defaultCollation]),
     Buffer.alloc(19),
     createUInt32LE(capabilitiesMariaDB),
-    toNullTerminatedStringEscaped(user),
+    toNullTerminatedStringEscaped(options.user),
     bufferAuthentication,
-    toNullTerminatedStringEscaped(database),
+    toNullTerminatedStringEscaped(options.database),
     toNullTerminatedStringEscaped(authPluginName.toString("binary")),
   ]);
 };

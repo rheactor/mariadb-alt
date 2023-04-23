@@ -3,14 +3,22 @@ import { BufferConsumer } from "@/Utils/BufferConsumer";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
+  type ConnectionOptionsHandshake = Parameters<
+    typeof createHandshakeResponse
+  >[2];
+
   test("createHandshakeResponse() without password", () => {
+    const options: ConnectionOptionsHandshake = {
+      user: "root",
+      password: "",
+      database: "test",
+    };
+
     const handshake = new BufferConsumer(
       createHandshakeResponse(
         Buffer.from([0]),
         Buffer.from("example"),
-        "root",
-        "",
-        "test",
+        options,
         0x000000ff
       )
     );
@@ -31,13 +39,17 @@ describe(getTestName(__filename), () => {
   });
 
   test("createHandshakeResponse() with password", () => {
+    const options: ConnectionOptionsHandshake = {
+      user: "root",
+      password: "password",
+      database: "test",
+    };
+
     const handshake = new BufferConsumer(
       createHandshakeResponse(
         Buffer.from([0]),
         Buffer.from("example"),
-        "root",
-        "password",
-        "test",
+        options,
         0x000000ff
       )
     );
