@@ -369,7 +369,7 @@ export class Connection extends ConnectionEvents {
             this.#commands = [];
             this.#options.afterAuthenticated.call(this);
             this.#wasUsed = false;
-            this.#commands = queuedCommands;
+            this.#commands.push(...queuedCommands);
           }
 
           this.#commandRun();

@@ -377,28 +377,28 @@ describe(getTestName(__filename), () => {
   });
 
   describe("connections", () => {
-    let connectionPool: ConnectionPool;
-
-    beforeAll(() => {
-      connectionPool = TestConnectionPool({
-        afterAuthenticated() {
-          this.execute("SET @REFERENCE_VALUE = 123");
-        },
-      });
-    });
+    let connectionPool: ConnectionPool | undefined = undefined;
 
     test("afterAuthenticated() must return reference value", async () => {
+      connectionPool = TestConnectionPool({
+        async afterAuthenticated() {
+          this.execute("SET @REFERENCE_VALUE = 123");
+          this.query("SELECT SLEEP(0.1)");
+          this.execute("SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2");
+        },
+      });
+
       await connectionPool.execute(
         "SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2"
       );
 
-      const result = await connectionPool.query("SELECT @REFERENCE_VALUE AS a");
-
-      expect([...result][0]).toStrictEqual({ a: 246n });
+      expect(
+        [...(await connectionPool!.query("SELECT @REFERENCE_VALUE AS a"))][0]
+      ).toStrictEqual({ a: 492n });
     });
 
     afterAll(() => {
-      connectionPool.close();
+      connectionPool?.close();
     });
   });
 });
