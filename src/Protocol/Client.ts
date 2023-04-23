@@ -1,19 +1,19 @@
+import {
+  CapabilitiesBase,
+  CapabilitiesExtended,
+  CapabilitiesMariaDB,
+} from "@/Protocol/Enumerations";
+
 export const capabilitiesBase =
-  // Capabilities.CONNECT_WITH_DB
-  0b0000_0000_0000_1000 |
-  // Capabilities.CLIENT_PROTOCOL_41
-  0b0000_0010_0000_0000 |
-  // Capabilities.SECURE_CONNECTION
-  0b1000_0000_0000_0000;
+  CapabilitiesBase.CONNECT_WITH_DB |
+  CapabilitiesBase.CLIENT_PROTOCOL_41 |
+  CapabilitiesBase.SECURE_CONNECTION;
 
 export const capabilitiesExtended =
-  // Capabilities.PLUGIN_AUTH
-  0b0000_0000_0000_1000 |
-  // Capabilities.PLUGIN_AUTH_LENENC_CLIENT_DATA
-  0b0000_0000_0010_0000;
+  CapabilitiesExtended.PLUGIN_AUTH |
+  CapabilitiesExtended.PLUGIN_AUTH_LENENC_CLIENT_DATA;
 
 export const capabilitiesMariaDB =
-  // Capabilities.MARIADB_CLIENT_EXTENDED_METADATA
-  0b0000_0000_0000_1000;
+  CapabilitiesMariaDB.MARIADB_CLIENT_EXTENDED_METADATA;
 
 export const defaultCollation = 0x2d; // utf8mb4_general_ci
