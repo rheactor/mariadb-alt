@@ -200,3 +200,6 @@ export const createExecutePacket = (
     ...values,
   ]);
 };
+
+export const createClosePacket = (statementId: number) =>
+  Buffer.concat([Buffer.from([0x19]), createUInt32LE(statementId)]);

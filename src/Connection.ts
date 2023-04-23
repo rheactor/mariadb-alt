@@ -18,6 +18,7 @@ import { ReassemblerPSResponse } from "@/Protocol/PacketReassembler/Reassembler/
 import { ReassemblerPSResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPSResultSet";
 import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
 import {
+  createClosePacket,
   createExecutePacket,
   type ExecuteArgument,
 } from "@/Protocol/PreparedStatement/PreparedStatement";
@@ -215,12 +216,7 @@ export class Connection extends ConnectionEvents {
           new ReassemblerPSResultSet(),
           true
         ).then((data) => {
-          const statementClose = Buffer.allocUnsafe(5);
-
-          statementClose.writeUInt8(0x19);
-          statementClose.writeUInt32LE(response.statementId, 1);
-
-          this.#commandQueue(statementClose, false);
+          this.#commandQueue(createClosePacket(response.statementId), false);
 
           return data;
         });
