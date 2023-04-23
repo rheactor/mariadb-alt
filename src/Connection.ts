@@ -205,10 +205,6 @@ export class Connection extends ConnectionEvents {
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
         new ReassemblerPSResponse()
       ).then(async (packet) => {
-        if (packet instanceof PacketError) {
-          throw packet;
-        }
-
         const response = packet as PreparedStatementResponse;
 
         return this.#commandQueue(

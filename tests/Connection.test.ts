@@ -417,6 +417,218 @@ describe(getTestName(__filename), () => {
 
         expect(result!.packet).toStrictEqual(packet16MB.length);
       }, 5000);
+
+      test(`create table, insert and select using Prepared Statement`, async () => {
+        const table = `test-${Math.random()}`;
+
+        await connectionGlobal.execute(
+          `CREATE TEMPORARY TABLE \`${table}\` (
+            id INT NULL AUTO_INCREMENT,
+            a VARCHAR(20) NULL,
+            b INT NULL,
+            c BLOB NULL,
+            d INT NULL,
+            e INT NULL,
+            f INT NULL,
+            g INT NULL,
+            h INT NULL,
+            i INT NULL,
+            j INT NULL,
+            k INT NULL,
+            l INT NULL,
+            m INT NULL,
+            n INT NULL,
+            PRIMARY KEY (id)
+          )`
+        );
+
+        await connectionGlobal.execute(
+          `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            "example",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]
+        );
+        await connectionGlobal.execute(
+          `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            null,
+            123,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]
+        );
+        await connectionGlobal.execute(
+          `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            null,
+            null,
+            "example",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]
+        );
+        await connectionGlobal.execute(
+          `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+          ]
+        );
+        await connectionGlobal.execute(
+          `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ["example", 123, "example", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+        );
+
+        const results = await connectionGlobal.query<{
+          id: number;
+          a: string | null;
+          b: number | null;
+          c: Buffer | null;
+          d: number | null;
+          e: number | null;
+          f: number | null;
+          g: number | null;
+          h: number | null;
+          i: number | null;
+          j: number | null;
+          k: number | null;
+          l: number | null;
+          m: number | null;
+          n: number | null;
+        }>(`SELECT * FROM \`${table}\` WHERE id > ?`, [0]);
+
+        expect([...results]).toStrictEqual([
+          {
+            id: 1,
+            a: "example",
+            b: null,
+            c: null,
+            d: null,
+            e: null,
+            f: null,
+            g: null,
+            h: null,
+            i: null,
+            j: null,
+            k: null,
+            l: null,
+            m: null,
+            n: null,
+          },
+          {
+            id: 2,
+            a: null,
+            b: 123,
+            c: null,
+            d: null,
+            e: null,
+            f: null,
+            g: null,
+            h: null,
+            i: null,
+            j: null,
+            k: null,
+            l: null,
+            m: null,
+            n: null,
+          },
+          {
+            id: 3,
+            a: null,
+            b: null,
+            c: Buffer.from("example"),
+            d: null,
+            e: null,
+            f: null,
+            g: null,
+            h: null,
+            i: null,
+            j: null,
+            k: null,
+            l: null,
+            m: null,
+            n: null,
+          },
+          {
+            id: 4,
+            a: null,
+            b: null,
+            c: null,
+            d: null,
+            e: null,
+            f: null,
+            g: null,
+            h: null,
+            i: null,
+            j: null,
+            k: null,
+            l: null,
+            m: null,
+            n: null,
+          },
+          {
+            id: 5,
+            a: "example",
+            b: 123,
+            c: Buffer.from("example"),
+            d: 1,
+            e: 2,
+            f: 3,
+            g: 4,
+            h: 5,
+            i: 6,
+            j: 7,
+            k: 8,
+            l: 9,
+            m: 10,
+            n: 11,
+          },
+        ]);
+      });
     });
   });
 

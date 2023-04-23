@@ -272,6 +272,32 @@ export const createInt64LE = (value: bigint) => {
   return buffer;
 };
 
+export const getNullPositions = (
+  nullBitmap: Buffer,
+  fieldsCount: number,
+  offset: number
+): number[] => {
+  const positions: number[] = [];
+
+  let currentByte = 0;
+  let currentBit = offset;
+
+  for (let i = 0; i < fieldsCount; i++) {
+    const byte = nullBitmap[currentByte]!;
+
+    if ((byte & (1 << currentBit)) !== 0) {
+      positions.push(i);
+    }
+
+    if (++currentBit > 7) {
+      currentByte++;
+      currentBit = 0;
+    }
+  }
+
+  return positions;
+};
+
 export const generateNullBitmap = (args: unknown[]): Buffer => {
   const nullBitmap: number[] = Array(Math.floor((args.length + 7) / 8)).fill(0);
 

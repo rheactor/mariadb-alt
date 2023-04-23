@@ -2,7 +2,10 @@ import { readField, type Field } from "@/Protocol/Data/Field";
 import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
 import { type Row } from "@/Protocol/Packet/PacketResultSet";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { getNullPositions } from "@/Utils/BufferUtil";
 import { toNumber } from "@/Utils/NumberUtil";
+
+const PS_RESULT_ROW_OFFSET = 2;
 
 export class PreparedStatementResultSet {
   public fieldsCount: number;
@@ -33,19 +36,28 @@ export class PreparedStatementResultSet {
     const fieldsLength = fields.length;
 
     while (!this.#bufferConsumer.consumed()) {
-      // Skip Header OK (0x00) and Null Bitmap.
-      this.#bufferConsumer.skip(1 + Math.floor((this.fieldsCount + 9) / 8));
-
       const row: Row = {};
+
+      // Skip Header OK: 0.
+      this.#bufferConsumer.skip(1);
+
+      const nullPositions = getNullPositions(
+        this.#bufferConsumer.slice(
+          Math.floor((this.fieldsCount + 7 + PS_RESULT_ROW_OFFSET) / 8)
+        ),
+        fieldsLength,
+        PS_RESULT_ROW_OFFSET
+      );
 
       for (let i = 0; i < fieldsLength; i++) {
         const field = fields[i]!;
 
-        switch (field.type) {
-          case FieldTypes.NULL:
-            row[field.name] = null;
-            break;
+        if (nullPositions.includes(i)) {
+          row[field.name] = null;
+          continue;
+        }
 
+        switch (field.type) {
           case FieldTypes.INT:
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED

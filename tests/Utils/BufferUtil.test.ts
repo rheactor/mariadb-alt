@@ -6,6 +6,7 @@ import {
   createUInt16LE,
   createUInt32LE,
   generateNullBitmap,
+  getNullPositions,
   readDatetimeEncoded,
   readNullTerminatedString,
   readTimeEncoded,
@@ -330,6 +331,72 @@ describe(getTestName(__filename), () => {
       );
     });
   });
+
+  type GetNullPositionUnit = [Buffer, number, number[], number?];
+
+  const getNullPositionsUnits: GetNullPositionUnit[] = [
+    [Buffer.from([0b0000_0000]), 1, []],
+    [Buffer.from([0b0000_0001]), 1, [0]],
+    [Buffer.from([0b0000_0011]), 1, [0]], // fake bit must be ignored
+    [Buffer.from([0b0000_0000]), 2, []],
+    [Buffer.from([0b0000_0010]), 2, [1]],
+    [Buffer.from([0b0000_0001]), 2, [0]],
+    [Buffer.from([0b0000_0011]), 2, [0, 1]],
+    [Buffer.from([0b0000_0011]), 4, [0, 1]],
+    [Buffer.from([0b0000_1100]), 4, [2, 3]],
+    [Buffer.from([0b0011_0000]), 4, [2, 3], 2], // First 2-bytes from right-side must be ignored.
+    [Buffer.from([0b1111_1111]), 8, [0, 1, 2, 3, 4, 5, 6, 7]],
+    [Buffer.from([0b0000_0000]), 8, []],
+    [Buffer.from([0b1111_1111, 0b0000_0000]), 16, [0, 1, 2, 3, 4, 5, 6, 7]],
+    [
+      Buffer.from([0b1111_1111, 0b1111_1111]),
+      16,
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+    ],
+    [Buffer.from([0b0101_0101, 0b0101_0101]), 16, [0, 2, 4, 6, 8, 10, 12, 14]],
+    [Buffer.from([0b0101_0101, 0b0100_0001]), 9, [0, 2, 4, 6, 8]],
+    [Buffer.from([0b0101_0101, 0b0000_0011]), 9, [0, 2, 4, 6, 8]], // fake bit must be ignored
+    [
+      Buffer.from([0b1111_0000, 0b1111_1111, 0b00000001]),
+      15,
+      [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+      2,
+    ],
+    [
+      Buffer.from([0b1110_1000, 0b1111_1111, 0b00000001]),
+      15,
+      [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+      2,
+    ],
+    [
+      Buffer.from([0b1111_0000, 0b1111_1111, 0b00000001]),
+      16,
+      [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+      2,
+    ],
+    [
+      Buffer.from([0b1110_1000, 0b1111_1111, 0b00000001]),
+      16,
+      [1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+      2,
+    ],
+  ];
+
+  describe.each(getNullPositionsUnits)(
+    "getNullPositions()",
+    (nullBitmap, fieldsCount, output, offset) => {
+      const nullBitmapTitle = nullBitmap
+        .toJSON()
+        .data[0]?.toString(2)
+        .padStart(8, "0");
+
+      test(`${nullBitmapTitle} with ${fieldsCount} fields`, () => {
+        expect(
+          getNullPositions(nullBitmap, fieldsCount, offset ?? 0)
+        ).toStrictEqual(output);
+      });
+    }
+  );
 
   type NullBitmapUnit = [unknown[], Buffer];
 
