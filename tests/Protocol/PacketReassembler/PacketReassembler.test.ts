@@ -1,4 +1,4 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Errors/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {
@@ -9,7 +9,7 @@ import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/R
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
-  type PacketUnit = [string, Buffer[], PacketType];
+  type PacketUnit = [string, Buffer[], PacketError | PacketType];
 
   const packetsUnits: PacketUnit[] = [
     [
@@ -57,7 +57,7 @@ describe(getTestName(__filename), () => {
       PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40])),
     ],
     [
-      "PacketErrorState",
+      "PacketError",
       [
         // Length: 16 bytes.
         Buffer.from([0x10, 0x00, 0x00, 0x00]),

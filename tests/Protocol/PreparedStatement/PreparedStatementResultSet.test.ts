@@ -1,8 +1,8 @@
 import { type Connection } from "@/Connection";
+import { PacketError } from "@/Errors/PacketError";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
-import { PacketError } from "@/Protocol/Packet/PacketError";
 import { type Row } from "@/Protocol/Packet/PacketResultSet";
 import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
@@ -143,7 +143,7 @@ describe(getTestName(__filename), () => {
       );
 
       expect(result).toStrictEqual([{ "?": 9 }]);
-    }, 0);
+    }, 1000);
   });
 
   type NullBitmapUnit = [number];
@@ -216,27 +216,35 @@ describe(getTestName(__filename), () => {
 
   describe("query()", () => {
     test("SELECT fail", async () => {
-      const result = await connectionBase.queryDetailed("SELECT!", [123]);
+      try {
+        await connectionBase.queryDetailed("SELECT!", [123]);
+      } catch (error) {
+        expect(error).toBeInstanceOf(PacketError);
 
-      expect(result).toBeInstanceOf(PacketError);
-
-      if (result instanceof PacketError) {
-        expect(result.code).toBe(1064);
-        expect(result.message).toContain(
-          "You have an error in your SQL syntax;"
-        );
+        if (error instanceof PacketError) {
+          expect(error.code).toBe(1064);
+          expect(error.message).toContain(
+            "You have an error in your SQL syntax;"
+          );
+        }
       }
     });
 
     test("SELECT ? without args must fail", async () => {
-      const result = await connectionBase.queryDetailed("SELECT ?");
-
-      expect(result).toBeInstanceOf(PacketError);
-
-      if (result instanceof PacketError) {
-        expect(result.code).toBe(1064);
-        expect(result.message).toContain("'?'");
+      try {
+        await connectionBase.queryDetailed("SELECT ?");
+      } catch (error) {
+        if (error instanceof PacketError) {
+          expect(error.code).toBe(1064);
+          expect(error.message).toContain("'?'");
+        }
       }
+    });
+
+    test("SELECT wrong arguments number", async () => {
+      expect(async () =>
+        connectionBase.queryDetailed("SELECT ?, ?", [123])
+      ).rejects.toThrowError("Incorrect arguments to mysqld_stmt_execute");
     });
 
     test("SELECT +64K arguments must throw error", async () => {

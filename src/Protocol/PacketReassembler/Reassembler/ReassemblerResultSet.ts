@@ -1,4 +1,4 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Errors/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {

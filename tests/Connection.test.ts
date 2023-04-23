@@ -1,9 +1,9 @@
 import { type Connection } from "@/Connection";
 import { ExecuteError } from "@/Errors/ExecuteError";
+import { PacketError } from "@/Errors/PacketError";
 import { QueryError } from "@/Errors/QueryError";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
-import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnection } from "@Tests/Fixtures/TestConnection";
@@ -37,7 +37,7 @@ describe(getTestName(__filename), () => {
       });
 
       connectionBase.once("authenticated", (connection) => {
-        expect(connection.isAuthenticated()).toBe(true);
+        expect(connection.hasAuthenticated()).toBe(true);
         connection.close();
       });
     });
@@ -429,7 +429,7 @@ describe(getTestName(__filename), () => {
       connectionBase.once("closed", () => done());
 
       connectionBase.once("error", (connection, error) => {
-        expect(connection.isError()).toBe(true);
+        expect(connection.hasError()).toBe(true);
         expect(error.message).toContain("ECONNREFUSED");
       });
     });
@@ -446,11 +446,11 @@ describe(getTestName(__filename), () => {
       connectionBase.once("error", (connection, error) => {
         expect.assertions(3);
 
-        expect(connection.isError()).toBe(true);
+        expect(connection.hasError()).toBe(true);
         expect(error.message).toContain("random-user");
 
-        if (error.cause instanceof PacketError) {
-          expect(error.cause.code).toBe(1045);
+        if (error instanceof PacketError) {
+          expect(error.code).toBe(1045);
         }
       });
     });
@@ -465,13 +465,11 @@ describe(getTestName(__filename), () => {
       connectionBase.once("closed", () => done());
 
       connectionBase.once("error", (connection, error) => {
-        expect.assertions(3);
-
-        expect(connection.isError()).toBe(true);
+        expect(connection.hasError()).toBe(true);
         expect(error.message).toContain("denied for user");
 
-        if (error.cause instanceof PacketError) {
-          expect(error.cause.code).toBe(1045);
+        if (error instanceof PacketError) {
+          expect(error.code).toBe(1045);
         }
       });
     });

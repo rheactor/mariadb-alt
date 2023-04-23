@@ -1,4 +1,4 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Errors/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {
@@ -13,13 +13,12 @@ const SEQUENCE_LENGTH = 1;
 const HEADER_SIZE = PAYLOAD_LENGTH + SEQUENCE_LENGTH;
 
 export type PacketType =
-  | PacketError
   | PacketOk
   | PacketResultSet
   | PreparedStatementResponse
   | PreparedStatementResultSet;
 
-type OnDoneCallback = (packets: PacketType) => void;
+type OnDoneCallback = (packets: PacketError | PacketType) => void;
 
 export class PacketReassembler {
   #packetIncomplete: Buffer | undefined = undefined;

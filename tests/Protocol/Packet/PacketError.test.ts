@@ -1,4 +1,4 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Errors/PacketError";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
