@@ -234,8 +234,8 @@ export class Connection extends ConnectionEvents {
       .catch((error) => {
         throw new QueryError("query error", { cause: error });
       })
-      .then((result) =>
-        result.map((packet) => {
+      .then((packets) =>
+        packets.map((packet) => {
           if (
             packet instanceof PacketResultSet ||
             packet instanceof PreparedStatementResultSet
@@ -244,7 +244,25 @@ export class Connection extends ConnectionEvents {
           }
 
           throw new QueryError("unexpected query response type", {
-            cause: result,
+            cause: packets,
+          });
+        })
+      );
+  }
+
+  public async batchExecute(sql: string) {
+    return this.batchDetailed(sql)
+      .catch((error) => {
+        throw new ExecuteError("query error", { cause: error });
+      })
+      .then((packets) =>
+        packets.map((packet) => {
+          if (packet instanceof PacketOk) {
+            return packet;
+          }
+
+          throw new ExecuteError("unexpected query response type", {
+            cause: packet,
           });
         })
       );
