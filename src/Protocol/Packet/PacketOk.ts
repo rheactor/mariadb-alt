@@ -1,3 +1,4 @@
+import { ServerStatus } from "@/Protocol/Enumerations";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
 export class PacketOk {
@@ -28,6 +29,13 @@ export class PacketOk {
   public static is(packet: Buffer) {
     return (
       (packet.readUInt8() === 0x00 && packet.length >= 7) || this.isEOF(packet)
+    );
+  }
+
+  public static hasMoreResults(packet: Buffer) {
+    return (
+      packet.readUInt8() === 0x00 &&
+      (packet.readUIntLE(3, 2) & ServerStatus.MORE_RESULTS) !== 0
     );
   }
 

@@ -1,8 +1,12 @@
 import { type PacketType } from "@/Protocol/PacketReassembler/PacketReassembler";
 
 export enum PushRecommendation {
+  // Packet is incomplete, more data incoming.
   CONTINUE,
+  // Packet is complete.
   EOF,
+  // Packet is complete, but new packet is incoming.
+  EOF_THEN_REPEAT,
 }
 
 export abstract class Reassembler {

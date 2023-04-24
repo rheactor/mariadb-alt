@@ -18,7 +18,7 @@ export type PacketType =
   | PreparedStatementResponse
   | PreparedStatementResultSet;
 
-type OnDoneCallback = (packets: PacketError | PacketType) => void;
+type OnDoneCallback = (packets: Array<PacketError | PacketType>) => void;
 
 export class PacketReassembler {
   #packetIncomplete: Buffer | undefined = undefined;
@@ -28,6 +28,8 @@ export class PacketReassembler {
   readonly #onDoneCallback: OnDoneCallback;
 
   readonly #reassembler?: Reassembler | undefined;
+
+  readonly #results: Array<PacketError | PacketType> = [];
 
   public constructor(
     onDoneCallback: OnDoneCallback,
@@ -65,8 +67,15 @@ export class PacketReassembler {
         }
 
         if (this.#reassemblerValidated) {
-          if (this.#reassembler.push(payload) === PushRecommendation.EOF) {
-            this.#onDoneCallback(this.#reassembler.get());
+          const pushStatus = this.#reassembler.push(payload);
+
+          if (pushStatus === PushRecommendation.EOF_THEN_REPEAT) {
+            this.#results.push(this.#reassembler.get());
+
+            continue;
+          } else if (pushStatus === PushRecommendation.EOF) {
+            this.#results.push(this.#reassembler.get());
+            this.#onDoneCallback(this.#results);
 
             return;
           }
@@ -80,14 +89,16 @@ export class PacketReassembler {
 
       // Packet Error:
       if (PacketError.is(payload)) {
-        this.#onDoneCallback(PacketError.from(payload.subarray(1)));
+        this.#results.push(PacketError.from(payload.subarray(1)));
+        this.#onDoneCallback(this.#results);
 
         return;
       }
 
       // Packet OK:
       if (PacketOk.is(payload)) {
-        this.#onDoneCallback(PacketOk.from(payload.subarray(1)));
+        this.#results.push(PacketOk.from(payload.subarray(1)));
+        this.#onDoneCallback(this.#results);
 
         return;
       }

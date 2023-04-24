@@ -65,7 +65,7 @@ type ConnectionEventsCommon =
 class ConnectionCommand {
   public constructor(
     public readonly buffer: Buffer,
-    public resolve: (data: PacketType) => void,
+    public resolve: (data: Array<PacketError | PacketType>) => void,
     public reject: (error: Error) => void,
     public reassembler: Reassembler | false | undefined,
     public sequence: number
@@ -190,7 +190,7 @@ export class Connection extends ConnectionEvents {
   }
 
   public async ping() {
-    return this.#commandQueue(Buffer.from([0x0e]));
+    return this.#commandQueue(Buffer.from([0x0e])).then(([packet]) => packet);
   }
 
   public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
@@ -204,14 +204,14 @@ export class Connection extends ConnectionEvents {
       return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
         new ReassemblerPSResponse()
-      ).then(async (packet) => {
+      ).then(async ([packet]) => {
         const response = packet as PreparedStatementResponse;
 
         return this.#commandQueue(
           createExecutePacket(response, args),
           new ReassemblerPSResultSet(),
           true
-        ).then((data) => {
+        ).then(([data]) => {
           this.#commandQueue(createClosePacket(response.statementId), false);
 
           return data;
@@ -222,7 +222,7 @@ export class Connection extends ConnectionEvents {
     return this.#commandQueue(
       Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
       new ReassemblerResultSet()
-    );
+    ).then(([packet]) => packet);
   }
 
   public async query<T extends object = Row>(
@@ -277,7 +277,7 @@ export class Connection extends ConnectionEvents {
   }
 
   public async reset() {
-    return this.#commandQueue(Buffer.from([0x1f]));
+    return this.#commandQueue(Buffer.from([0x1f])).then(([packet]) => packet);
   }
 
   async #commandQueue(
@@ -286,7 +286,7 @@ export class Connection extends ConnectionEvents {
     priority = false,
     sequence = 0
   ) {
-    return new Promise<PacketType>((resolve, reject) => {
+    return new Promise<Array<PacketError | PacketType>>((resolve, reject) => {
       const command = new ConnectionCommand(
         buffer,
         resolve,
@@ -337,8 +337,10 @@ export class Connection extends ConnectionEvents {
       const reassembler = new PacketReassembler((data) => {
         this.#socket.off("data", reassemblerPush);
 
-        if (data instanceof PacketError) {
-          command.reject(data);
+        const dataLatest = data[data.length - 1];
+
+        if (dataLatest instanceof PacketError) {
+          command.reject(dataLatest);
         } else {
           command.resolve(data);
         }

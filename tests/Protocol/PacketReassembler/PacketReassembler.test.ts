@@ -201,7 +201,7 @@ describe(getTestName(__filename), () => {
         expect.assertions(1);
 
         const reassembler = new PacketReassembler((payload) => {
-          expect(payload).toStrictEqual(reassembledPayload);
+          expect(payload).toStrictEqual([reassembledPayload]);
         }, new ReassemblerResultSet());
 
         buffers.forEach((buffer) => reassembler.push(buffer));

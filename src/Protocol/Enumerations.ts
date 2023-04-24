@@ -94,6 +94,26 @@ export const FieldFlags = {
   NUM_FLAG: 32768,
 };
 
+/** @see https://dev.mysql.com/doc/dev/mysql-server/latest/mysql__com_8h.html#a1d854e841086925be1883e4d7b4e8cad */
+export const ServerStatus = {
+  IN_TRANSACTION: 1 << 0,
+  AUTO_COMMIT: 1 << 1,
+  // UNUSED: 1 << 2,
+  MORE_RESULTS: 1 << 3,
+  BAD_INDEX_USED: 1 << 4,
+  NO_INDEX_USED: 1 << 5,
+  CURSOR_EXISTS: 1 << 6,
+  LAST_ROW_SENT: 1 << 7,
+  DATABASE_DROPPED: 1 << 8,
+  NO_BACKSLASH_ESCAPES: 1 << 9,
+  METADATA_CHANGED: 1 << 10,
+  QUERY_WAS_SLOW: 1 << 11,
+  PS_OUT_PARAMS: 1 << 12,
+  IN_TRANS_READONLY: 1 << 13,
+  SESSION_STATE_CHANGED: 1 << 14,
+  // UNUSED: 1 << 15,
+};
+
 export const Collations = {
   [`utf8mb4_general_ci`]: 0x2d,
   binary: 0x3f,

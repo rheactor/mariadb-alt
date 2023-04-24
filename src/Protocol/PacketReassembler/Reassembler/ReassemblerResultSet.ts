@@ -19,7 +19,9 @@ export abstract class ReassemblerResultSetPartial extends Reassembler {
   public push(packet: Buffer): PushRecommendation {
     if (PacketOk.isEOF(packet)) {
       if (this.#intermediateEOFFound) {
-        return PushRecommendation.EOF;
+        return PacketOk.hasMoreResults(packet)
+          ? PushRecommendation.EOF_THEN_REPEAT
+          : PushRecommendation.EOF;
       }
 
       this.#intermediateEOFFound = true;
