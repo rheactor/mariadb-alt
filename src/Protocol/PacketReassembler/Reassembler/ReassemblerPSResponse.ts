@@ -24,12 +24,12 @@ export class ReassemblerPSResponse extends Reassembler {
   public push(packet: Buffer): PushRecommendation {
     if (PacketOk.isEOF(packet)) {
       if (this.#intermediateEOFFound) {
-        return PushRecommendation.EOF;
+        return PushRecommendation.DONE;
       }
 
       this.#intermediateEOFFound = true;
 
-      return PushRecommendation.CONTINUE;
+      return PushRecommendation.INCOMPLETE;
     }
 
     // We need just the first packet, and ignoring first-byte header (0x00).
@@ -37,7 +37,7 @@ export class ReassemblerPSResponse extends Reassembler {
       this.#packet = packet.subarray(1);
     }
 
-    return PushRecommendation.CONTINUE;
+    return PushRecommendation.INCOMPLETE;
   }
 
   public get() {

@@ -202,7 +202,7 @@ describe(getTestName(__filename), () => {
 
         const reassembler = new PacketReassembler((payload) => {
           expect(payload).toStrictEqual([reassembledPayload]);
-        }, new ReassemblerResultSet());
+        }, ReassemblerResultSet);
 
         buffers.forEach((buffer) => reassembler.push(buffer));
       });

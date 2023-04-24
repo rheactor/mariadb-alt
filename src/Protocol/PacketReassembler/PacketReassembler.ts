@@ -20,6 +20,8 @@ export type PacketType =
 
 type OnDoneCallback = (packets: Array<PacketError | PacketType>) => void;
 
+type Constructor<T> = new () => T;
+
 export class PacketReassembler {
   #packetIncomplete: Buffer | undefined = undefined;
 
@@ -27,16 +29,22 @@ export class PacketReassembler {
 
   readonly #onDoneCallback: OnDoneCallback;
 
-  readonly #reassembler?: Reassembler | undefined;
+  readonly #reassembler?: Constructor<Reassembler> | undefined = undefined;
+
+  #reassemblerInstance?: Reassembler | undefined = undefined;
 
   readonly #results: Array<PacketError | PacketType> = [];
 
   public constructor(
     onDoneCallback: OnDoneCallback,
-    reassembler?: Reassembler | undefined
+    reassembler?: Constructor<Reassembler> | undefined
   ) {
     this.#onDoneCallback = onDoneCallback;
-    this.#reassembler = reassembler;
+
+    if (reassembler !== undefined) {
+      this.#reassembler = reassembler;
+      this.#reassemblerInstance = new reassembler();
+    }
   }
 
   public push(buffer: Buffer) {
@@ -61,20 +69,20 @@ export class PacketReassembler {
         packetLength
       );
 
-      if (this.#reassembler) {
+      if (this.#reassemblerInstance) {
         if (this.#reassemblerValidated === undefined) {
-          this.#reassemblerValidated = this.#reassembler.is(payload);
+          this.#reassemblerValidated = this.#reassemblerInstance.is(payload);
         }
 
         if (this.#reassemblerValidated) {
-          const pushStatus = this.#reassembler.push(payload);
+          const pushStatus = this.#reassemblerInstance.push(payload);
 
-          if (pushStatus === PushRecommendation.EOF_THEN_REPEAT) {
-            this.#results.push(this.#reassembler.get());
-
-            continue;
-          } else if (pushStatus === PushRecommendation.EOF) {
-            this.#results.push(this.#reassembler.get());
+          if (pushStatus === PushRecommendation.MORE_RESULTS) {
+            this.#results.push(this.#reassemblerInstance.get());
+            this.#reassemblerValidated = undefined;
+            this.#reassemblerInstance = new this.#reassembler!();
+          } else if (pushStatus === PushRecommendation.DONE) {
+            this.#results.push(this.#reassemblerInstance.get());
             this.#onDoneCallback(this.#results);
 
             return;

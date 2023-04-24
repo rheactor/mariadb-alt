@@ -67,7 +67,7 @@ class ConnectionCommand {
     public readonly buffer: Buffer,
     public resolve: (data: Array<PacketError | PacketType>) => void,
     public reject: (error: Error) => void,
-    public reassembler: Reassembler | false | undefined,
+    public reassembler: typeof Reassembler | false | undefined,
     public sequence: number
   ) {}
 }
@@ -203,13 +203,13 @@ export class Connection extends ConnectionEvents {
 
       return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
-        new ReassemblerPSResponse()
+        ReassemblerPSResponse
       ).then(async ([packet]) => {
         const response = packet as PreparedStatementResponse;
 
         return this.#commandQueue(
           createExecutePacket(response, args),
-          new ReassemblerPSResultSet(),
+          ReassemblerPSResultSet,
           true
         ).then(([data]) => {
           this.#commandQueue(createClosePacket(response.statementId), false);
@@ -219,10 +219,14 @@ export class Connection extends ConnectionEvents {
       });
     }
 
+    return this.batchDetailed(sql).then(([packet]) => packet);
+  }
+
+  public async batchDetailed(sql: string) {
     return this.#commandQueue(
       Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
-      new ReassemblerResultSet()
-    ).then(([packet]) => packet);
+      ReassemblerResultSet
+    );
   }
 
   public async query<T extends object = Row>(
@@ -282,7 +286,7 @@ export class Connection extends ConnectionEvents {
 
   async #commandQueue(
     buffer: Buffer,
-    reassembler: Reassembler | false | undefined = undefined,
+    reassembler: typeof Reassembler | false | undefined = undefined,
     priority = false,
     sequence = 0
   ) {
@@ -346,7 +350,7 @@ export class Connection extends ConnectionEvents {
         }
 
         resolve();
-      }, command.reassembler as Exclude<typeof command.reassembler, false>);
+      }, command.reassembler as ConstructorParameters<typeof PacketReassembler>[1]);
 
       const reassemblerPush = reassembler.push.bind(reassembler);
 

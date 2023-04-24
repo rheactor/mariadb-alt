@@ -632,6 +632,17 @@ describe(getTestName(__filename), () => {
     });
   });
 
+  describe("batch queries", () => {
+    test(`batchDetailed()`, async () => {
+      const [query1, query2] = (await connectionGlobal.batchDetailed(
+        "SELECT 1, 2; SELECT 3"
+      )) as [PacketResultSet, PacketResultSet];
+
+      expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect([...query2.getRows()]).toStrictEqual([{ 3: 3 }]);
+    });
+  });
+
   describe("connection error", () => {
     test("invalid port", (done) => {
       expect.assertions(2);

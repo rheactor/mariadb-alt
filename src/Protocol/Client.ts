@@ -10,6 +10,7 @@ export const capabilitiesBase =
   CapabilitiesBase.SECURE_CONNECTION;
 
 export const capabilitiesExtended =
+  CapabilitiesExtended.MULTI_STATEMENTS |
   CapabilitiesExtended.PLUGIN_AUTH |
   CapabilitiesExtended.PLUGIN_AUTH_LENENC_CLIENT_DATA;
 

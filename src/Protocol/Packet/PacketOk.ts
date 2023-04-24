@@ -32,14 +32,11 @@ export class PacketOk {
     );
   }
 
-  public static hasMoreResults(packet: Buffer) {
-    return (
-      packet.readUInt8() === 0x00 &&
-      (packet.readUIntLE(3, 2) & ServerStatus.MORE_RESULTS) !== 0
-    );
-  }
-
   public static isEOF(packet: Buffer) {
     return packet.readUInt8() === 0xfe && packet.length === 5;
+  }
+
+  public hasMoreResults() {
+    return (this.serverStatus & ServerStatus.MORE_RESULTS) !== 0;
   }
 }
