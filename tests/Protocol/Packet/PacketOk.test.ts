@@ -36,8 +36,8 @@ describe(getTestName(__filename), () => {
       Buffer.concat([Buffer.from([0x10, 0x20]), Buffer.from([0x30, 0x40])]),
       0x00,
       0x00,
-      0x2010,
       0x4030,
+      0x2010,
     ],
   ];
 

@@ -12,7 +12,7 @@ export class PacketOk {
   public static from(packet: Buffer) {
     // EOF Packet (will be transformed into a OK Packet).
     if (packet.length === 4) {
-      return new PacketOk(0, 0, packet.readUInt16LE(), packet.readUInt16LE(2));
+      return new PacketOk(0, 0, packet.readUInt16LE(2), packet.readUInt16LE());
     }
 
     // OK Packet.
