@@ -18,6 +18,17 @@ export type PacketType =
   | PreparedStatementResponse
   | PreparedStatementResultSet;
 
+const enum ReassemblerValidation {
+  // Reassembler not was checked by validation using .is().
+  PENDING,
+
+  // Reassembler has checked, but packet is incompatible (probably is PacketOK or PacketError).
+  INCOMPATIBLE,
+
+  // Reassembler has checked and is compatible packet.
+  ACCEPTED,
+}
+
 type OnDoneCallback = (packets: Array<PacketError | PacketType>) => void;
 
 type Constructor<T> = new () => T;
@@ -25,7 +36,7 @@ type Constructor<T> = new () => T;
 export class PacketReassembler {
   #packetIncomplete: Buffer | undefined = undefined;
 
-  #reassemblerValidated: boolean | undefined = undefined;
+  #reassemblerValidation = ReassemblerValidation.PENDING;
 
   readonly #onDoneCallback: OnDoneCallback;
 
@@ -70,16 +81,18 @@ export class PacketReassembler {
       );
 
       if (this.#reassemblerInstance) {
-        if (this.#reassemblerValidated === undefined) {
-          this.#reassemblerValidated = this.#reassemblerInstance.is(payload);
+        if (this.#reassemblerValidation === ReassemblerValidation.PENDING) {
+          this.#reassemblerValidation = this.#reassemblerInstance.is(payload)
+            ? ReassemblerValidation.ACCEPTED
+            : ReassemblerValidation.INCOMPATIBLE;
         }
 
-        if (this.#reassemblerValidated) {
+        if (this.#reassemblerValidation === ReassemblerValidation.ACCEPTED) {
           const pushStatus = this.#reassemblerInstance.push(payload);
 
           if (pushStatus === PushRecommendation.MORE_RESULTS) {
             this.#results.push(this.#reassemblerInstance.get());
-            this.#reassemblerValidated = undefined;
+            this.#reassemblerValidation = ReassemblerValidation.PENDING;
             this.#reassemblerInstance = new this.#reassembler!();
           } else if (pushStatus === PushRecommendation.DONE) {
             this.#results.push(this.#reassemblerInstance.get());
@@ -105,7 +118,18 @@ export class PacketReassembler {
 
       // Packet OK:
       if (PacketOk.is(payload)) {
-        this.#results.push(PacketOk.from(payload.subarray(1)));
+        const packetOk = PacketOk.from(payload.subarray(1));
+
+        this.#results.push(packetOk);
+
+        if (packetOk.hasMoreResults()) {
+          this.#reassemblerValidation = ReassemblerValidation.PENDING;
+          this.#packetIncomplete =
+            this.#packetIncomplete.subarray(packetLength);
+
+          continue;
+        }
+
         this.#onDoneCallback(this.#results);
 
         return;

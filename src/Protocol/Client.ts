@@ -11,6 +11,7 @@ export const capabilitiesBase =
 
 export const capabilitiesExtended =
   CapabilitiesExtended.MULTI_STATEMENTS |
+  CapabilitiesExtended.MULTI_RESULTS |
   CapabilitiesExtended.PLUGIN_AUTH |
   CapabilitiesExtended.PLUGIN_AUTH_LENENC_CLIENT_DATA;
 
