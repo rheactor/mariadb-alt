@@ -229,6 +229,27 @@ export class Connection extends ConnectionEvents {
     );
   }
 
+  public async batchQuery<T extends object = Row>(sql: string) {
+    return this.batchDetailed(sql)
+      .catch((error) => {
+        throw new QueryError("query error", { cause: error });
+      })
+      .then((result) =>
+        result.map((packet) => {
+          if (
+            packet instanceof PacketResultSet ||
+            packet instanceof PreparedStatementResultSet
+          ) {
+            return packet.getRows<T>();
+          }
+
+          throw new QueryError("unexpected query response type", {
+            cause: result,
+          });
+        })
+      );
+  }
+
   public async query<T extends object = Row>(
     sql: string,
     args?: ExecuteArgument[]

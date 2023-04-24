@@ -672,6 +672,15 @@ describe(getTestName(__filename), () => {
       expect([...query2.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
       expect(result3.serverStatus).toBe(0x02);
     });
+
+    test(`batchQuery()`, async () => {
+      const [query1, query2] = await connectionGlobal.batchQuery(
+        "SELECT 1, 2; SELECT 3"
+      );
+
+      expect([...query1!]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect([...query2!]).toStrictEqual([{ 3: 3 }]);
+    });
   });
 
   describe("connection error", () => {
