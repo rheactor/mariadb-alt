@@ -149,6 +149,18 @@ export class ConnectionPool {
     return this.acquire(async (connection) => connection.execute(sql, args));
   }
 
+  public async batchQueryRaw(sql: string) {
+    return this.acquire(async (connection) => connection.batchQueryRaw(sql));
+  }
+
+  public async batchQuery(sql: string) {
+    return this.acquire(async (connection) => connection.batchQuery(sql));
+  }
+
+  public async batchExecute(sql: string) {
+    return this.acquire(async (connection) => connection.batchExecute(sql));
+  }
+
   public async close() {
     return Promise.all(
       [...this.#connections.keys()].map(async (connection) =>

@@ -1,5 +1,6 @@
 import { type ConnectionPool } from "@/ConnectionPool";
 import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { type PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import { TestConnectionPool } from "@Tests/Fixtures/TestConnection";
 import { delay, getTestName } from "@Tests/Fixtures/Utils";
@@ -399,6 +400,74 @@ describe(getTestName(__filename), () => {
 
     afterAll(() => {
       connectionPool?.close();
+    });
+  });
+
+  describe("batch queries", () => {
+    let connectionPool: ConnectionPool;
+
+    beforeAll(() => {
+      connectionPool = TestConnectionPool();
+    });
+
+    test(`batchQueryRaw() with only PacketResultSet`, async () => {
+      const [query1, query2] = (await connectionPool.batchQueryRaw(
+        "SELECT 1, 2; SELECT 3"
+      )) as [PacketResultSet, PacketResultSet];
+
+      expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect([...query2.getRows()]).toStrictEqual([{ 3: 3 }]);
+    });
+
+    test(`batchQueryRaw() with only PacketOK`, async () => {
+      const [result1, result2] = (await connectionPool.batchQueryRaw(
+        "DO NULL; DO NULL"
+      )) as [PacketOk, PacketOk];
+
+      expect(result1.serverStatus).toBe(0x0a);
+      expect(result2.serverStatus).toBe(0x02);
+    });
+
+    test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
+      const [query1, result2, query3] = (await connectionPool.batchQueryRaw(
+        "SELECT 1, 2; DO NULL; SELECT 3"
+      )) as [PacketResultSet, PacketOk, PacketResultSet];
+
+      expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect(result2.serverStatus).toBe(0x0a);
+      expect([...query3.getRows()]).toStrictEqual([{ 3: 3 }]);
+    });
+
+    test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
+      const [result1, query2, result3] = (await connectionPool.batchQueryRaw(
+        "DO NULL; SELECT 1, 2; DO NULL"
+      )) as [PacketOk, PacketResultSet, PacketOk];
+
+      expect(result1.serverStatus).toBe(0x0a);
+      expect([...query2.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect(result3.serverStatus).toBe(0x02);
+    });
+
+    test(`batchQuery()`, async () => {
+      const [query1, query2] = await connectionPool.batchQuery(
+        "SELECT 1, 2; SELECT 3"
+      );
+
+      expect([...query1!]).toStrictEqual([{ 1: 1, 2: 2 }]);
+      expect([...query2!]).toStrictEqual([{ 3: 3 }]);
+    });
+
+    test(`batchExecute()`, async () => {
+      const [result1, result2] = await connectionPool.batchExecute(
+        "DO NULL; DO NULL"
+      );
+
+      expect(result1!.serverStatus).toBe(0x0a);
+      expect(result2!.serverStatus).toBe(0x02);
+    });
+
+    afterAll(() => {
+      connectionPool.close();
     });
   });
 });
