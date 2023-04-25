@@ -357,13 +357,13 @@ describe(getTestName(__filename), () => {
 
     test(`field type "${packetUnit.query}" = ${packetUnit.input}`, async () => {
       const table = `test-${Math.random()}`;
-      const createQuery = await connectionBase.queryDetailed(
+      const createQuery = await connectionBase.queryRaw(
         `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${packetUnit.query} )`
       );
 
       expect(createQuery).toBeInstanceOf(PacketOk);
 
-      const insertQuery = await connectionBase.queryDetailed(
+      const insertQuery = await connectionBase.queryRaw(
         `INSERT INTO \`${table}\` (\`column\`) VALUES (${packetUnit.input})`
       );
 
@@ -373,7 +373,7 @@ describe(getTestName(__filename), () => {
         expect(insertQuery.affectedRows).toBe(1);
       }
 
-      const selectQuery = await connectionBase.queryDetailed(
+      const selectQuery = await connectionBase.queryRaw(
         `SELECT * FROM \`${table}\``
       );
 

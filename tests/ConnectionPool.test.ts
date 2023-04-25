@@ -41,7 +41,7 @@ describe(getTestName(__filename), () => {
     });
 
     test("query()", async () => {
-      const query = await connectionPool.queryDetailed("SELECT 1");
+      const query = await connectionPool.queryRaw("SELECT 1");
 
       expect(query).toBeInstanceOf(PacketResultSet);
 

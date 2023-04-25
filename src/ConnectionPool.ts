@@ -134,11 +134,8 @@ export class ConnectionPool {
     return this.#acquireWith<T>(acquireCallback, connection);
   }
 
-  /** Run a query with an idle connection. */
-  public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
-    return this.acquire(async (connection) =>
-      connection.queryDetailed(sql, args)
-    );
+  public async queryRaw(sql: string, args?: ExecuteArgument[]) {
+    return this.acquire(async (connection) => connection.queryRaw(sql, args));
   }
 
   public async query<T extends object = Row>(

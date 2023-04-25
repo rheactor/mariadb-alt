@@ -112,7 +112,7 @@ describe(getTestName(__filename), () => {
 
   describe.each(queryUnits)("query()", (query, input, output) => {
     test(`${query}: ${String(input)}`, async () => {
-      const result = await connectionBase.queryDetailed(query, [input]);
+      const result = await connectionBase.queryRaw(query, [input]);
 
       expect(result).toBeInstanceOf(PreparedStatementResultSet);
 
@@ -217,7 +217,7 @@ describe(getTestName(__filename), () => {
   describe("query()", () => {
     test("SELECT fail", async () => {
       try {
-        await connectionBase.queryDetailed("SELECT!", [123]);
+        await connectionBase.queryRaw("SELECT!", [123]);
       } catch (error) {
         expect(error).toBeInstanceOf(PacketError);
 
@@ -232,7 +232,7 @@ describe(getTestName(__filename), () => {
 
     test("SELECT ? without args must fail", async () => {
       try {
-        await connectionBase.queryDetailed("SELECT ?");
+        await connectionBase.queryRaw("SELECT ?");
       } catch (error) {
         if (error instanceof PacketError) {
           expect(error.code).toBe(1064);
@@ -243,7 +243,7 @@ describe(getTestName(__filename), () => {
 
     test("SELECT wrong arguments number", async () => {
       expect(async () =>
-        connectionBase.queryDetailed("SELECT ?, ?", [123])
+        connectionBase.queryRaw("SELECT ?, ?", [123])
       ).rejects.toThrowError("Incorrect arguments to mysqld_stmt_execute");
     });
 
@@ -251,7 +251,7 @@ describe(getTestName(__filename), () => {
       const parameters = Array(0xffff + 1).fill(null);
 
       expect(async () =>
-        connectionBase.queryDetailed("DO NULL", parameters)
+        connectionBase.queryRaw("DO NULL", parameters)
       ).rejects.toThrowError(
         "Prepared Statements supports only 65535 arguments"
       );

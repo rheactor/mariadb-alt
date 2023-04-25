@@ -141,8 +141,8 @@ describe(getTestName(__filename), () => {
     ];
 
     describe.each(querySelectUnits)("query()", (input, outputNormalized) => {
-      test(`SELECT ${input} via queryDetailed()`, async () => {
-        const queryResult = await connectionGlobal.queryDetailed(
+      test(`SELECT ${input} via queryRaw()`, async () => {
+        const queryResult = await connectionGlobal.queryRaw(
           `SELECT ${input} AS \`value\``
         );
 
@@ -187,12 +187,12 @@ describe(getTestName(__filename), () => {
         const table = `test-${Math.random()}`;
 
         expect(
-          await connectionGlobal.queryDetailed(
+          await connectionGlobal.queryRaw(
             `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`
           )
         ).toBeInstanceOf(PacketOk);
 
-        const insertInto = await connectionGlobal.queryDetailed(
+        const insertInto = await connectionGlobal.queryRaw(
           `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`
         );
 
@@ -203,7 +203,7 @@ describe(getTestName(__filename), () => {
           expect(insertInto.lastInsertId).toBe(123);
         }
 
-        const query = await connectionGlobal.queryDetailed(
+        const query = await connectionGlobal.queryRaw(
           `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``
         );
 
@@ -635,8 +635,8 @@ describe(getTestName(__filename), () => {
   });
 
   describe("batch queries", () => {
-    test(`batchDetailed() with only PacketResultSet`, async () => {
-      const [query1, query2] = (await connectionGlobal.batchDetailed(
+    test(`batchQueryRaw() with only PacketResultSet`, async () => {
+      const [query1, query2] = (await connectionGlobal.batchQueryRaw(
         "SELECT 1, 2; SELECT 3"
       )) as [PacketResultSet, PacketResultSet];
 
@@ -644,8 +644,8 @@ describe(getTestName(__filename), () => {
       expect([...query2.getRows()]).toStrictEqual([{ 3: 3 }]);
     });
 
-    test(`batchDetailed() with only PacketOK`, async () => {
-      const [result1, result2] = (await connectionGlobal.batchDetailed(
+    test(`batchQueryRaw() with only PacketOK`, async () => {
+      const [result1, result2] = (await connectionGlobal.batchQueryRaw(
         "DO NULL; DO NULL"
       )) as [PacketOk, PacketOk];
 
@@ -653,8 +653,8 @@ describe(getTestName(__filename), () => {
       expect(result2.serverStatus).toBe(0x02);
     });
 
-    test(`batchDetailed() mixing PacketOK and PacketResultSet #1`, async () => {
-      const [query1, result2, query3] = (await connectionGlobal.batchDetailed(
+    test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
+      const [query1, result2, query3] = (await connectionGlobal.batchQueryRaw(
         "SELECT 1, 2; DO NULL; SELECT 3"
       )) as [PacketResultSet, PacketOk, PacketResultSet];
 
@@ -663,8 +663,8 @@ describe(getTestName(__filename), () => {
       expect([...query3.getRows()]).toStrictEqual([{ 3: 3 }]);
     });
 
-    test(`batchDetailed() mixing PacketOK and PacketResultSet #2`, async () => {
-      const [result1, query2, result3] = (await connectionGlobal.batchDetailed(
+    test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
+      const [result1, query2, result3] = (await connectionGlobal.batchQueryRaw(
         "DO NULL; SELECT 1, 2; DO NULL"
       )) as [PacketOk, PacketResultSet, PacketOk];
 

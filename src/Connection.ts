@@ -193,7 +193,7 @@ export class Connection extends ConnectionEvents {
     return this.#commandQueue(Buffer.from([0x0e])).then(([packet]) => packet);
   }
 
-  public async queryDetailed(sql: string, args?: ExecuteArgument[]) {
+  public async queryRaw(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
       if (args.length > 0xffff) {
         throw new TooManyArgumentsError(
@@ -219,10 +219,48 @@ export class Connection extends ConnectionEvents {
       });
     }
 
-    return this.batchDetailed(sql).then(([packet]) => packet);
+    return this.batchQueryRaw(sql).then(([packet]) => packet);
   }
 
-  public async batchDetailed(sql: string) {
+  public async query<T extends object = Row>(
+    sql: string,
+    args?: ExecuteArgument[]
+  ) {
+    return this.queryRaw(sql, args)
+      .catch((error) => {
+        throw new QueryError("query error", { cause: error });
+      })
+      .then((result) => {
+        if (
+          result instanceof PacketResultSet ||
+          result instanceof PreparedStatementResultSet
+        ) {
+          return result.getRows<T>();
+        }
+
+        throw new QueryError("unexpected query response type", {
+          cause: result,
+        });
+      });
+  }
+
+  public async execute(sql: string, args?: ExecuteArgument[]) {
+    return this.queryRaw(sql, args)
+      .catch((error) => {
+        throw new ExecuteError("query error", { cause: error });
+      })
+      .then((response) => {
+        if (response instanceof PacketOk) {
+          return response;
+        }
+
+        throw new ExecuteError("unexpected query response type", {
+          cause: response,
+        });
+      });
+  }
+
+  public async batchQueryRaw(sql: string) {
     return this.#commandQueue(
       Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
       ReassemblerResultSet
@@ -230,7 +268,7 @@ export class Connection extends ConnectionEvents {
   }
 
   public async batchQuery<T extends object = Row>(sql: string) {
-    return this.batchDetailed(sql)
+    return this.batchQueryRaw(sql)
       .catch((error) => {
         throw new QueryError("query error", { cause: error });
       })
@@ -251,7 +289,7 @@ export class Connection extends ConnectionEvents {
   }
 
   public async batchExecute(sql: string) {
-    return this.batchDetailed(sql)
+    return this.batchQueryRaw(sql)
       .catch((error) => {
         throw new ExecuteError("query error", { cause: error });
       })
@@ -266,44 +304,6 @@ export class Connection extends ConnectionEvents {
           });
         })
       );
-  }
-
-  public async query<T extends object = Row>(
-    sql: string,
-    args?: ExecuteArgument[]
-  ) {
-    return this.queryDetailed(sql, args)
-      .catch((error) => {
-        throw new QueryError("query error", { cause: error });
-      })
-      .then((result) => {
-        if (
-          result instanceof PacketResultSet ||
-          result instanceof PreparedStatementResultSet
-        ) {
-          return result.getRows<T>();
-        }
-
-        throw new QueryError("unexpected query response type", {
-          cause: result,
-        });
-      });
-  }
-
-  public async execute(sql: string, args?: ExecuteArgument[]) {
-    return this.queryDetailed(sql, args)
-      .catch((error) => {
-        throw new ExecuteError("query error", { cause: error });
-      })
-      .then((response) => {
-        if (response instanceof PacketOk) {
-          return response;
-        }
-
-        throw new ExecuteError("unexpected query response type", {
-          cause: response,
-        });
-      });
   }
 
   public async close(): Promise<void> {
