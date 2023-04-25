@@ -1,12 +1,13 @@
 import { Socket } from "node:net";
 
-import { ExecuteError } from "@/Errors/ExecuteError";
-import { PacketError } from "@/Errors/PacketError";
+import { ConnectionError } from "@/Errors/ConnectionError";
 import { QueryError } from "@/Errors/QueryError";
+import { ResponseNotAllowedError } from "@/Errors/ResponseNotAllowedError";
 import { TooManyArgumentsError } from "@/Errors/TooManyArgumentsError";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { createPacket } from "@/Protocol/Packet/Packet";
+import { type PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
 import {
@@ -72,7 +73,7 @@ class ConnectionCommand {
   public constructor(
     public readonly buffer: Buffer,
     public resolve: (data: Array<PacketError | PacketType>) => void,
-    public reject: (error: Error) => void,
+    public reject: (error: PacketError, packets: PacketType[]) => void,
     public reassembler: typeof Reassembler | false | undefined,
     public sequence: number,
     public lock = CommandLock.FREE
@@ -216,61 +217,69 @@ export class Connection extends ConnectionEvents {
         0,
         CommandLock.LOCK
       )
-        .then((data) => data)
+        .catch((error) => {
+          throw new QueryError(error.message, { cause: error });
+        })
         .then(async ([packet]) => {
           const response = packet as PreparedStatementResponse;
 
-          return this.#commandQueue(
-            createExecutePacket(response, args),
-            ReassemblerPSResultSet,
-            0,
-            CommandLock.RELEASE
-          ).then(([data]) => {
-            this.#commandQueue(createClosePacket(response.statementId), false);
+          return (
+            this.#commandQueue(
+              createExecutePacket(response, args),
+              ReassemblerPSResultSet,
+              0,
+              CommandLock.RELEASE
+            )
+              // eslint-disable-next-line promise/no-nesting
+              .catch((error) => {
+                throw new QueryError(error.message, { cause: error });
+              })
+              .then(([data]) => {
+                this.#commandQueue(
+                  createClosePacket(response.statementId),
+                  false
+                );
 
-            return data;
-          });
+                return data;
+              })
+          );
         });
     }
 
-    return this.batchQueryRaw(sql).then(([packet]) => packet);
+    return this.batchQueryRaw(sql)
+      .catch((error) => {
+        throw new QueryError(error.message, { cause: error });
+      })
+      .then(([packet]) => packet);
   }
 
   public async query<T extends object = Row>(
     sql: string,
     args?: ExecuteArgument[]
   ) {
-    return this.queryRaw(sql, args)
-      .catch((error) => {
-        throw new QueryError("query error", { cause: error });
-      })
-      .then((result) => {
-        if (
-          result instanceof PacketResultSet ||
-          result instanceof PreparedStatementResultSet
-        ) {
-          return result.getRows<T>();
-        }
+    return this.queryRaw(sql, args).then((result) => {
+      if (
+        result instanceof PacketResultSet ||
+        result instanceof PreparedStatementResultSet
+      ) {
+        return result.getRows<T>();
+      }
 
-        throw new QueryError("unexpected query response type", {
-          cause: result,
-        });
-      });
+      throw ResponseNotAllowedError.expectedResultSetPacket(result!);
+    });
   }
 
   public async execute(sql: string, args?: ExecuteArgument[]) {
     return this.queryRaw(sql, args)
       .catch((error) => {
-        throw new ExecuteError("query error", { cause: error });
+        throw new QueryError(error.message, { cause: error });
       })
       .then((response) => {
         if (response instanceof PacketOk) {
           return response;
         }
 
-        throw new ExecuteError("unexpected query response type", {
-          cause: response,
-        });
+        throw ResponseNotAllowedError.expectedOKPacket(response!);
       });
   }
 
@@ -284,20 +293,15 @@ export class Connection extends ConnectionEvents {
   public async batchQuery<T extends object = Row>(sql: string) {
     return this.batchQueryRaw(sql)
       .catch((error) => {
-        throw new QueryError("query error", { cause: error });
+        throw new QueryError(error.message, { cause: error });
       })
       .then((packets) =>
         packets.map((packet) => {
-          if (
-            packet instanceof PacketResultSet ||
-            packet instanceof PreparedStatementResultSet
-          ) {
+          if (packet instanceof PacketResultSet) {
             return packet.getRows<T>();
           }
 
-          throw new QueryError("unexpected query response type", {
-            cause: packets,
-          });
+          throw ResponseNotAllowedError.expectedResultSetPacket(packet);
         })
       );
   }
@@ -305,7 +309,7 @@ export class Connection extends ConnectionEvents {
   public async batchExecute(sql: string) {
     return this.batchQueryRaw(sql)
       .catch((error) => {
-        throw new ExecuteError("query error", { cause: error });
+        throw new QueryError(error.message, { cause: error });
       })
       .then((packets) =>
         packets.map((packet) => {
@@ -313,9 +317,7 @@ export class Connection extends ConnectionEvents {
             return packet;
           }
 
-          throw new ExecuteError("unexpected query response type", {
-            cause: packet,
-          });
+          throw ResponseNotAllowedError.expectedOKPacket(packet);
         })
       );
   }
@@ -406,15 +408,13 @@ export class Connection extends ConnectionEvents {
     }
 
     return new Promise<void>((resolve) => {
-      const reassembler = new PacketReassembler((data) => {
+      const reassembler = new PacketReassembler((packets, error) => {
         this.#socket.off("data", reassemblerPush);
 
-        const dataLatest = data[data.length - 1];
-
-        if (dataLatest instanceof PacketError) {
-          command.reject(dataLatest);
+        if (error === undefined) {
+          command.resolve(packets);
         } else {
-          command.resolve(data);
+          command.reject(error, packets);
         }
 
         resolve();
@@ -457,9 +457,13 @@ export class Connection extends ConnectionEvents {
 
           this.#commandRun();
         },
-        (response) => {
+        (error) => {
           this.status = Status.ERROR;
-          this.emit("error", this, response);
+          this.emit(
+            "error",
+            this,
+            new ConnectionError(error.message, { cause: error })
+          );
           this.close();
         },
         undefined,

@@ -1,5 +1,5 @@
 import { type Connection } from "@/Connection";
-import { PacketError } from "@/Errors/PacketError";
+import { QueryError } from "@/Errors/QueryError";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
@@ -219,10 +219,10 @@ describe(getTestName(__filename), () => {
       try {
         await connectionBase.queryRaw("SELECT!", [123]);
       } catch (error) {
-        expect(error).toBeInstanceOf(PacketError);
+        expect(error).toBeInstanceOf(QueryError);
 
-        if (error instanceof PacketError) {
-          expect(error.code).toBe(1064);
+        if (error instanceof QueryError) {
+          expect(error.cause.code).toBe(1064);
           expect(error.message).toContain(
             "You have an error in your SQL syntax;"
           );
@@ -234,8 +234,10 @@ describe(getTestName(__filename), () => {
       try {
         await connectionBase.queryRaw("SELECT ?");
       } catch (error) {
-        if (error instanceof PacketError) {
-          expect(error.code).toBe(1064);
+        expect(error).toBeInstanceOf(QueryError);
+
+        if (error instanceof QueryError) {
+          expect(error.cause.code).toBe(1064);
           expect(error.message).toContain("'?'");
         }
       }

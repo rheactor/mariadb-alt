@@ -1,7 +1,7 @@
 import { type Connection } from "@/Connection";
-import { ExecuteError } from "@/Errors/ExecuteError";
-import { PacketError } from "@/Errors/PacketError";
+import { ConnectionError } from "@/Errors/ConnectionError";
 import { QueryError } from "@/Errors/QueryError";
+import { ResponseNotAllowedError } from "@/Errors/ResponseNotAllowedError";
 import { TimeFormat } from "@/Formats/TimeFormat";
 import { Collations, FieldTypes } from "@/Protocol/Enumerations";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
@@ -273,10 +273,7 @@ describe(getTestName(__filename), () => {
           await connectionGlobal.query("SELECT ?");
         } catch (error) {
           expect(error).toBeInstanceOf(QueryError);
-
-          if (error instanceof QueryError) {
-            expect(error.message).toBe("query error");
-          }
+          expect((error as QueryError).message).toContain("near '?'");
         }
       });
 
@@ -287,10 +284,7 @@ describe(getTestName(__filename), () => {
           await connectionGlobal.query("SELECT ?", []);
         } catch (error) {
           expect(error).toBeInstanceOf(QueryError);
-
-          if (error instanceof QueryError) {
-            expect(error.message).toBe("query error");
-          }
+          expect((error as QueryError).message).toContain("near '?'");
         }
       });
 
@@ -300,11 +294,35 @@ describe(getTestName(__filename), () => {
         try {
           await connectionGlobal.query("DO NULL");
         } catch (error) {
-          expect(error).toBeInstanceOf(QueryError);
+          expect(error).toBeInstanceOf(ResponseNotAllowedError);
+          expect((error as ResponseNotAllowedError).message).toBe(
+            "received OK instead of ResultSet response"
+          );
+        }
+      });
 
-          if (error instanceof QueryError) {
-            expect(error.message).toBe("unexpected query response type");
-          }
+      test(`query() Prepared Statement execution error`, async () => {
+        expect.assertions(2);
+
+        const table = `test-${Math.random()}`;
+
+        await connectionGlobal.execute(
+          `CREATE TEMPORARY TABLE \`${table}\` (
+            id INT NULL AUTO_INCREMENT,
+            PRIMARY KEY (id)
+          )`
+        );
+
+        try {
+          await connectionGlobal.query(
+            `INSERT INTO \`${table}\` (id) VALUES (?)`,
+            ["abc"]
+          );
+        } catch (error) {
+          expect(error).toBeInstanceOf(QueryError);
+          expect((error as QueryError).message).toContain(
+            `Incorrect integer value`
+          );
         }
       });
 
@@ -334,11 +352,8 @@ describe(getTestName(__filename), () => {
         try {
           await connectionGlobal.execute("SELECT ?");
         } catch (error) {
-          expect(error).toBeInstanceOf(ExecuteError);
-
-          if (error instanceof ExecuteError) {
-            expect(error.message).toBe("query error");
-          }
+          expect(error).toBeInstanceOf(QueryError);
+          expect((error as QueryError).message).toContain("near '?'");
         }
       });
 
@@ -348,11 +363,10 @@ describe(getTestName(__filename), () => {
         try {
           await connectionGlobal.execute("SELECT 1");
         } catch (error) {
-          expect(error).toBeInstanceOf(ExecuteError);
-
-          if (error instanceof ExecuteError) {
-            expect(error.message).toBe("unexpected query response type");
-          }
+          expect(error).toBeInstanceOf(ResponseNotAllowedError);
+          expect((error as ResponseNotAllowedError).message).toBe(
+            "received ResultSet instead of OK response"
+          );
         }
       });
     });
@@ -690,6 +704,46 @@ describe(getTestName(__filename), () => {
       expect(result1!.serverStatus).toBe(0x0a);
       expect(result2!.serverStatus).toBe(0x02);
     });
+
+    test(`batchQuery() invalid query`, async () => {
+      try {
+        await connectionGlobal.batchQuery("SELECT!");
+      } catch (error) {
+        expect(error).toBeInstanceOf(QueryError);
+        expect((error as QueryError).message).toContain("near ''");
+      }
+    });
+
+    test(`batchQuery() unexpected response type`, async () => {
+      try {
+        await connectionGlobal.batchQuery("DO NULL");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ResponseNotAllowedError);
+        expect((error as ResponseNotAllowedError).message).toBe(
+          "received OK instead of ResultSet response"
+        );
+      }
+    });
+
+    test(`batchExecute() invalid query`, async () => {
+      try {
+        await connectionGlobal.batchExecute("DO NULL!");
+      } catch (error) {
+        expect(error).toBeInstanceOf(QueryError);
+        expect((error as QueryError).message).toContain("near '!'");
+      }
+    });
+
+    test(`batchExecute() unexpected response type`, async () => {
+      try {
+        await connectionGlobal.batchExecute("SELECT 123");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ResponseNotAllowedError);
+        expect((error as ResponseNotAllowedError).message).toBe(
+          "received ResultSet instead of OK response"
+        );
+      }
+    });
   });
 
   describe("connection error", () => {
@@ -721,8 +775,8 @@ describe(getTestName(__filename), () => {
         expect(connection.hasError()).toBe(true);
         expect(error.message).toContain("random-user");
 
-        if (error instanceof PacketError) {
-          expect(error.code).toBe(1045);
+        if (error instanceof ConnectionError) {
+          expect(error.cause.code).toBe(1045);
         }
       });
     });
@@ -740,8 +794,8 @@ describe(getTestName(__filename), () => {
         expect(connection.hasError()).toBe(true);
         expect(error.message).toContain("denied for user");
 
-        if (error instanceof PacketError) {
-          expect(error.code).toBe(1045);
+        if (error instanceof ConnectionError) {
+          expect(error.cause.code).toBe(1045);
         }
       });
     });

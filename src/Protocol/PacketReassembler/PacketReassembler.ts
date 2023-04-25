@@ -1,4 +1,4 @@
-import { PacketError } from "@/Errors/PacketError";
+import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {
@@ -29,7 +29,7 @@ const enum ReassemblerValidation {
   ACCEPTED,
 }
 
-type OnDoneCallback = (packets: Array<PacketError | PacketType>) => void;
+type OnDoneCallback = (packets: PacketType[], error?: PacketError) => void;
 
 type Constructor<T> = new () => T;
 
@@ -44,7 +44,7 @@ export class PacketReassembler {
 
   #reassemblerInstance?: Reassembler | undefined = undefined;
 
-  readonly #results: Array<PacketError | PacketType> = [];
+  readonly #results: PacketType[] = [];
 
   public constructor(
     onDoneCallback: OnDoneCallback,
@@ -110,8 +110,10 @@ export class PacketReassembler {
 
       // Packet Error:
       if (PacketError.is(payload)) {
-        this.#results.push(PacketError.from(payload.subarray(1)));
-        this.#onDoneCallback(this.#results);
+        this.#onDoneCallback(
+          this.#results,
+          PacketError.from(payload.subarray(1))
+        );
 
         return;
       }

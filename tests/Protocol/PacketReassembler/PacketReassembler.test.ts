@@ -1,4 +1,4 @@
-import { PacketError } from "@/Errors/PacketError";
+import { PacketError } from "@/Protocol/Packet/PacketError";
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 import {
@@ -9,7 +9,7 @@ import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/R
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {
-  type PacketUnit = [string, Buffer[], PacketError | PacketType];
+  type PacketUnit = [string, Buffer[], PacketType[], PacketError?];
 
   const packetsUnits: PacketUnit[] = [
     [
@@ -26,7 +26,7 @@ describe(getTestName(__filename), () => {
           0x30, 0x40, 0x50, 0x60,
         ]),
       ],
-      PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40, 0x50, 0x60])),
+      [PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40, 0x50, 0x60]))],
     ],
     [
       "PacketOK (splitted)",
@@ -46,7 +46,7 @@ describe(getTestName(__filename), () => {
           0x30, 0x40, 0x50, 0x60,
         ]),
       ],
-      PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40, 0x50, 0x60])),
+      [PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40, 0x50, 0x60]))],
     ],
     [
       "PacketOK (from EOF Buffer)",
@@ -54,7 +54,7 @@ describe(getTestName(__filename), () => {
         Buffer.from([0x05, 0x00, 0x00, 0x00]),
         Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40]),
       ],
-      PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40])),
+      [PacketOk.from(Buffer.from([0x10, 0x20, 0x30, 0x40]))],
     ],
     [
       "PacketError",
@@ -67,6 +67,48 @@ describe(getTestName(__filename), () => {
         Buffer.from([0x10, 0x20]),
         // Error marker (#), error code (ER123), error message.
         Buffer.from("#ER123Message"),
+      ],
+      [],
+      PacketError.from(Buffer.from("\x10\x20#ER123Message", "binary")),
+    ],
+    [
+      "PacketError, but with 2 packets PacketOk before",
+      [
+        // PacketOK #1 (with ServerStatus.MORE_RESULTS)
+        Buffer.from([
+          // Length: 7 bytes. Sequence: 0.
+          0x07, 0x00, 0x00, 0x00,
+          // Packet OK identifier.
+          0x00,
+          // Affected rows: 0x10, Last insert id: 0x20.
+          0x10, 0x20,
+          // Status flags: 0x000a, Number of warnings: 0x6050.
+          0x0a, 0x00, 0x50, 0x60,
+        ]),
+        // PacketOK #2 (with ServerStatus.MORE_RESULTS)
+        Buffer.from([
+          // Length: 7 bytes. Sequence: 0.
+          0x07, 0x00, 0x00, 0x00,
+          // Packet OK identifier.
+          0x00,
+          // Affected rows: 0x10, Last insert id: 0x20.
+          0x10, 0x20,
+          // Status flags: 0x4030, Number of warnings: 0x6050.
+          0x0a, 0x00, 0x50, 0x60,
+        ]),
+        // Packet Error
+        // Length: 16 bytes.
+        Buffer.from([0x10, 0x00, 0x00, 0x00]),
+        // Error packet identifier.
+        Buffer.from([0xff]),
+        // Error state code:
+        Buffer.from([0x10, 0x20]),
+        // Error marker (#), error code (ER123), error message.
+        Buffer.from("#ER123Message"),
+      ],
+      [
+        PacketOk.from(Buffer.from([0x10, 0x20, 0x0a, 0x00, 0x50, 0x60])),
+        PacketOk.from(Buffer.from([0x10, 0x20, 0x0a, 0x00, 0x50, 0x60])),
       ],
       PacketError.from(Buffer.from("\x10\x20#ER123Message", "binary")),
     ],
@@ -114,23 +156,25 @@ describe(getTestName(__filename), () => {
         Buffer.from([0x05, 0x00, 0x00, 0x05]),
         Buffer.from([0xfe, 0x00, 0x00, 0x02, 0x00]),
       ],
-      new PacketResultSet(
-        Buffer.concat([
-          Buffer.from([0x01]),
-          //
-          Buffer.from([0x03, 0x64, 0x65, 0x66]),
-          Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]),
-          Buffer.from([0x0c]),
-          Buffer.from([0x2d, 0x00]),
-          Buffer.from([0x00, 0x00, 0x00, 0x00]),
-          Buffer.from([0xfd]),
-          Buffer.from([0x01, 0x00]),
-          Buffer.from([0x27]),
-          Buffer.from([0x00, 0x00]),
-          //
-          Buffer.from([0x00]),
-        ])
-      ),
+      [
+        new PacketResultSet(
+          Buffer.concat([
+            Buffer.from([0x01]),
+            //
+            Buffer.from([0x03, 0x64, 0x65, 0x66]),
+            Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]),
+            Buffer.from([0x0c]),
+            Buffer.from([0x2d, 0x00]),
+            Buffer.from([0x00, 0x00, 0x00, 0x00]),
+            Buffer.from([0xfd]),
+            Buffer.from([0x01, 0x00]),
+            Buffer.from([0x27]),
+            Buffer.from([0x00, 0x00]),
+            //
+            Buffer.from([0x00]),
+          ])
+        ),
+      ],
     ],
     [
       'PacketResultSet: SELECT "" (at once)',
@@ -174,34 +218,37 @@ describe(getTestName(__filename), () => {
           0x05, 0x00, 0x00, 0x05, 0xfe, 0x00, 0x00, 0x02, 0x00,
         ]),
       ],
-      new PacketResultSet(
-        Buffer.concat([
-          Buffer.from([0x01]),
-          //
-          Buffer.from([0x03, 0x64, 0x65, 0x66]),
-          Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]),
-          Buffer.from([0x0c]),
-          Buffer.from([0x2d, 0x00]),
-          Buffer.from([0x00, 0x00, 0x00, 0x00]),
-          Buffer.from([0xfd]),
-          Buffer.from([0x01, 0x00]),
-          Buffer.from([0x27]),
-          Buffer.from([0x00, 0x00]),
-          //
-          Buffer.from([0x00]),
-        ])
-      ),
+      [
+        new PacketResultSet(
+          Buffer.concat([
+            Buffer.from([0x01]),
+            //
+            Buffer.from([0x03, 0x64, 0x65, 0x66]),
+            Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00]),
+            Buffer.from([0x0c]),
+            Buffer.from([0x2d, 0x00]),
+            Buffer.from([0x00, 0x00, 0x00, 0x00]),
+            Buffer.from([0xfd]),
+            Buffer.from([0x01, 0x00]),
+            Buffer.from([0x27]),
+            Buffer.from([0x00, 0x00]),
+            //
+            Buffer.from([0x00]),
+          ])
+        ),
+      ],
     ],
   ];
 
   describe.each(packetsUnits)(
     "PacketReassembler()",
-    (name, buffers, reassembledPayload) => {
+    (name, buffers, expectedPackets, expectedError) => {
       test(name, () => {
-        expect.assertions(1);
+        expect.assertions(2);
 
-        const reassembler = new PacketReassembler((payload) => {
-          expect(payload).toStrictEqual([reassembledPayload]);
+        const reassembler = new PacketReassembler((packets, error) => {
+          expect(packets).toStrictEqual(expectedPackets);
+          expect(error).toStrictEqual(expectedError);
         }, ReassemblerResultSet);
 
         buffers.forEach((buffer) => reassembler.push(buffer));
