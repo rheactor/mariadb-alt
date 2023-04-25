@@ -383,9 +383,9 @@ describe(getTestName(__filename), () => {
     test("afterAuthenticated() must return reference value", async () => {
       connectionPool = TestConnectionPool({
         async afterAuthenticated() {
-          this.execute("SET @REFERENCE_VALUE = 123");
-          this.query("SELECT SLEEP(0.1)");
-          this.execute("SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2");
+          await this.execute("SET @REFERENCE_VALUE = 123");
+          await this.query("SELECT SLEEP(0.1)");
+          await this.execute("SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2");
         },
       });
 

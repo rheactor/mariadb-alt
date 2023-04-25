@@ -51,7 +51,7 @@ export interface ConnectionOptions {
   database: string;
 
   /** Do something with the connection after it is authenticated. */
-  afterAuthenticated?(this: Connection): void;
+  afterAuthenticated?(this: Connection): Promise<void> | void;
 }
 
 type ConnectionEventsError = "error";
@@ -62,13 +62,20 @@ type ConnectionEventsCommon =
   | "closed"
   | "connected";
 
+const enum CommandLock {
+  FREE,
+  LOCK,
+  RELEASE,
+}
+
 class ConnectionCommand {
   public constructor(
     public readonly buffer: Buffer,
     public resolve: (data: Array<PacketError | PacketType>) => void,
     public reject: (error: Error) => void,
     public reassembler: typeof Reassembler | false | undefined,
-    public sequence: number
+    public sequence: number,
+    public lock = CommandLock.FREE
   ) {}
 }
 
@@ -121,6 +128,8 @@ abstract class ConnectionEvents {
 
 export class Connection extends ConnectionEvents {
   public status: Status = Status.CONNECTING;
+
+  #lock = CommandLock.FREE;
 
   #connected = false;
 
@@ -203,20 +212,25 @@ export class Connection extends ConnectionEvents {
 
       return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
-        ReassemblerPSResponse
-      ).then(async ([packet]) => {
-        const response = packet as PreparedStatementResponse;
+        ReassemblerPSResponse,
+        0,
+        CommandLock.LOCK
+      )
+        .then((data) => data)
+        .then(async ([packet]) => {
+          const response = packet as PreparedStatementResponse;
 
-        return this.#commandQueue(
-          createExecutePacket(response, args),
-          ReassemblerPSResultSet,
-          true
-        ).then(([data]) => {
-          this.#commandQueue(createClosePacket(response.statementId), false);
+          return this.#commandQueue(
+            createExecutePacket(response, args),
+            ReassemblerPSResultSet,
+            0,
+            CommandLock.RELEASE
+          ).then(([data]) => {
+            this.#commandQueue(createClosePacket(response.statementId), false);
 
-          return data;
+            return data;
+          });
         });
-      });
     }
 
     return this.batchQueryRaw(sql).then(([packet]) => packet);
@@ -326,8 +340,8 @@ export class Connection extends ConnectionEvents {
   async #commandQueue(
     buffer: Buffer,
     reassembler: typeof Reassembler | false | undefined = undefined,
-    priority = false,
-    sequence = 0
+    sequence = 0,
+    lock = CommandLock.FREE
   ) {
     return new Promise<Array<PacketError | PacketType>>((resolve, reject) => {
       const command = new ConnectionCommand(
@@ -335,16 +349,16 @@ export class Connection extends ConnectionEvents {
         resolve,
         reject,
         reassembler,
-        sequence
+        sequence,
+        lock
       );
 
-      if (priority) {
-        this.#commands.unshift(command);
+      if (lock !== CommandLock.FREE && this.#lock === CommandLock.LOCK) {
+        this.#commandRunImmediately(command);
       } else {
         this.#commands.push(command);
+        this.#commandRun();
       }
-
-      this.#commandRun();
     });
   }
 
@@ -359,13 +373,28 @@ export class Connection extends ConnectionEvents {
       return;
     }
 
+    this.#commandRunImmediately(command);
+  }
+
+  #commandRunImmediately(command: ConnectionCommand) {
+    if (command.lock === CommandLock.LOCK) {
+      this.#lock = CommandLock.LOCK;
+    }
+
     this.status = Status.EXECUTING;
     this.#wasUsed = true;
 
     // eslint-disable-next-line promise/catch-or-return
     this.#send(command).finally(() => {
       this.status = Status.READY;
-      this.#commandRun();
+
+      if (command.lock === CommandLock.RELEASE) {
+        this.#lock = CommandLock.FREE;
+      }
+
+      if (command.lock !== CommandLock.LOCK) {
+        this.#commandRun();
+      }
     });
   }
 
@@ -413,7 +442,7 @@ export class Connection extends ConnectionEvents {
     this.#send(
       new ConnectionCommand(
         handshakeResponse,
-        () => {
+        async () => {
           this.status = Status.READY;
           this.emit("authenticated", this);
 
@@ -421,7 +450,7 @@ export class Connection extends ConnectionEvents {
             const queuedCommands = this.#commands;
 
             this.#commands = [];
-            this.#options.afterAuthenticated.call(this);
+            await this.#options.afterAuthenticated.call(this);
             this.#wasUsed = false;
             this.#commands.push(...queuedCommands);
           }
