@@ -1,4 +1,5 @@
 import { type Connection } from "@/Connection";
+import { FewArgumentsError } from "@/Errors/FewArgumentsError";
 import { QueryError } from "@/Errors/QueryError";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
@@ -243,10 +244,17 @@ describe(getTestName(__filename), () => {
       }
     });
 
-    test("SELECT wrong arguments number", async () => {
-      expect(async () =>
-        connectionBase.queryRaw("SELECT ?, ?", [123])
-      ).rejects.toThrowError("Incorrect arguments to mysqld_stmt_execute");
+    test("SELECT PS with few arguments", async () => {
+      try {
+        await connectionBase.queryRaw("SELECT ?, ?", [123]);
+      } catch (error) {
+        expect(error).toBeInstanceOf(FewArgumentsError);
+        expect((error as FewArgumentsError).message).toBe(
+          "Prepared Statement number of arguments is 2, but received 1"
+        );
+        expect((error as FewArgumentsError).cause.received).toBe(1);
+        expect((error as FewArgumentsError).cause.required).toBe(2);
+      }
     });
 
     test("SELECT +64K arguments must throw error", async () => {

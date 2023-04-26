@@ -1,6 +1,7 @@
 import { Socket } from "node:net";
 
 import { ConnectionError } from "@/Errors/ConnectionError";
+import { FewArgumentsError } from "@/Errors/FewArgumentsError";
 import { QueryError } from "@/Errors/QueryError";
 import { ResponseNotAllowedError } from "@/Errors/ResponseNotAllowedError";
 import { TooManyArgumentsError } from "@/Errors/TooManyArgumentsError";
@@ -222,6 +223,15 @@ export class Connection extends ConnectionEvents {
         })
         .then(async ([packet]) => {
           const response = packet as PreparedStatementResponse;
+
+          if (response.parametersCount > args.length) {
+            this.#commandQueue(createClosePacket(response.statementId), false);
+
+            throw FewArgumentsError.generate(
+              response.parametersCount,
+              args.length
+            );
+          }
 
           return (
             this.#commandQueue(
