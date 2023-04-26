@@ -4,11 +4,13 @@ export class FewArgumentsError extends Error {
     received: number;
   };
 
-  public constructor(
+  private constructor(
     message: string,
-    cause: { cause: FewArgumentsError["cause"] }
+    options: ErrorOptions & { cause: FewArgumentsError["cause"] }
   ) {
-    super(message, cause);
+    super(message, options);
+
+    this.cause = options.cause;
   }
 
   public static generate(required: number, received: number) {
