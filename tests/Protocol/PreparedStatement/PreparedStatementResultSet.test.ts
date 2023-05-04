@@ -1,6 +1,6 @@
 import { type Connection } from "@/Connection";
-import { FewArgumentsError } from "@/Errors/FewArgumentsError";
-import { QueryError } from "@/Errors/QueryError";
+import { FewArgumentsException } from "@/Exceptions/FewArgumentsException";
+import { QueryException } from "@/Exceptions/QueryException";
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
@@ -220,10 +220,10 @@ describe(getTestName(__filename), () => {
       try {
         await connectionBase.queryRaw("SELECT!", [123]);
       } catch (error) {
-        expect(error).toBeInstanceOf(QueryError);
+        expect(error).toBeInstanceOf(QueryException);
 
-        if (error instanceof QueryError) {
-          expect(error.cause.code).toBe(1064);
+        if (error instanceof QueryException) {
+          expect(error.code).toBe(1064);
           expect(error.message).toContain(
             "You have an error in your SQL syntax;"
           );
@@ -235,10 +235,10 @@ describe(getTestName(__filename), () => {
       try {
         await connectionBase.queryRaw("SELECT ?");
       } catch (error) {
-        expect(error).toBeInstanceOf(QueryError);
+        expect(error).toBeInstanceOf(QueryException);
 
-        if (error instanceof QueryError) {
-          expect(error.cause.code).toBe(1064);
+        if (error instanceof QueryException) {
+          expect(error.code).toBe(1064);
           expect(error.message).toContain("'?'");
         }
       }
@@ -248,12 +248,12 @@ describe(getTestName(__filename), () => {
       try {
         await connectionBase.queryRaw("SELECT ?, ?", [123]);
       } catch (error) {
-        expect(error).toBeInstanceOf(FewArgumentsError);
-        expect((error as FewArgumentsError).message).toBe(
+        expect(error).toBeInstanceOf(FewArgumentsException);
+        expect((error as FewArgumentsException).message).toBe(
           "Prepared Statement number of arguments is 2, but received 1"
         );
-        expect((error as FewArgumentsError).cause.received).toBe(1);
-        expect((error as FewArgumentsError).cause.required).toBe(2);
+        expect((error as FewArgumentsException).details.received).toBe(1);
+        expect((error as FewArgumentsException).details.required).toBe(2);
       }
     });
 

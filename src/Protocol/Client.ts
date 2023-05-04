@@ -2,6 +2,7 @@ import {
   CapabilitiesBase,
   CapabilitiesExtended,
   CapabilitiesMariaDB,
+  Collations,
 } from "@/Protocol/Enumerations";
 
 export const capabilitiesBase =
@@ -18,4 +19,4 @@ export const capabilitiesExtended =
 export const capabilitiesMariaDB =
   CapabilitiesMariaDB.MARIADB_CLIENT_EXTENDED_METADATA;
 
-export const defaultCollation = 0x2d; // utf8mb4_general_ci
+export const defaultCollation = Collations.utf8mb4_general_ci;

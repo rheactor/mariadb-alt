@@ -1,10 +1,14 @@
 import { Socket } from "node:net";
 
-import { ConnectionError } from "@/Errors/ConnectionError";
-import { FewArgumentsError } from "@/Errors/FewArgumentsError";
-import { QueryError } from "@/Errors/QueryError";
-import { ResponseNotAllowedError } from "@/Errors/ResponseNotAllowedError";
-import { TooManyArgumentsError } from "@/Errors/TooManyArgumentsError";
+import { ConnectionException } from "@/Exceptions/ConnectionException";
+import { type Exception } from "@/Exceptions/Exception";
+import { FewArgumentsException } from "@/Exceptions/FewArgumentsException";
+import { QueryException } from "@/Exceptions/QueryException";
+import { TooManyArgumentsException } from "@/Exceptions/TooManyArgumentsException";
+import {
+  expectedOKPacket,
+  expectedResultSetPacket,
+} from "@/Exceptions/UnexpectedResponseTypeException";
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { createPacket } from "@/Protocol/Packet/Packet";
@@ -86,7 +90,7 @@ abstract class ConnectionEvents {
 
   public on(
     eventName: ConnectionEventsError,
-    listener: (connection: Connection, error: Error) => void
+    listener: (connection: Connection, error: Exception) => void
   ): void;
 
   public on(
@@ -104,7 +108,7 @@ abstract class ConnectionEvents {
 
   public once(
     eventName: ConnectionEventsError,
-    listener: (connection: Connection, error: Error) => void
+    listener: (connection: Connection, error: Exception) => void
   ): void;
 
   public once(
@@ -207,7 +211,7 @@ export class Connection extends ConnectionEvents {
   public async queryRaw(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
       if (args.length > 0xffff) {
-        throw new TooManyArgumentsError(
+        throw new TooManyArgumentsException(
           `Prepared Statements supports only ${0xffff} arguments`
         );
       }
@@ -218,8 +222,11 @@ export class Connection extends ConnectionEvents {
         0,
         CommandLock.LOCK
       )
-        .catch((error) => {
-          throw new QueryError(error.message, { cause: error });
+        .catch((packetError) => {
+          throw new QueryException(packetError.message).setDetails(
+            packetError.code,
+            { packetError }
+          );
         })
         .then(async ([packet]) => {
           const response = packet as PreparedStatementResponse;
@@ -227,10 +234,12 @@ export class Connection extends ConnectionEvents {
           if (response.parametersCount > args.length) {
             this.#commandQueue(createClosePacket(response.statementId), false);
 
-            throw FewArgumentsError.generate(
-              response.parametersCount,
-              args.length
-            );
+            throw new FewArgumentsException(
+              `Prepared Statement number of arguments is ${response.parametersCount}, but received ${args.length}`
+            ).setDetails(undefined, {
+              required: response.parametersCount,
+              received: args.length,
+            });
           }
 
           return (
@@ -241,8 +250,11 @@ export class Connection extends ConnectionEvents {
               CommandLock.RELEASE
             )
               // eslint-disable-next-line promise/no-nesting
-              .catch((error) => {
-                throw new QueryError(error.message, { cause: error });
+              .catch((packetError) => {
+                throw new QueryException(packetError.message).setDetails(
+                  packetError.code,
+                  { packetError }
+                );
               })
               .then(([data]) => {
                 this.#commandQueue(
@@ -257,8 +269,11 @@ export class Connection extends ConnectionEvents {
     }
 
     return this.batchQueryRaw(sql)
-      .catch((error) => {
-        throw new QueryError(error.message, { cause: error });
+      .catch((packetError) => {
+        throw new QueryException(packetError.message).setDetails(
+          packetError.code,
+          { packetError }
+        );
       })
       .then(([packet]) => packet);
   }
@@ -275,21 +290,24 @@ export class Connection extends ConnectionEvents {
         return result.getRows<T>();
       }
 
-      throw ResponseNotAllowedError.expectedResultSetPacket(result!);
+      throw expectedResultSetPacket(result!);
     });
   }
 
   public async execute(sql: string, args?: ExecuteArgument[]) {
     return this.queryRaw(sql, args)
-      .catch((error) => {
-        throw new QueryError(error.message, { cause: error });
+      .catch((packetError) => {
+        throw new QueryException(packetError.message).setDetails(
+          packetError.code,
+          { packetError }
+        );
       })
       .then((response) => {
         if (response instanceof PacketOk) {
           return response;
         }
 
-        throw ResponseNotAllowedError.expectedOKPacket(response!);
+        throw expectedOKPacket(response!);
       });
   }
 
@@ -302,8 +320,11 @@ export class Connection extends ConnectionEvents {
 
   public async batchQuery<T extends object = Row>(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((error) => {
-        throw new QueryError(error.message, { cause: error });
+      .catch((packetError) => {
+        throw new QueryException(packetError.message).setDetails(
+          packetError.code,
+          { packetError }
+        );
       })
       .then((packets) =>
         packets.map((packet) => {
@@ -311,15 +332,18 @@ export class Connection extends ConnectionEvents {
             return packet.getRows<T>();
           }
 
-          throw ResponseNotAllowedError.expectedResultSetPacket(packet);
+          throw expectedResultSetPacket(packet);
         })
       );
   }
 
   public async batchExecute(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((error) => {
-        throw new QueryError(error.message, { cause: error });
+      .catch((packetError) => {
+        throw new QueryException(packetError.message).setDetails(
+          packetError.code,
+          { packetError }
+        );
       })
       .then((packets) =>
         packets.map((packet) => {
@@ -327,7 +351,7 @@ export class Connection extends ConnectionEvents {
             return packet;
           }
 
-          throw ResponseNotAllowedError.expectedOKPacket(packet);
+          throw expectedOKPacket(packet);
         })
       );
   }
@@ -467,12 +491,15 @@ export class Connection extends ConnectionEvents {
 
           this.#commandRun();
         },
-        (error) => {
+        (packetError) => {
           this.status = Status.ERROR;
           this.emit(
             "error",
             this,
-            new ConnectionError(error.message, { cause: error })
+            new ConnectionException(packetError.message).setDetails(
+              packetError.code,
+              { packetError }
+            )
           );
           this.close();
         },
