@@ -358,13 +358,13 @@ describe(getTestName(__filename), () => {
     test(`field type "${packetUnit.query}" = ${packetUnit.input}`, async () => {
       const table = `test-${Math.random()}`;
       const createQuery = await connectionBase.queryRaw(
-        `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${packetUnit.query} )`
+        `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${packetUnit.query} )`,
       );
 
       expect(createQuery).toBeInstanceOf(PacketOk);
 
       const insertQuery = await connectionBase.queryRaw(
-        `INSERT INTO \`${table}\` (\`column\`) VALUES (${packetUnit.input})`
+        `INSERT INTO \`${table}\` (\`column\`) VALUES (${packetUnit.input})`,
       );
 
       expect(insertQuery).toBeInstanceOf(PacketOk);
@@ -374,7 +374,7 @@ describe(getTestName(__filename), () => {
       }
 
       const selectQuery = await connectionBase.queryRaw(
-        `SELECT * FROM \`${table}\``
+        `SELECT * FROM \`${table}\``,
       );
 
       expect(selectQuery).toBeInstanceOf(PacketResultSet);
@@ -386,7 +386,7 @@ describe(getTestName(__filename), () => {
         for (const fieldProperty of Object.keys(field)) {
           if (fieldProperty in packetUnit.metadata) {
             expect(packetUnit.metadata[fieldProperty as keyof Field]).toBe(
-              field[fieldProperty as keyof Field]
+              field[fieldProperty as keyof Field],
             );
           }
         }
@@ -414,8 +414,8 @@ describe(getTestName(__filename), () => {
               json: false,
               uuid: false,
             },
-          ]
-        )
+          ],
+        ),
       ).toStrictEqual({});
     });
 
@@ -450,7 +450,7 @@ describe(getTestName(__filename), () => {
           0x00,
           // Unused.
           0x00, 0x00,
-        ])
+        ]),
       );
 
       expect(packetResultSet.getFields()).toStrictEqual([

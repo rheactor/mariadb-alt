@@ -36,16 +36,16 @@ describe(getTestName(__filename), () => {
 
       test(`${inputJSON} at ${byteOffset ?? 0}`, () => {
         expect(readNullTerminatedString(input, byteOffset)).toStrictEqual(
-          output
+          output,
         );
       });
-    }
+    },
   );
 
   describe("readNullTerminatedString()", () => {
     test("expects a NULL-terminated string", () => {
       expect(() => readNullTerminatedString(Buffer.from(""))).toThrowError(
-        "expected a NULL-terminated string"
+        "expected a NULL-terminated string",
       );
     });
   });
@@ -65,12 +65,12 @@ describe(getTestName(__filename), () => {
       test(`${JSON.stringify(input?.toString() ?? "null")}`, () => {
         expect(toNullTerminatedStringEscaped(input)).toStrictEqual(output);
       });
-    }
+    },
   );
 
   type ToDatetimeEncodedUnit = [
     [number, number, number, number, number, number, number],
-    Buffer
+    Buffer,
   ];
 
   const toDatetimeEncodedUnits: ToDatetimeEncodedUnit[] = [
@@ -101,11 +101,11 @@ describe(getTestName(__filename), () => {
         JSON.stringify({ year, month, day, hours, minutes, seconds, ms }),
         () => {
           expect(
-            toDatetimeEncoded(year, month, day, hours, minutes, seconds, ms)
+            toDatetimeEncoded(year, month, day, hours, minutes, seconds, ms),
           ).toStrictEqual(output);
-        }
+        },
       );
-    }
+    },
   );
 
   describe("toDatetimeEncoded()", () => {
@@ -146,7 +146,7 @@ describe(getTestName(__filename), () => {
       test(JSON.stringify(output), () => {
         expect(readDatetimeEncoded(input)).toStrictEqual(output);
       });
-    }
+    },
   );
 
   type ToTimeEncodedUnit = [[number, number, number, number], Buffer];
@@ -178,10 +178,10 @@ describe(getTestName(__filename), () => {
     ([hours, minutes, seconds, ms], output) => {
       test(JSON.stringify({ hours, minutes, seconds, ms }), () => {
         expect(toTimeEncoded(hours, minutes, seconds, ms)).toStrictEqual(
-          output
+          output,
         );
       });
-    }
+    },
   );
 
   describe("toTimeEncoded()", () => {
@@ -251,7 +251,7 @@ describe(getTestName(__filename), () => {
 
   describe.each(toIntEncodedUnits)("toIntEncoded()", (input, output) => {
     const inputString = JSON.stringify(
-      typeof input === "bigint" ? input.toString(16) : input
+      typeof input === "bigint" ? input.toString(16) : input,
     );
 
     test(inputString, () => {
@@ -298,16 +298,16 @@ describe(getTestName(__filename), () => {
       expect(
         bufferXOR(
           Buffer.from([0b1100_1111, 0b1111_1111, 0b10101010, 0b1111_0000]),
-          Buffer.from([0b0011_1010, 0b0000_0000, 0b10101010, 0b1111_1111])
-        )
+          Buffer.from([0b0011_1010, 0b0000_0000, 0b10101010, 0b1111_1111]),
+        ),
       ).toStrictEqual(
-        Buffer.from([0b1111_0101, 0b1111_1111, 0b0000_0000, 0b0000_1111])
+        Buffer.from([0b1111_0101, 0b1111_1111, 0b0000_0000, 0b0000_1111]),
       );
     });
 
     test("XOR between two Buffer's", () => {
       expect(() =>
-        bufferXOR(Buffer.from([0x00]), Buffer.from([]))
+        bufferXOR(Buffer.from([0x00]), Buffer.from([])),
       ).toThrowError("both Buffer instances must have the same size");
     });
   });
@@ -321,13 +321,13 @@ describe(getTestName(__filename), () => {
 
     test("createUInt32LE()", () => {
       expect(createUInt32LE(0x000000)).toStrictEqual(
-        Buffer.from([0x00, 0x00, 0x00, 0x00])
+        Buffer.from([0x00, 0x00, 0x00, 0x00]),
       );
       expect(createUInt32LE(0x10203040)).toStrictEqual(
-        Buffer.from([0x40, 0x30, 0x20, 0x10])
+        Buffer.from([0x40, 0x30, 0x20, 0x10]),
       );
       expect(createUInt32LE(0xffffffff)).toStrictEqual(
-        Buffer.from([0xff, 0xff, 0xff, 0xff])
+        Buffer.from([0xff, 0xff, 0xff, 0xff]),
       );
     });
   });
@@ -392,10 +392,10 @@ describe(getTestName(__filename), () => {
 
       test(`${nullBitmapTitle} with ${fieldsCount} fields`, () => {
         expect(
-          getNullPositions(nullBitmap, fieldsCount, offset ?? 0)
+          getNullPositions(nullBitmap, fieldsCount, offset ?? 0),
         ).toStrictEqual(output);
       });
-    }
+    },
   );
 
   type NullBitmapUnit = [unknown[], Buffer];

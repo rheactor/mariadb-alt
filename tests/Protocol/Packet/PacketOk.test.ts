@@ -14,7 +14,7 @@ describe(getTestName(__filename), () => {
     OkAffectedRows,
     OkLastInsertId,
     OkServerStatus,
-    OkWarningCount
+    OkWarningCount,
   ];
 
   const fromUnits: FromUnit[] = [
@@ -49,7 +49,7 @@ describe(getTestName(__filename), () => {
       affectedRows,
       lastInsertId,
       serverStatus,
-      warningCount
+      warningCount,
     ) => {
       test(unitName, () => {
         const packetOk = PacketOk.from(packet);
@@ -59,7 +59,7 @@ describe(getTestName(__filename), () => {
         expect(packetOk.warningCount).toBe(warningCount);
         expect(packetOk.serverStatus).toBe(serverStatus);
       });
-    }
+    },
   );
 
   type IsOKUnit = boolean;
@@ -95,6 +95,6 @@ describe(getTestName(__filename), () => {
       test(`${String(isEOFUnit)}: ${unitName}`, () => {
         expect(PacketOk.isEOF(packet)).toBe(isEOFUnit);
       });
-    }
+    },
   );
 });

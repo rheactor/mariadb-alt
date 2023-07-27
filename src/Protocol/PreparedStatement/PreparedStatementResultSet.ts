@@ -43,10 +43,10 @@ export class PreparedStatementResultSet {
 
       const nullPositions = getNullPositions(
         this.#bufferConsumer.slice(
-          Math.floor((this.fieldsCount + 7 + PS_RESULT_ROW_OFFSET) / 8)
+          Math.floor((this.fieldsCount + 7 + PS_RESULT_ROW_OFFSET) / 8),
         ),
         fieldsLength,
-        PS_RESULT_ROW_OFFSET
+        PS_RESULT_ROW_OFFSET,
       );
 
       for (let i = 0; i < fieldsLength; i++) {
@@ -81,7 +81,7 @@ export class PreparedStatementResultSet {
 
           case FieldTypes.DECIMAL:
             row[field.name] = toNumber(
-              this.#bufferConsumer.readStringEncoded()!.toString()
+              this.#bufferConsumer.readStringEncoded()!.toString(),
             )!;
             break;
 
@@ -100,7 +100,7 @@ export class PreparedStatementResultSet {
             row[field.name] = toNumber(
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUBigInt()
-                : this.#bufferConsumer.readBigInt()
+                : this.#bufferConsumer.readBigInt(),
             )!;
             break;
 

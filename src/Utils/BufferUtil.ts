@@ -46,7 +46,7 @@ export const toDatetimeEncoded = (
   hours = 0,
   minutes = 0,
   seconds = 0,
-  ms = 0
+  ms = 0,
 ): Buffer => {
   const hasDate = year !== 0 || month !== 0 || day !== 0;
   const hasTime = hours !== 0 || minutes !== 0 || seconds !== 0;
@@ -99,7 +99,7 @@ export const readDatetimeEncoded = (buffer: Buffer): DateTimeFormat => {
     format > 4 ? bufferConsumer.readInt() : 0,
     format > 4 ? bufferConsumer.readInt() : 0,
     format > 4 ? bufferConsumer.readInt() : 0,
-    format > 7 ? bufferConsumer.readInt(4) : 0
+    format > 7 ? bufferConsumer.readInt(4) : 0,
   );
 };
 
@@ -107,7 +107,7 @@ export const toTimeEncoded = (
   hours = 0,
   minutes = 0,
   seconds = 0,
-  ms = 0
+  ms = 0,
 ): Buffer => {
   if (hours === 0 && minutes === 0 && seconds === 0 && ms === 0) {
     return Buffer.from([0]);
@@ -275,7 +275,7 @@ export const createInt64LE = (value: bigint) => {
 export const getNullPositions = (
   nullBitmap: Buffer,
   fieldsCount: number,
-  offset: number
+  offset: number,
 ): number[] => {
   const positions: number[] = [];
 

@@ -89,7 +89,7 @@ export class BufferConsumer {
   public readNullTerminatedString(): Buffer {
     const bufferString = readNullTerminatedString(
       this.#buffer,
-      this.#byteOffset
+      this.#byteOffset,
     );
 
     this.#byteOffset += bufferString.length + 1;
@@ -100,7 +100,7 @@ export class BufferConsumer {
   public readString(bytes: number, nullTerminated = false): Buffer {
     const bufferString = this.#buffer.subarray(
       this.#byteOffset,
-      this.#byteOffset + bytes
+      this.#byteOffset + bytes,
     );
 
     this.#byteOffset += bytes + +nullTerminated;
@@ -121,7 +121,7 @@ export class BufferConsumer {
 
     const bufferString = this.#buffer.subarray(
       this.#byteOffset,
-      this.#byteOffset + Number(bufferInt)
+      this.#byteOffset + Number(bufferInt),
     );
 
     this.#byteOffset += bufferString.length;
@@ -140,7 +140,7 @@ export class BufferConsumer {
   public slice(bytes: number): Buffer {
     const bufferSliced = this.#buffer.subarray(
       this.#byteOffset,
-      (this.#byteOffset += bytes)
+      (this.#byteOffset += bytes),
     );
 
     return bufferSliced;

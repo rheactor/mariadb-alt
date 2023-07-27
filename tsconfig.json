@@ -27,9 +27,11 @@
     "strict": true,
     "target": "ES2022",
 
-    "paths": { "@/*": ["./src/*"], "@Tests/*": ["./tests/*"] }
+    "paths": {
+      "@/*": ["./src/*"],
+      "@Tests/*": ["./tests/*"]
+    }
   },
-
   "include": [
     "./.env.d.ts",
     "./jest.config.*.ts",

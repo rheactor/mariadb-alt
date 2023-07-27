@@ -5,7 +5,7 @@ export const toNativeDate = (
   hours: number,
   minutes: number,
   seconds: number,
-  ms: number
+  ms: number,
 ): Date => {
   const date = new Date();
 

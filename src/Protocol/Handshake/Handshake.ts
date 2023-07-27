@@ -48,7 +48,7 @@ export class Handshake {
       this.authSeed,
       bufferConsumer.readString(
         Math.max(12, this.authPluginNameLength - 9),
-        true
+        true,
       ),
     ]);
 

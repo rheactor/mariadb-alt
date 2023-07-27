@@ -9,10 +9,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.10
 
-      - run: npm ci
-      - run: npm run code:analysis
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm code:analysis
 
   prettier:
     needs: quality
@@ -23,10 +26,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.10
 
-      - run: npm ci
-      - run: npm run prettier
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prettier
 
   eslint:
     needs: quality
@@ -37,10 +43,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.10
 
-      - run: npm ci
-      - run: npm run eslint
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm eslint
 
   tsc:
     needs: quality
@@ -51,10 +60,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.10
 
-      - run: npm ci
-      - run: npm run tsc
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm tsc
 
   test:
     runs-on: ubuntu-latest
@@ -95,17 +107,21 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
-      - run: npm ci
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.10
 
-      - run: npm run test:ci
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm test:ci
         env:
           TESTING_DATABASE: mariadb-alt
           TESTING_USER: user
           TESTING_PASSWORD: password
 
-      - run: npm run test:build:ci
+      - run: pnpm test:build:ci
         env:
           TESTING_DATABASE: mariadb-alt
           TESTING_USER: user

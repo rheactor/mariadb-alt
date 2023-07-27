@@ -46,11 +46,11 @@ describe(getTestName(__filename), () => {
       expect.assertions(2);
 
       const ping1 = expect(connectionGlobal.ping()).resolves.toBeInstanceOf(
-        PacketOk
+        PacketOk,
       );
 
       const ping2 = expect(connectionGlobal.ping()).resolves.toBeInstanceOf(
-        PacketOk
+        PacketOk,
       );
 
       await Promise.all([ping1, ping2]);
@@ -110,7 +110,7 @@ describe(getTestName(__filename), () => {
       test("test if reference value was set", async () => {
         expect([
           ...(await connectionBase.query<{ REFERENCE_VALUE: number }>(
-            "SELECT @REFERENCE_VALUE"
+            "SELECT @REFERENCE_VALUE",
           )),
         ]).toStrictEqual([{ "@REFERENCE_VALUE": Buffer.from("example") }]);
       });
@@ -122,7 +122,7 @@ describe(getTestName(__filename), () => {
 
     type QuerySelectUnit = [
       string,
-      TimeFormat | bigint | number | string | null
+      TimeFormat | bigint | number | string | null,
     ];
 
     const querySelectUnits: QuerySelectUnit[] = [
@@ -143,7 +143,7 @@ describe(getTestName(__filename), () => {
     describe.each(querySelectUnits)("query()", (input, outputNormalized) => {
       test(`SELECT ${input} via queryRaw()`, async () => {
         const queryResult = await connectionGlobal.queryRaw(
-          `SELECT ${input} AS \`value\``
+          `SELECT ${input} AS \`value\``,
         );
 
         expect(queryResult).toBeInstanceOf(PacketResultSet);
@@ -157,7 +157,7 @@ describe(getTestName(__filename), () => {
 
           if (typeof outputNormalized === "bigint") {
             expect((queryRow as bigint).toString()).toBe(
-              outputNormalized.toString()
+              outputNormalized.toString(),
             );
           } else {
             expect(queryRow).toStrictEqual(outputNormalized);
@@ -174,7 +174,7 @@ describe(getTestName(__filename), () => {
 
         if (typeof outputNormalized === "bigint") {
           expect((result!.value as bigint).toString()).toBe(
-            outputNormalized.toString()
+            outputNormalized.toString(),
           );
         } else {
           expect(result!.value).toStrictEqual(outputNormalized);
@@ -188,12 +188,12 @@ describe(getTestName(__filename), () => {
 
         expect(
           await connectionGlobal.queryRaw(
-            `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`
-          )
+            `CREATE TEMPORARY TABLE \`${table}\` ( \`id\` INT NULL AUTO_INCREMENT, \`text\` VARCHAR(20), PRIMARY KEY (\`id\`) )`,
+          ),
         ).toBeInstanceOf(PacketOk);
 
         const insertInto = await connectionGlobal.queryRaw(
-          `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`
+          `INSERT INTO \`${table}\` (\`id\`, \`text\`) VALUES (123, 'example')`,
         );
 
         expect(insertInto).toBeInstanceOf(PacketOk);
@@ -204,7 +204,7 @@ describe(getTestName(__filename), () => {
         }
 
         const query = await connectionGlobal.queryRaw(
-          `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``
+          `SELECT \`id\` as \`a\`, \`text\` FROM \`${table}\` \`b\``,
         );
 
         expect(query).toBeInstanceOf(PacketResultSet);
@@ -234,7 +234,7 @@ describe(getTestName(__filename), () => {
         }>("SELECT @LONGBLOB_REFERENCE");
 
         expect([...results][0]?.["@LONGBLOB_REFERENCE"]).toStrictEqual(
-          Buffer.from("example")
+          Buffer.from("example"),
         );
       });
 
@@ -260,7 +260,7 @@ describe(getTestName(__filename), () => {
         await connectionGlobal.execute("SET @BIGINT_REFERENCE := ?", [123]);
 
         const results = await connectionGlobal.query<{ a: number }>(
-          "SELECT @BIGINT_REFERENCE AS a"
+          "SELECT @BIGINT_REFERENCE AS a",
         );
 
         expect([...results][0]).toStrictEqual({ a: 123n });
@@ -296,7 +296,7 @@ describe(getTestName(__filename), () => {
         } catch (error) {
           expect(error).toBeInstanceOf(UnexpectedResponseTypeException);
           expect((error as UnexpectedResponseTypeException).message).toBe(
-            "received OK instead of ResultSet response"
+            "received OK instead of ResultSet response",
           );
         }
       });
@@ -310,18 +310,18 @@ describe(getTestName(__filename), () => {
           `CREATE TEMPORARY TABLE \`${table}\` (
             id INT NULL AUTO_INCREMENT,
             PRIMARY KEY (id)
-          )`
+          )`,
         );
 
         try {
           await connectionGlobal.query(
             `INSERT INTO \`${table}\` (id) VALUES (?)`,
-            ["abc"]
+            ["abc"],
           );
         } catch (error) {
           expect(error).toBeInstanceOf(QueryException);
           expect((error as QueryException).message).toContain(
-            `Incorrect integer value`
+            `Incorrect integer value`,
           );
         }
       });
@@ -365,7 +365,7 @@ describe(getTestName(__filename), () => {
         } catch (error) {
           expect(error).toBeInstanceOf(UnexpectedResponseTypeException);
           expect((error as UnexpectedResponseTypeException).message).toBe(
-            "received ResultSet instead of OK response"
+            "received ResultSet instead of OK response",
           );
         }
       });
@@ -386,7 +386,7 @@ describe(getTestName(__filename), () => {
 
       test(`65KB packet chunked`, async () => {
         const [result] = await connectionGlobal.query<{ packet: string }>(
-          `SELECT '${packet65KB.toString("binary")}' AS packet`
+          `SELECT '${packet65KB.toString("binary")}' AS packet`,
         );
 
         expect(result!.packet.length).toStrictEqual(packet65KB.length);
@@ -395,29 +395,29 @@ describe(getTestName(__filename), () => {
 
       test(`65KB packet chunked on limit`, async () => {
         const [result] = await connectionGlobal.query<{ packet: string }>(
-          `SELECT '${packet65KBOnLimit.toString("binary")}' AS packet`
+          `SELECT '${packet65KBOnLimit.toString("binary")}' AS packet`,
         );
 
         expect(result!.packet.length).toStrictEqual(packet65KBOnLimit.length);
         expect(result!.packet).toStrictEqual(
-          packet65KBOnLimit.toString("binary")
+          packet65KBOnLimit.toString("binary"),
         );
       });
 
       test(`16MB packet on limit`, async () => {
         const [result] = await connectionGlobal.query<{ packet: string }>(
-          `SELECT '${packet16MBOnLimit.toString("binary")}' AS packet`
+          `SELECT '${packet16MBOnLimit.toString("binary")}' AS packet`,
         );
 
         expect(result!.packet.length).toStrictEqual(packet16MBOnLimit.length);
         expect(result!.packet).toStrictEqual(
-          packet16MBOnLimit.toString("binary")
+          packet16MBOnLimit.toString("binary"),
         );
       }, 5000);
 
       test(`16MB packet (without prepared statement)`, async () => {
         const [result] = await connectionGlobal.query<{ packet: number }>(
-          `SELECT LENGTH('${packet16MB.toString("binary")}') AS packet`
+          `SELECT LENGTH('${packet16MB.toString("binary")}') AS packet`,
         );
 
         expect(result!.packet).toStrictEqual(packet16MB.length);
@@ -426,7 +426,7 @@ describe(getTestName(__filename), () => {
       test(`16MB packet (prepared statement)`, async () => {
         const [result] = await connectionGlobal.query<{ packet: number }>(
           `SELECT LENGTH(?) AS packet`,
-          [packet16MB]
+          [packet16MB],
         );
 
         expect(result!.packet).toStrictEqual(packet16MB.length);
@@ -455,7 +455,7 @@ describe(getTestName(__filename), () => {
             m INT NULL,
             n INT NULL,
             PRIMARY KEY (id)
-          )`
+          )`,
         );
 
         await connectionGlobal.execute(
@@ -475,7 +475,7 @@ describe(getTestName(__filename), () => {
             null,
             null,
             null,
-          ]
+          ],
         );
         await connectionGlobal.execute(
           `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -494,7 +494,7 @@ describe(getTestName(__filename), () => {
             null,
             null,
             null,
-          ]
+          ],
         );
         await connectionGlobal.execute(
           `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -513,7 +513,7 @@ describe(getTestName(__filename), () => {
             null,
             null,
             null,
-          ]
+          ],
         );
         await connectionGlobal.execute(
           `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -532,11 +532,11 @@ describe(getTestName(__filename), () => {
             null,
             null,
             null,
-          ]
+          ],
         );
         await connectionGlobal.execute(
           `INSERT INTO \`${table}\` (a, b, c, d, e, f, g, h, i, j, k, l, m, n) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          ["example", 123, "example", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+          ["example", 123, "example", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
         );
 
         const results = await connectionGlobal.query<{
@@ -651,7 +651,7 @@ describe(getTestName(__filename), () => {
   describe("batch queries", () => {
     test(`batchQueryRaw() with only PacketResultSet`, async () => {
       const [query1, query2] = (await connectionGlobal.batchQueryRaw(
-        "SELECT 1, 2; SELECT 3"
+        "SELECT 1, 2; SELECT 3",
       )) as [PacketResultSet, PacketResultSet];
 
       expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -660,7 +660,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() with only PacketOK`, async () => {
       const [result1, result2] = (await connectionGlobal.batchQueryRaw(
-        "DO NULL; DO NULL"
+        "DO NULL; DO NULL",
       )) as [PacketOk, PacketOk];
 
       expect(result1.serverStatus).toBe(0x0a);
@@ -669,7 +669,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
       const [query1, result2, query3] = (await connectionGlobal.batchQueryRaw(
-        "SELECT 1, 2; DO NULL; SELECT 3"
+        "SELECT 1, 2; DO NULL; SELECT 3",
       )) as [PacketResultSet, PacketOk, PacketResultSet];
 
       expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -679,7 +679,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
       const [result1, query2, result3] = (await connectionGlobal.batchQueryRaw(
-        "DO NULL; SELECT 1, 2; DO NULL"
+        "DO NULL; SELECT 1, 2; DO NULL",
       )) as [PacketOk, PacketResultSet, PacketOk];
 
       expect(result1.serverStatus).toBe(0x0a);
@@ -689,7 +689,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQuery()`, async () => {
       const [query1, query2] = await connectionGlobal.batchQuery(
-        "SELECT 1, 2; SELECT 3"
+        "SELECT 1, 2; SELECT 3",
       );
 
       expect([...query1!]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -698,7 +698,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchExecute()`, async () => {
       const [result1, result2] = await connectionGlobal.batchExecute(
-        "DO NULL; DO NULL"
+        "DO NULL; DO NULL",
       );
 
       expect(result1!.serverStatus).toBe(0x0a);
@@ -720,7 +720,7 @@ describe(getTestName(__filename), () => {
       } catch (error) {
         expect(error).toBeInstanceOf(UnexpectedResponseTypeException);
         expect((error as UnexpectedResponseTypeException).message).toBe(
-          "received OK instead of ResultSet response"
+          "received OK instead of ResultSet response",
         );
       }
     });
@@ -740,7 +740,7 @@ describe(getTestName(__filename), () => {
       } catch (error) {
         expect(error).toBeInstanceOf(UnexpectedResponseTypeException);
         expect((error as UnexpectedResponseTypeException).message).toBe(
-          "received ResultSet instead of OK response"
+          "received ResultSet instead of OK response",
         );
       }
     });

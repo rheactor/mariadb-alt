@@ -172,7 +172,7 @@ describe(getTestName(__filename), () => {
             Buffer.from([0x00, 0x00]),
             //
             Buffer.from([0x00]),
-          ])
+          ]),
         ),
       ],
     ],
@@ -234,7 +234,7 @@ describe(getTestName(__filename), () => {
             Buffer.from([0x00, 0x00]),
             //
             Buffer.from([0x00]),
-          ])
+          ]),
         ),
       ],
     ],
@@ -253,7 +253,7 @@ describe(getTestName(__filename), () => {
 
         buffers.forEach((buffer) => reassembler.push(buffer));
       });
-    }
+    },
   );
 
   describe("PacketReassembler()", () => {
@@ -263,7 +263,7 @@ describe(getTestName(__filename), () => {
       });
 
       expect(() =>
-        reassembler.push(Buffer.from([0x01, 0x00, 0x00, 0x00, 0x01]))
+        reassembler.push(Buffer.from([0x01, 0x00, 0x00, 0x00, 0x01])),
       ).toThrowError("malformed packet");
     });
   });

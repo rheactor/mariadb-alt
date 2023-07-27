@@ -6,7 +6,7 @@ export class PacketOk {
     public readonly affectedRows: bigint | number,
     public readonly lastInsertId: bigint | number,
     public readonly serverStatus: number,
-    public readonly warningCount: number
+    public readonly warningCount: number,
   ) {}
 
   public static from(packet: Buffer) {
@@ -22,7 +22,7 @@ export class PacketOk {
       bufferConsumer.readIntEncoded()!,
       bufferConsumer.readIntEncoded()!,
       bufferConsumer.readUInt(2),
-      bufferConsumer.readUInt(2)
+      bufferConsumer.readUInt(2),
     );
   }
 

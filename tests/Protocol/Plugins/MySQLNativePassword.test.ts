@@ -11,12 +11,12 @@ describe(getTestName(__filename), () => {
     ]);
 
     expect(
-      hashMySQLNativePassword(authenticationSeed, "password")
+      hashMySQLNativePassword(authenticationSeed, "password"),
     ).toStrictEqual(
       Buffer.from([
         0x1e, 0x59, 0x38, 0x88, 0x3b, 0xee, 0xe1, 0xb2, 0x4c, 0x7e, 0x44, 0x48,
         0x68, 0xfd, 0xd3, 0x24, 0xf9, 0xf1, 0x92, 0x28,
-      ])
+      ]),
     );
   });
 });

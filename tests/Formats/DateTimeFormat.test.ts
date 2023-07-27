@@ -17,7 +17,7 @@ describe(getTestName(__filename), () => {
   describe.each(toNativeDateUnits)("toNativeDate()", (input, output) => {
     test(input, () => {
       expect(DateTimeFormat.parse(input).toNativeDate().toISOString()).toBe(
-        output
+        output,
       );
     });
   });

@@ -23,7 +23,7 @@ const readFieldExtended = (bufferConsumer: BufferConsumer) => {
   }
 
   const extendedBuffer = new BufferConsumer(
-    bufferConsumer.slice(Number(extendedMetadataLength))
+    bufferConsumer.slice(Number(extendedMetadataLength)),
   );
 
   while (!extendedBuffer.consumed()) {

@@ -1,5 +1,5 @@
 export const toNumber = (
-  value: bigint | number | string
+  value: bigint | number | string,
 ): bigint | number | undefined => {
   if (typeof value === "number") {
     return value;

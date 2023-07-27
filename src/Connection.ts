@@ -81,7 +81,7 @@ class ConnectionCommand {
     public reject: (error: PacketError, packets: PacketType[]) => void,
     public reassembler: typeof Reassembler | false | undefined,
     public sequence: number,
-    public lock = CommandLock.FREE
+    public lock = CommandLock.FREE,
   ) {}
 }
 
@@ -90,36 +90,36 @@ abstract class ConnectionEvents {
 
   public on(
     eventName: ConnectionEventsError,
-    listener: (connection: Connection, error: Exception) => void
+    listener: (connection: Connection, error: Exception) => void,
   ): void;
 
   public on(
     eventName: ConnectionEventsCommon,
-    listener: (connection: Connection) => void
+    listener: (connection: Connection) => void,
   ): void;
 
   public on(
     eventName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listener: (...args: any[]) => void
+    listener: (...args: any[]) => void,
   ): void {
     this.#eventsEmitter.on(eventName, listener);
   }
 
   public once(
     eventName: ConnectionEventsError,
-    listener: (connection: Connection, error: Exception) => void
+    listener: (connection: Connection, error: Exception) => void,
   ): void;
 
   public once(
     eventName: ConnectionEventsCommon,
-    listener: (connection: Connection) => void
+    listener: (connection: Connection) => void,
   ): void;
 
   public once(
     eventName: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    listener: (...args: any[]) => void
+    listener: (...args: any[]) => void,
   ): void {
     this.#eventsEmitter.once(eventName, listener);
   }
@@ -148,7 +148,7 @@ export class Connection extends ConnectionEvents {
   #wasUsed = false;
 
   public constructor(
-    options: Partial<ConnectionOptions> & Pick<ConnectionOptions, "database">
+    options: Partial<ConnectionOptions> & Pick<ConnectionOptions, "database">,
   ) {
     super();
 
@@ -212,7 +212,7 @@ export class Connection extends ConnectionEvents {
     if (args !== undefined && args.length > 0) {
       if (args.length > 0xffff) {
         throw new TooManyArgumentsException(
-          `Prepared Statements supports only ${0xffff} arguments`
+          `Prepared Statements supports only ${0xffff} arguments`,
         );
       }
 
@@ -220,12 +220,12 @@ export class Connection extends ConnectionEvents {
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
         ReassemblerPSResponse,
         0,
-        CommandLock.LOCK
+        CommandLock.LOCK,
       )
         .catch((packetError) => {
           throw new QueryException(packetError.message).setDetails(
             packetError.code,
-            { packetError }
+            { packetError },
           );
         })
         .then(async ([packet]) => {
@@ -235,7 +235,7 @@ export class Connection extends ConnectionEvents {
             this.#commandQueue(createClosePacket(response.statementId), false);
 
             throw new FewArgumentsException(
-              `Prepared Statement number of arguments is ${response.parametersCount}, but received ${args.length}`
+              `Prepared Statement number of arguments is ${response.parametersCount}, but received ${args.length}`,
             ).setDetails(undefined, {
               required: response.parametersCount,
               received: args.length,
@@ -247,19 +247,19 @@ export class Connection extends ConnectionEvents {
               createExecutePacket(response, args),
               ReassemblerPSResultSet,
               0,
-              CommandLock.RELEASE
+              CommandLock.RELEASE,
             )
               // eslint-disable-next-line promise/no-nesting
               .catch((packetError) => {
                 throw new QueryException(packetError.message).setDetails(
                   packetError.code,
-                  { packetError }
+                  { packetError },
                 );
               })
               .then(([data]) => {
                 this.#commandQueue(
                   createClosePacket(response.statementId),
-                  false
+                  false,
                 );
 
                 return data;
@@ -272,7 +272,7 @@ export class Connection extends ConnectionEvents {
       .catch((packetError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
-          { packetError }
+          { packetError },
         );
       })
       .then(([packet]) => packet);
@@ -280,7 +280,7 @@ export class Connection extends ConnectionEvents {
 
   public async query<T extends object = Row>(
     sql: string,
-    args?: ExecuteArgument[]
+    args?: ExecuteArgument[],
   ) {
     return this.queryRaw(sql, args).then((result) => {
       if (
@@ -299,7 +299,7 @@ export class Connection extends ConnectionEvents {
       .catch((packetError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
-          { packetError }
+          { packetError },
         );
       })
       .then((response) => {
@@ -314,7 +314,7 @@ export class Connection extends ConnectionEvents {
   public async batchQueryRaw(sql: string) {
     return this.#commandQueue(
       Buffer.concat([Buffer.from([0x03]), Buffer.from(sql)]),
-      ReassemblerResultSet
+      ReassemblerResultSet,
     );
   }
 
@@ -323,7 +323,7 @@ export class Connection extends ConnectionEvents {
       .catch((packetError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
-          { packetError }
+          { packetError },
         );
       })
       .then((packets) =>
@@ -333,7 +333,7 @@ export class Connection extends ConnectionEvents {
           }
 
           throw expectedResultSetPacket(packet);
-        })
+        }),
       );
   }
 
@@ -342,7 +342,7 @@ export class Connection extends ConnectionEvents {
       .catch((packetError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
-          { packetError }
+          { packetError },
         );
       })
       .then((packets) =>
@@ -352,7 +352,7 @@ export class Connection extends ConnectionEvents {
           }
 
           throw expectedOKPacket(packet);
-        })
+        }),
       );
   }
 
@@ -377,7 +377,7 @@ export class Connection extends ConnectionEvents {
     buffer: Buffer,
     reassembler: typeof Reassembler | false | undefined = undefined,
     sequence = 0,
-    lock = CommandLock.FREE
+    lock = CommandLock.FREE,
   ) {
     return new Promise<Array<PacketError | PacketType>>((resolve, reject) => {
       const command = new ConnectionCommand(
@@ -386,7 +386,7 @@ export class Connection extends ConnectionEvents {
         reject,
         reassembler,
         sequence,
-        lock
+        lock,
       );
 
       if (lock !== CommandLock.FREE && this.#lock === CommandLock.LOCK) {
@@ -442,17 +442,22 @@ export class Connection extends ConnectionEvents {
     }
 
     return new Promise<void>((resolve) => {
-      const reassembler = new PacketReassembler((packets, error) => {
-        this.#socket.off("data", reassemblerPush);
+      const reassembler = new PacketReassembler(
+        (packets, error) => {
+          this.#socket.off("data", reassemblerPush);
 
-        if (error === undefined) {
-          command.resolve(packets);
-        } else {
-          command.reject(error, packets);
-        }
+          if (error === undefined) {
+            command.resolve(packets);
+          } else {
+            command.reject(error, packets);
+          }
 
-        resolve();
-      }, command.reassembler as ConstructorParameters<typeof PacketReassembler>[1]);
+          resolve();
+        },
+        command.reassembler as ConstructorParameters<
+          typeof PacketReassembler
+        >[1],
+      );
 
       const reassemblerPush = reassembler.push.bind(reassembler);
 
@@ -470,7 +475,7 @@ export class Connection extends ConnectionEvents {
       handshake.authSeed,
       handshake.authPluginName,
       this.#options,
-      0xffffffff
+      0xffffffff,
     );
 
     this.#send(
@@ -498,14 +503,14 @@ export class Connection extends ConnectionEvents {
             this,
             new ConnectionException(packetError.message).setDetails(
               packetError.code,
-              { packetError }
-            )
+              { packetError },
+            ),
           );
           this.close();
         },
         undefined,
-        1
-      )
+        1,
+      ),
     );
   }
 }

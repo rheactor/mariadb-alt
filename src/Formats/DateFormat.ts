@@ -46,7 +46,7 @@ export class DateFormat {
       hours,
       minutes,
       seconds,
-      ms * 1000
+      ms * 1000,
     );
   }
 

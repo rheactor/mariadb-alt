@@ -48,7 +48,7 @@ export class PacketReassembler {
 
   public constructor(
     onDoneCallback: OnDoneCallback,
-    reassembler?: Constructor<Reassembler> | undefined
+    reassembler?: Constructor<Reassembler> | undefined,
   ) {
     this.#onDoneCallback = onDoneCallback;
 
@@ -67,7 +67,7 @@ export class PacketReassembler {
     while (this.#packetIncomplete.length >= HEADER_SIZE) {
       const payloadLength = this.#packetIncomplete.readUIntLE(
         0,
-        PAYLOAD_LENGTH
+        PAYLOAD_LENGTH,
       );
       const packetLength = payloadLength + HEADER_SIZE;
 
@@ -77,7 +77,7 @@ export class PacketReassembler {
 
       const payload = this.#packetIncomplete.subarray(
         HEADER_SIZE,
-        packetLength
+        packetLength,
       );
 
       if (this.#reassemblerInstance) {
@@ -112,7 +112,7 @@ export class PacketReassembler {
       if (PacketError.is(payload)) {
         this.#onDoneCallback(
           this.#results,
-          PacketError.from(payload.subarray(1))
+          PacketError.from(payload.subarray(1)),
         );
 
         return;

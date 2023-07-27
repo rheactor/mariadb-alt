@@ -15,7 +15,7 @@ describe(getTestName(__filename), () => {
     expect(packet.serverStatus).toBe(0x0002);
     expect(packet.authPluginNameLength).toBe(0x15);
     expect(packet.authPluginName).toStrictEqual(
-      Buffer.from("mysql_native_password")
+      Buffer.from("mysql_native_password"),
     );
   });
 });

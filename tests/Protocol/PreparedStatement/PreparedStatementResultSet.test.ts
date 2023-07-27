@@ -127,7 +127,7 @@ describe(getTestName(__filename), () => {
     test(`SELECT ?, ? with NULL`, async () => {
       const [...result] = await connectionBase.query(
         "SELECT NULL AS a, ? AS b, 123 AS c, ? AS d, NULL AS e",
-        [null, null]
+        [null, null],
       );
 
       expect(result).toStrictEqual([
@@ -140,7 +140,7 @@ describe(getTestName(__filename), () => {
 
       const [...result] = await connectionBase.query(
         `SELECT ${parameters.map(() => "?").join(",")}`,
-        parameters
+        parameters,
       );
 
       expect(result).toStrictEqual([{ "?": 9 }]);
@@ -160,7 +160,7 @@ describe(getTestName(__filename), () => {
 
       const [...result] = await connectionBase.query(
         `SELECT ${parameters.toString()}`,
-        parametersValues
+        parametersValues,
       );
 
       expect(result).toStrictEqual([{ "?": 9 }]);
@@ -202,7 +202,7 @@ describe(getTestName(__filename), () => {
           // Null bitmap: none.
           0x00,
           // Value is NULL, so no more data here.
-        ])
+        ]),
       );
 
       expect(resultSet.fieldsCount).toBe(1);
@@ -225,7 +225,7 @@ describe(getTestName(__filename), () => {
         if (error instanceof QueryException) {
           expect(error.code).toBe(1064);
           expect(error.message).toContain(
-            "You have an error in your SQL syntax;"
+            "You have an error in your SQL syntax;",
           );
         }
       }
@@ -250,7 +250,7 @@ describe(getTestName(__filename), () => {
       } catch (error) {
         expect(error).toBeInstanceOf(FewArgumentsException);
         expect((error as FewArgumentsException).message).toBe(
-          "Prepared Statement number of arguments is 2, but received 1"
+          "Prepared Statement number of arguments is 2, but received 1",
         );
         expect((error as FewArgumentsException).details.received).toBe(1);
         expect((error as FewArgumentsException).details.required).toBe(2);
@@ -261,9 +261,9 @@ describe(getTestName(__filename), () => {
       const parameters = Array(0xffff + 1).fill(null);
 
       expect(async () =>
-        connectionBase.queryRaw("DO NULL", parameters)
+        connectionBase.queryRaw("DO NULL", parameters),
       ).rejects.toThrowError(
-        "Prepared Statements supports only 65535 arguments"
+        "Prepared Statements supports only 65535 arguments",
       );
     });
   });

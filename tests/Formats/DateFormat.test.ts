@@ -22,16 +22,16 @@ describe(getTestName(__filename), () => {
         expect(
           DateFormat.parse(input)
             .toNativeDate(offset ?? 0, offset ?? 0, offset ?? 0, offset ?? 0)
-            .toISOString()
+            .toISOString(),
         ).toBe(output);
       });
-    }
+    },
   );
 
   describe("toNativeDate()", () => {
     test("2023-03-26 start of day", () => {
       expect(DateFormat.parse("2023-03-26").toNativeDate().toISOString()).toBe(
-        "2023-03-26T00:00:00.000Z"
+        "2023-03-26T00:00:00.000Z",
       );
     });
   });

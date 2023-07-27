@@ -21,7 +21,7 @@ describe(getTestName(__filename), () => {
       expect(
         TimeFormat.parse(input)
           .toNativeDate(year ?? 1970)
-          .toISOString()
+          .toISOString(),
       ).toBe(output);
     });
   });
@@ -30,7 +30,7 @@ describe(getTestName(__filename), () => {
     const timeFormat = TimeFormat.parse("00:00:00.1234567");
 
     expect(timeFormat.toNativeDate().toISOString()).toBe(
-      "1970-01-01T00:00:00.123Z"
+      "1970-01-01T00:00:00.123Z",
     );
 
     expect(timeFormat.ms).toBe(123456);

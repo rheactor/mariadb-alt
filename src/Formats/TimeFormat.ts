@@ -19,7 +19,7 @@ export class TimeFormat {
     hours: number,
     minutes: number,
     seconds: number,
-    ms: number
+    ms: number,
   ): TimeFormat {
     const instance = new TimeFormat();
 
@@ -54,7 +54,7 @@ export class TimeFormat {
       this.hours,
       this.minutes,
       this.seconds,
-      this.ms
+      this.ms,
     );
   }
 }

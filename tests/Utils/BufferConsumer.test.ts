@@ -5,7 +5,7 @@ import { getTestName } from "@Tests/Fixtures/Utils";
 describe(getTestName(__filename), () => {
   test("readUInt()", () => {
     const bufferConsumer = new BufferConsumer(
-      Buffer.from("\x10\x20\x30\x40\x50\x60\x00\xFF\xFF\x70\x80\x90", "binary")
+      Buffer.from("\x10\x20\x30\x40\x50\x60\x00\xFF\xFF\x70\x80\x90", "binary"),
     );
 
     expect(bufferConsumer.readUInt()).toBe(0x10);
@@ -19,7 +19,7 @@ describe(getTestName(__filename), () => {
 
   test("readInt()", () => {
     const bufferConsumer = new BufferConsumer(
-      Buffer.from("\x80\xff", "binary")
+      Buffer.from("\x80\xff", "binary"),
     );
 
     expect(bufferConsumer.readInt()).toBe(-128);
@@ -30,8 +30,8 @@ describe(getTestName(__filename), () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from(
         "\x10\x20\x30\x40\x50\x60\x70\x80\x80\x70\x60\x50\x40\x30\x20\x10",
-        "binary"
-      )
+        "binary",
+      ),
     );
 
     expect(bufferConsumer.readUBigInt()).toBe(9255003132036915216n);
@@ -42,8 +42,8 @@ describe(getTestName(__filename), () => {
     const bufferConsumer = new BufferConsumer(
       Buffer.from(
         "\x10\x20\x30\x40\x50\x60\x70\x80\x80\x70\x60\x50\x40\x30\x20\x10",
-        "binary"
-      )
+        "binary",
+      ),
     );
 
     expect(bufferConsumer.readBigInt()).toBe(-9191740941672636400n);
@@ -73,7 +73,7 @@ describe(getTestName(__filename), () => {
         0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         // 8-bytes bigint(0x80706050_40302010)
         0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80,
-      ])
+      ]),
     );
 
     expect(bufferConsumer.readIntEncoded()).toBe(0);
@@ -103,10 +103,10 @@ describe(getTestName(__filename), () => {
     const bufferConsumer = new BufferConsumer(Buffer.from("AA\0BB\0"));
 
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("AA")
+      Buffer.from("AA"),
     );
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("BB")
+      Buffer.from("BB"),
     );
   });
 
@@ -115,7 +115,7 @@ describe(getTestName(__filename), () => {
 
     expect(bufferConsumer.readString(4)).toStrictEqual(Buffer.from("Test"));
     expect(bufferConsumer.readString(3, true)).toStrictEqual(
-      Buffer.from("123")
+      Buffer.from("123"),
     );
     expect(bufferConsumer.readString(3)).toStrictEqual(Buffer.from("456"));
   });
@@ -149,50 +149,50 @@ describe(getTestName(__filename), () => {
           Buffer.from([0xfe, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0xff, 0x01]),
           bufferStr16M1,
         ]),
-      ])
+      ]),
     );
 
     expect(bufferConsumer.readStringEncoded()).toStrictEqual(Buffer.from(""));
     expect(bufferConsumer.readStringEncoded()).toStrictEqual(null);
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr1.length
+      bufferStr1.length,
     );
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr250.length
+      bufferStr250.length,
     );
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr255.length
+      bufferStr255.length,
     );
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr400.length
+      bufferStr400.length,
     );
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr100K.length
+      bufferStr100K.length,
     );
     expect(bufferConsumer.readStringEncoded()!.length).toStrictEqual(
-      bufferStr16M1.length
+      bufferStr16M1.length,
     );
   });
 
   test("slice()", () => {
     expect(
-      new BufferConsumer(Buffer.from("0012300")).skip(2).slice(3)
+      new BufferConsumer(Buffer.from("0012300")).skip(2).slice(3),
     ).toStrictEqual(Buffer.from("123"));
   });
 
   test("skip()", () => {
     expect(
-      new BufferConsumer(Buffer.from("00123")).skip(2).readString(3)
+      new BufferConsumer(Buffer.from("00123")).skip(2).readString(3),
     ).toStrictEqual(Buffer.from("123"));
   });
 
   test("consumed()", () => {
     expect(new BufferConsumer(Buffer.from("123")).skip(2).consumed()).toBe(
-      false
+      false,
     );
 
     expect(new BufferConsumer(Buffer.from("123")).skip(3).consumed()).toBe(
-      true
+      true,
     );
   });
 
@@ -205,24 +205,27 @@ describe(getTestName(__filename), () => {
 
   test("skipStringEncoded()", () => {
     const bufferConsumer = new BufferConsumer(
-      Buffer.from([0x00, 0xfb, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f])
+      Buffer.from([0x00, 0xfb, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]),
     );
 
     expect(
-      bufferConsumer.skipStringEncoded().skipStringEncoded().readStringEncoded()
+      bufferConsumer
+        .skipStringEncoded()
+        .skipStringEncoded()
+        .readStringEncoded(),
     ).toStrictEqual(Buffer.from("Hello"));
   });
 
   test("multiples", () => {
     const bufferConsumer = new BufferConsumer(
-      Buffer.from("\x10\x20\x30\x40\x50\x60Test\0\x00123", "binary")
+      Buffer.from("\x10\x20\x30\x40\x50\x60Test\0\x00123", "binary"),
     );
 
     expect(bufferConsumer.readUInt()).toBe(0x10);
     expect(bufferConsumer.readUInt(2)).toBe(0x3020);
     expect(bufferConsumer.readUInt(3)).toBe(0x605040);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("Test")
+      Buffer.from("Test"),
     );
 
     bufferConsumer.skip();
@@ -232,16 +235,16 @@ describe(getTestName(__filename), () => {
 
   test("initial handshake packet example", () => {
     const bufferConsumer = new BufferConsumer(
-      InitialHandshakePacketFixture.Example1
+      InitialHandshakePacketFixture.Example1,
     );
 
     expect(bufferConsumer.readUInt()).toBe(0x0a);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("example")
+      Buffer.from("example"),
     );
     expect(bufferConsumer.readUInt(4)).toBe(0x40302010);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("Scramble")
+      Buffer.from("Scramble"),
     );
     expect(bufferConsumer.readUInt(2)).toBe(0xf7fe);
     expect(bufferConsumer.readUInt()).toBe(0x2d);
@@ -251,10 +254,10 @@ describe(getTestName(__filename), () => {
     bufferConsumer.skip(6);
     expect(bufferConsumer.readUInt(4)).toBe(0x0000001d);
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("Scramble1234")
+      Buffer.from("Scramble1234"),
     );
     expect(bufferConsumer.readNullTerminatedString()).toStrictEqual(
-      Buffer.from("mysql_native_password")
+      Buffer.from("mysql_native_password"),
     );
   });
 });

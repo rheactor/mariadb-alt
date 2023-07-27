@@ -41,7 +41,7 @@ const createTypeBuffer = (type: number, unsigned = true): Buffer => {
 
 export const createExecutePacket = (
   preparedStatement: PreparedStatementResponse,
-  args: ExecuteArgument[]
+  args: ExecuteArgument[],
 ) => {
   const header = Buffer.allocUnsafe(10);
 
@@ -114,7 +114,7 @@ export const createExecutePacket = (
         parameter <= 0xffffffffffffffffn
       ) {
         values.push(
-          parameter >= 0 ? createUInt64LE(parameter) : createInt64LE(parameter)
+          parameter >= 0 ? createUInt64LE(parameter) : createInt64LE(parameter),
         );
         types.push(createTypeBuffer(FieldTypes.BIGINT, parameter >= 0));
       } else {
@@ -130,8 +130,8 @@ export const createExecutePacket = (
           parameter.getHours(),
           parameter.getMinutes(),
           parameter.getSeconds(),
-          parameter.getMilliseconds() * 1000
-        )
+          parameter.getMilliseconds() * 1000,
+        ),
       );
       types.push(createTypeBuffer(FieldTypes.DATETIME));
     } else if (parameter instanceof DateTimeFormat) {
@@ -143,13 +143,13 @@ export const createExecutePacket = (
           parameter.time.hours,
           parameter.time.minutes,
           parameter.time.seconds,
-          parameter.time.ms
-        )
+          parameter.time.ms,
+        ),
       );
       types.push(createTypeBuffer(FieldTypes.DATETIME));
     } else if (parameter instanceof DateFormat) {
       values.push(
-        toDatetimeEncoded(parameter.year, parameter.month, parameter.day)
+        toDatetimeEncoded(parameter.year, parameter.month, parameter.day),
       );
       types.push(createTypeBuffer(FieldTypes.DATETIME));
     } else if (parameter instanceof TimeFormat) {
@@ -158,8 +158,8 @@ export const createExecutePacket = (
           parameter.hours,
           parameter.minutes,
           parameter.seconds,
-          parameter.ms
-        )
+          parameter.ms,
+        ),
       );
       types.push(createTypeBuffer(FieldTypes.TIME));
     } else if (typeof parameter === "boolean") {

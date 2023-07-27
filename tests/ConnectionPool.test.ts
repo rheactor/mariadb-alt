@@ -72,13 +72,13 @@ describe(getTestName(__filename), () => {
       expect.assertions(4);
 
       const query1 = connectionPool.query<TimeSleepResultSet>(
-        "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
+        "SELECT NOW() AS time, SLEEP(0.1) AS sleep",
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
       const query2 = connectionPool.query<TimeSleepResultSet>(
-        "SELECT NOW() AS time, NULL AS sleep"
+        "SELECT NOW() AS time, NULL AS sleep",
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -90,7 +90,7 @@ describe(getTestName(__filename), () => {
           const set2 = [...result2][0]!;
 
           expect(set2.time.toNativeDate().getTime()).toBeLessThan(
-            set1.time.toNativeDate().getTime()
+            set1.time.toNativeDate().getTime(),
           );
 
           return true;
@@ -121,13 +121,13 @@ describe(getTestName(__filename), () => {
       expect.assertions(6);
 
       const query1 = connectionPool.query<TimeSleepResultSet>(
-        "SELECT NOW() AS time, SLEEP(0.1) AS sleep"
+        "SELECT NOW() AS time, SLEEP(0.1) AS sleep",
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
 
       const query2 = connectionPool.query<TimeSleepResultSet>(
-        "SELECT NOW() AS time, NULL AS sleep"
+        "SELECT NOW() AS time, NULL AS sleep",
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -142,7 +142,7 @@ describe(getTestName(__filename), () => {
           const set2 = [...result2][0]!;
 
           expect(set2.time.toNativeDate().getTime()).toBeGreaterThan(
-            set1.time.toNativeDate().getTime()
+            set1.time.toNativeDate().getTime(),
           );
 
           return true;
@@ -235,7 +235,7 @@ describe(getTestName(__filename), () => {
         expect(connection.wasUsed).toBe(true);
 
         return connection.query<{ "@REFERENCE_VALUE": number }>(
-          "SELECT @REFERENCE_VALUE"
+          "SELECT @REFERENCE_VALUE",
         );
       });
 
@@ -245,10 +245,10 @@ describe(getTestName(__filename), () => {
           expect(connection.wasUsed).toBe(false);
 
           return connection.query<{ "@REFERENCE_VALUE": null }>(
-            "SELECT @REFERENCE_VALUE"
+            "SELECT @REFERENCE_VALUE",
           );
         },
-        { renew: true }
+        { renew: true },
       );
 
       const [, result2, result3] = await Promise.all([query1, query2, query3]);
@@ -275,7 +275,7 @@ describe(getTestName(__filename), () => {
       expect.assertions(15);
 
       const query1 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.01)")
+        connection.query("SELECT SLEEP(0.01)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -283,7 +283,7 @@ describe(getTestName(__filename), () => {
       expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
 
       const query2 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.02)")
+        connection.query("SELECT SLEEP(0.02)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -292,7 +292,7 @@ describe(getTestName(__filename), () => {
 
       const query3 = connectionPool.acquire(
         async (connection) => connection.query("SELECT SLEEP(0.03)"),
-        { immediate: true }
+        { immediate: true },
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -300,7 +300,7 @@ describe(getTestName(__filename), () => {
       expect(connectionPool.debug.acquisitionQueueSize).toBe(1);
 
       const query4 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.04)")
+        connection.query("SELECT SLEEP(0.04)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -333,7 +333,7 @@ describe(getTestName(__filename), () => {
       expect.assertions(15);
 
       const query1 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.01)")
+        connection.query("SELECT SLEEP(0.01)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -341,7 +341,7 @@ describe(getTestName(__filename), () => {
       expect(connectionPool.debug.acquisitionQueueSize).toBe(0);
 
       const query2 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.02)")
+        connection.query("SELECT SLEEP(0.02)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -350,7 +350,7 @@ describe(getTestName(__filename), () => {
 
       const query3 = connectionPool.acquire(
         async (connection) => connection.query("SELECT SLEEP(0.03)"),
-        { immediate: true }
+        { immediate: true },
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -358,7 +358,7 @@ describe(getTestName(__filename), () => {
       expect(connectionPool.debug.acquisitionQueueSize).toBe(2);
 
       const query4 = connectionPool.acquire(async (connection) =>
-        connection.query("SELECT SLEEP(0.04)")
+        connection.query("SELECT SLEEP(0.04)"),
       );
 
       expect(connectionPool.debug.idleConnectionsCount).toBe(0);
@@ -390,11 +390,11 @@ describe(getTestName(__filename), () => {
       });
 
       await connectionPool.execute(
-        "SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2"
+        "SET @REFERENCE_VALUE = @REFERENCE_VALUE * 2",
       );
 
       expect(
-        [...(await connectionPool!.query("SELECT @REFERENCE_VALUE AS a"))][0]
+        [...(await connectionPool!.query("SELECT @REFERENCE_VALUE AS a"))][0],
       ).toStrictEqual({ a: 492n });
     });
 
@@ -412,7 +412,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() with only PacketResultSet`, async () => {
       const [query1, query2] = (await connectionPool.batchQueryRaw(
-        "SELECT 1, 2; SELECT 3"
+        "SELECT 1, 2; SELECT 3",
       )) as [PacketResultSet, PacketResultSet];
 
       expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -421,7 +421,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() with only PacketOK`, async () => {
       const [result1, result2] = (await connectionPool.batchQueryRaw(
-        "DO NULL; DO NULL"
+        "DO NULL; DO NULL",
       )) as [PacketOk, PacketOk];
 
       expect(result1.serverStatus).toBe(0x0a);
@@ -430,7 +430,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
       const [query1, result2, query3] = (await connectionPool.batchQueryRaw(
-        "SELECT 1, 2; DO NULL; SELECT 3"
+        "SELECT 1, 2; DO NULL; SELECT 3",
       )) as [PacketResultSet, PacketOk, PacketResultSet];
 
       expect([...query1.getRows()]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -440,7 +440,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
       const [result1, query2, result3] = (await connectionPool.batchQueryRaw(
-        "DO NULL; SELECT 1, 2; DO NULL"
+        "DO NULL; SELECT 1, 2; DO NULL",
       )) as [PacketOk, PacketResultSet, PacketOk];
 
       expect(result1.serverStatus).toBe(0x0a);
@@ -450,7 +450,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchQuery()`, async () => {
       const [query1, query2] = await connectionPool.batchQuery(
-        "SELECT 1, 2; SELECT 3"
+        "SELECT 1, 2; SELECT 3",
       );
 
       expect([...query1!]).toStrictEqual([{ 1: 1, 2: 2 }]);
@@ -459,7 +459,7 @@ describe(getTestName(__filename), () => {
 
     test(`batchExecute()`, async () => {
       const [result1, result2] = await connectionPool.batchExecute(
-        "DO NULL; DO NULL"
+        "DO NULL; DO NULL",
       );
 
       expect(result1!.serverStatus).toBe(0x0a);

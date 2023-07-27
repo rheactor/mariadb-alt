@@ -24,7 +24,7 @@ export const createPacket = (input: Buffer, sequence: number) => {
         0,
         // Sequence: next.
         (sequence + packets.length) & 0xff,
-      ])
+      ]),
     );
   }
 

@@ -67,7 +67,7 @@ export class ConnectionPool {
 
   public constructor(
     options: ConstructorParameters<typeof Connection>[0] &
-      Partial<ConnectionPoolOptions>
+      Partial<ConnectionPoolOptions>,
   ) {
     this.#options = {
       host: "localhost",
@@ -98,7 +98,7 @@ export class ConnectionPool {
   /** Acquire an exclusive idle connection. */
   public async acquire<T>(
     acquireCallback: AcquireCallback<T>,
-    options: AcquireOptions = {}
+    options: AcquireOptions = {},
   ): Promise<T> {
     const connection = this.#idleConnections.pop();
 
@@ -114,7 +114,7 @@ export class ConnectionPool {
       ) {
         return this.#acquireWith<T>(
           acquireCallback,
-          this.#initializeConnection()
+          this.#initializeConnection(),
         );
       }
 
@@ -127,7 +127,7 @@ export class ConnectionPool {
       return connection
         .reset()
         .then(async () =>
-          this.#acquireWith<T>(acquireCallback, this.#initializeConnection())
+          this.#acquireWith<T>(acquireCallback, this.#initializeConnection()),
         );
     }
 
@@ -140,7 +140,7 @@ export class ConnectionPool {
 
   public async query<T extends object = Row>(
     sql: string,
-    args?: ExecuteArgument[]
+    args?: ExecuteArgument[],
   ) {
     return this.acquire(async (connection) => connection.query<T>(sql, args));
   }
@@ -164,8 +164,8 @@ export class ConnectionPool {
   public async close() {
     return Promise.all(
       [...this.#connections.keys()].map(async (connection) =>
-        connection.close()
-      )
+        connection.close(),
+      ),
     );
   }
 
@@ -199,7 +199,7 @@ export class ConnectionPool {
 
   async #acquireWith<T>(
     acquireCallback: AcquireCallback<T>,
-    connection: Connection
+    connection: Connection,
   ) {
     const connectionTimer = this.#connections.get(connection)!;
 
@@ -221,7 +221,7 @@ export class ConnectionPool {
       if (acquisitionQueued !== undefined) {
         const result = await this.acquire(
           acquisitionQueued.acquireCallback,
-          acquisitionQueued.options
+          acquisitionQueued.options,
         );
 
         acquisitionQueued.resolve(result);

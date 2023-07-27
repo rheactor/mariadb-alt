@@ -34,7 +34,7 @@ describe(getTestName(__filename), () => {
         expect(packetError.state).toBe(errorState);
         expect(packetError.message).toBe(errorMessage);
       });
-    }
+    },
   );
 
   type IsUnit = [UnitName, Packet, boolean];

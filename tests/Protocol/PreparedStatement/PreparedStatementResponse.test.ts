@@ -16,7 +16,7 @@ describe(getTestName(__filename), () => {
         0x00,
         // Warning count: 2,
         0x02, 0x00,
-      ])
+      ]),
     );
 
     expect(preparedStatementResponse.statementId).toBe(1);

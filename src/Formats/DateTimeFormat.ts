@@ -18,7 +18,7 @@ export class DateTimeFormat {
     hours: number,
     minutes: number,
     seconds: number,
-    ms: number
+    ms: number,
   ): DateTimeFormat {
     const instance = new DateTimeFormat();
 
@@ -46,7 +46,7 @@ export class DateTimeFormat {
       this.time.hours,
       this.time.minutes,
       this.time.seconds,
-      this.time.ms
+      this.time.ms,
     );
   }
 }

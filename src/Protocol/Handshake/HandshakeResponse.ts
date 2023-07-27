@@ -17,13 +17,15 @@ export const createHandshakeResponse = (
   authSeed: Buffer,
   authPluginName: Buffer,
   options: Pick<ConnectionOptions, "database" | "password" | "user">,
-  maxPacketSize: number
+  maxPacketSize: number,
 ) => {
   const bufferAuthentication =
     options.password === undefined || options.password === ""
       ? Buffer.from([0])
       : toStringEncoded(
-          hashMySQLNativePassword(authSeed, options.password).toString("binary")
+          hashMySQLNativePassword(authSeed, options.password).toString(
+            "binary",
+          ),
         );
 
   return Buffer.concat([
