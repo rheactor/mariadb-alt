@@ -15,5 +15,9 @@ export const toNumber = (
     return Number(value);
   }
 
-  return toNumber(BigInt(value));
+  try {
+    return toNumber(BigInt(value));
+  } catch {
+    return undefined;
+  }
 };

@@ -17,7 +17,7 @@ const defaultConnection = {
 export const TestConnection = (options?: TestConnectionOptions) => {
   const connection = new Connection({
     ...defaultConnection,
-    ...(options ?? {}),
+    ...options,
   });
 
   return connection;
@@ -33,7 +33,7 @@ export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
     connections: 2,
 
     ...defaultConnection,
-    ...(options ?? {}),
+    ...options,
   });
 
   return connection;

@@ -1,5 +1,5 @@
-export const InitialHandshakePacketFixture = {
-  Example1: Buffer.from([
+export const initialHandshakePacketSamples = {
+  sampleA: Buffer.from([
     // Protocol version: 1-byte int.
     0x0a,
     // Server version: NTS ("example").
