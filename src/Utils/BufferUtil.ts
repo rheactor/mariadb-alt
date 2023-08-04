@@ -6,7 +6,7 @@ export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
   const nullIndexOf = data.indexOf("\0", byteOffset);
 
   if (nullIndexOf === -1) {
-    throw Error("expected a NULL-terminated string");
+    throw new Error("expected a NULL-terminated string");
   }
 
   return data.subarray(byteOffset, nullIndexOf);
@@ -17,7 +17,7 @@ export const toNullTerminatedStringEscaped = (data: string | null) => {
     return Buffer.from([0x00]);
   }
 
-  return Buffer.from(`${data.replaceAll("\x00", "\x00\x00")}\x00`);
+  return Buffer.from(`${data.replaceAll("\u0000", "\u0000\u0000")}\u0000`);
 };
 
 export const toStringEncoded = (value: Buffer | string | null) => {
@@ -178,11 +178,11 @@ export const toIntEncoded = (value: bigint | number | null) => {
   }
 
   if (value > 0xfa) {
-    if (value > 0xffffff) {
+    if (value > 0xff_ff_ff) {
       return toBigIntEncoded(BigInt(value));
     }
 
-    const inputBigger = Number(value > 0xffff);
+    const inputBigger = Number(value > 0xff_ff);
     const bufferInt = Buffer.allocUnsafe(3 + inputBigger);
 
     bufferInt.writeUInt8(0xfc + inputBigger);
@@ -196,13 +196,13 @@ export const toIntEncoded = (value: bigint | number | null) => {
 
 export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
   if (bufferA.length !== bufferB.length) {
-    throw Error("both Buffer instances must have the same size");
+    throw new Error("both Buffer instances must have the same size");
   }
 
   const bufferResult = Buffer.allocUnsafe(bufferA.length);
 
-  for (let i = 0; i < bufferA.length; i++) {
-    bufferResult[i] = bufferA[i]! ^ bufferB[i]!;
+  for (const [index, element] of bufferA.entries()) {
+    bufferResult[index] = element ^ bufferB[index]!;
   }
 
   return bufferResult;
@@ -282,11 +282,11 @@ export const getNullPositions = (
   let currentByte = 0;
   let currentBit = offset;
 
-  for (let i = 0; i < fieldsCount; i++) {
+  for (let index = 0; index < fieldsCount; index++) {
     const byte = nullBitmap[currentByte]!;
 
     if ((byte & (1 << currentBit)) !== 0) {
-      positions.push(i);
+      positions.push(index);
     }
 
     if (++currentBit > 7) {
@@ -299,13 +299,15 @@ export const getNullPositions = (
 };
 
 export const generateNullBitmap = (args: unknown[]): Buffer => {
-  const nullBitmap: number[] = Array(Math.floor((args.length + 7) / 8)).fill(0);
+  const nullBitmap = Array.from({
+    length: Math.floor((args.length + 7) / 8),
+  }).fill(0) as number[];
 
-  for (let i = 0; i < args.length; i++) {
-    if (args[i] === null) {
-      const bit = Math.floor(i / 8);
+  for (const [index, argument] of args.entries()) {
+    if (argument === null) {
+      const bit = Math.floor(index / 8);
 
-      nullBitmap[bit] |= 1 << (i - bit * 8);
+      nullBitmap[bit] |= 1 << (index - bit * 8);
     }
   }
 
@@ -319,10 +321,10 @@ export const chunk = (buffer: Buffer, size: number) => {
 
   const buffers: Buffer[] = [];
 
-  for (let i = 0; i < buffer.length; i += size) {
-    const blockSize = Math.min(buffer.length - i, size);
+  for (let index = 0; index < buffer.length; index += size) {
+    const blockSize = Math.min(buffer.length - index, size);
 
-    buffers.push(buffer.subarray(i, i + blockSize));
+    buffers.push(buffer.subarray(index, index + blockSize));
   }
 
   return buffers;

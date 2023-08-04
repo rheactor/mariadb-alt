@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-event-target */
 import { Socket } from "node:net";
 
 import { ConnectionException } from "@/Exceptions/ConnectionException";
@@ -20,8 +21,8 @@ import {
   type PacketType,
 } from "@/Protocol/PacketReassembler/PacketReassembler";
 import { type Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
-import { ReassemblerPSResponse } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPSResponse";
-import { ReassemblerPSResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPSResultSet";
+import { ReassemblerPreparedStatementResponse } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResponse";
+import { ReassemblerPreparedStatementResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResultSet";
 import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
 import {
   createClosePacket,
@@ -126,7 +127,7 @@ abstract class ConnectionEvents {
 
   public emit(
     eventName: ConnectionEventsCommon | ConnectionEventsError,
-    ...args: Parameters<EventEmitter["emit"]>[1]
+    ...args: unknown[]
   ): void {
     this.#eventsEmitter.emit(eventName, ...args);
   }
@@ -170,9 +171,9 @@ export class Connection extends ConnectionEvents {
       this.#authenticate(data);
     });
 
-    socket.once("error", (err) => {
+    socket.once("error", (error) => {
       this.status = Status.ERROR;
-      this.emit("error", this, err);
+      this.emit("error", this, error);
     });
 
     socket.once("close", () => {
@@ -210,19 +211,19 @@ export class Connection extends ConnectionEvents {
 
   public async queryRaw(sql: string, args?: ExecuteArgument[]) {
     if (args !== undefined && args.length > 0) {
-      if (args.length > 0xffff) {
+      if (args.length > 0xff_ff) {
         throw new TooManyArgumentsException(
-          `Prepared Statements supports only ${0xffff} arguments`,
+          `Prepared Statements supports only ${0xff_ff} arguments`,
         );
       }
 
       return this.#commandQueue(
         Buffer.concat([Buffer.from([0x16]), Buffer.from(sql)]),
-        ReassemblerPSResponse,
+        ReassemblerPreparedStatementResponse,
         0,
         CommandLock.LOCK,
       )
-        .catch((packetError) => {
+        .catch((packetError: PacketError) => {
           throw new QueryException(packetError.message).setDetails(
             packetError.code,
             { packetError },
@@ -232,7 +233,10 @@ export class Connection extends ConnectionEvents {
           const response = packet as PreparedStatementResponse;
 
           if (response.parametersCount > args.length) {
-            this.#commandQueue(createClosePacket(response.statementId), false);
+            void this.#commandQueue(
+              createClosePacket(response.statementId),
+              false,
+            );
 
             throw new FewArgumentsException(
               `Prepared Statement number of arguments is ${response.parametersCount}, but received ${args.length}`,
@@ -245,19 +249,19 @@ export class Connection extends ConnectionEvents {
           return (
             this.#commandQueue(
               createExecutePacket(response, args),
-              ReassemblerPSResultSet,
+              ReassemblerPreparedStatementResultSet,
               0,
               CommandLock.RELEASE,
             )
               // eslint-disable-next-line promise/no-nesting
-              .catch((packetError) => {
+              .catch((packetError: PacketError) => {
                 throw new QueryException(packetError.message).setDetails(
                   packetError.code,
                   { packetError },
                 );
               })
               .then(([data]) => {
-                this.#commandQueue(
+                void this.#commandQueue(
                   createClosePacket(response.statementId),
                   false,
                 );
@@ -269,7 +273,7 @@ export class Connection extends ConnectionEvents {
     }
 
     return this.batchQueryRaw(sql)
-      .catch((packetError) => {
+      .catch((packetError: PacketError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
           { packetError },
@@ -296,7 +300,7 @@ export class Connection extends ConnectionEvents {
 
   public async execute(sql: string, args?: ExecuteArgument[]) {
     return this.queryRaw(sql, args)
-      .catch((packetError) => {
+      .catch((packetError: PacketError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
           { packetError },
@@ -320,7 +324,7 @@ export class Connection extends ConnectionEvents {
 
   public async batchQuery<T extends object = Row>(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((packetError) => {
+      .catch((packetError: PacketError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
           { packetError },
@@ -339,7 +343,7 @@ export class Connection extends ConnectionEvents {
 
   public async batchExecute(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((packetError) => {
+      .catch((packetError: PacketError) => {
         throw new QueryException(packetError.message).setDetails(
           packetError.code,
           { packetError },
@@ -365,7 +369,7 @@ export class Connection extends ConnectionEvents {
 
     return new Promise((resolve) => {
       this.#socket.once("end", resolve);
-      this.#commandQueue(Buffer.from([0x01]));
+      void this.#commandQueue(Buffer.from([0x01]));
     });
   }
 
@@ -375,7 +379,7 @@ export class Connection extends ConnectionEvents {
 
   async #commandQueue(
     buffer: Buffer,
-    reassembler: typeof Reassembler | false | undefined = undefined,
+    reassembler?: typeof Reassembler | false | undefined,
     sequence = 0,
     lock = CommandLock.FREE,
   ) {
@@ -421,7 +425,7 @@ export class Connection extends ConnectionEvents {
     this.#wasUsed = true;
 
     // eslint-disable-next-line promise/catch-or-return
-    this.#send(command).finally(() => {
+    void this.#send(command).finally(() => {
       this.status = Status.READY;
 
       if (command.lock === CommandLock.RELEASE) {
@@ -438,7 +442,7 @@ export class Connection extends ConnectionEvents {
     if (command.reassembler === false) {
       this.#socket.write(createPacket(command.buffer, command.sequence));
 
-      return undefined;
+      return;
     }
 
     return new Promise<void>((resolve) => {
@@ -475,10 +479,10 @@ export class Connection extends ConnectionEvents {
       handshake.authSeed,
       handshake.authPluginName,
       this.#options,
-      0xffffffff,
+      0xff_ff_ff_ff,
     );
 
-    this.#send(
+    void this.#send(
       new ConnectionCommand(
         handshakeResponse,
         async () => {
@@ -506,7 +510,8 @@ export class Connection extends ConnectionEvents {
               { packetError },
             ),
           );
-          this.close();
+
+          void this.close();
         },
         undefined,
         1,

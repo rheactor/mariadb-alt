@@ -1,6 +1,6 @@
 /** @see https://mariadb.com/kb/en/connection/#capabilities */
 export const CapabilitiesBase = {
-  CLIENT_MYSQL: 1 << 0,
+  CLIENT_MYSQL: 1,
   FOUND_ROWS: 1 << 1,
   CONNECT_WITH_DB: 1 << 3,
   // UNUSED: 1 << 4,
@@ -18,7 +18,7 @@ export const CapabilitiesBase = {
 };
 
 export const CapabilitiesExtended = {
-  MULTI_STATEMENTS: 1 << 0,
+  MULTI_STATEMENTS: 1,
   MULTI_RESULTS: 1 << 1,
   PS_MULTI_RESULTS: 1 << 2,
   PLUGIN_AUTH: 1 << 3,
@@ -37,7 +37,7 @@ export const CapabilitiesExtended = {
 };
 
 export const CapabilitiesMariaDB = {
-  MARIADB_CLIENT_PROGRESS: 1 << 0,
+  MARIADB_CLIENT_PROGRESS: 1,
   MARIADB_CLIENT_RESERVED_1: 1 << 1,
   MARIADB_CLIENT_STMT_BULK_OPERATIONS: 1 << 2,
   MARIADB_CLIENT_EXTENDED_METADATA: 1 << 3,
@@ -91,12 +91,12 @@ export const FieldFlags = {
   //
   NO_DEFAULT_VALUE_FLAG: 4096,
   ON_UPDATE_NOW_FLAG: 8192,
-  NUM_FLAG: 32768,
+  NUM_FLAG: 32_768,
 };
 
 /** @see https://dev.mysql.com/doc/dev/mysql-server/latest/mysql__com_8h.html#a1d854e841086925be1883e4d7b4e8cad */
 export const ServerStatus = {
-  IN_TRANSACTION: 1 << 0,
+  IN_TRANSACTION: 1,
   AUTO_COMMIT: 1 << 1,
   // UNUSED: 1 << 2,
   MORE_RESULTS: 1 << 3,

@@ -1,4 +1,4 @@
-import type { Config } from "jest";
+import { type Config } from "jest";
 
 export const jestConfig = (sourcePath = "src"): Config => ({
   moduleNameMapper: {

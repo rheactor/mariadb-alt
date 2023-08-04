@@ -5,7 +5,7 @@ import {
 } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
 import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 
-export class ReassemblerPSResponse extends Reassembler {
+export class ReassemblerPreparedStatementResponse extends Reassembler {
   #packet: Buffer | undefined = undefined;
 
   #intermediateEOFFound = false;

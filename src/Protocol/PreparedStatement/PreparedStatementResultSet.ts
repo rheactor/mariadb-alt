@@ -23,7 +23,7 @@ export class PreparedStatementResultSet {
     if (this.#fields === undefined) {
       this.#fields = [];
 
-      for (let i = 0; i < this.fieldsCount; i++) {
+      for (let index = 0; index < this.fieldsCount; index++) {
         this.#fields.push(readField(this.#bufferConsumer));
       }
     }
@@ -49,68 +49,77 @@ export class PreparedStatementResultSet {
         PS_RESULT_ROW_OFFSET,
       );
 
-      for (let i = 0; i < fieldsLength; i++) {
-        const field = fields[i]!;
+      for (let index = 0; index < fieldsLength; index++) {
+        const field = fields[index]!;
 
-        if (nullPositions.includes(i)) {
+        if (nullPositions.includes(index)) {
           row[field.name] = null;
           continue;
         }
 
         switch (field.type) {
-          case FieldTypes.INT:
+          case FieldTypes.INT: {
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUInt(4)
                 : this.#bufferConsumer.readInt(4);
             break;
+          }
 
-          case FieldTypes.SMALLINT:
+          case FieldTypes.SMALLINT: {
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUInt(2)
                 : this.#bufferConsumer.readInt(2);
             break;
+          }
 
-          case FieldTypes.TINYINT:
+          case FieldTypes.TINYINT: {
             row[field.name] =
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUInt()
                 : this.#bufferConsumer.readInt();
             break;
+          }
 
-          case FieldTypes.DECIMAL:
+          case FieldTypes.DECIMAL: {
             row[field.name] = toNumber(
               this.#bufferConsumer.readStringEncoded()!.toString(),
             )!;
             break;
+          }
 
-          case FieldTypes.VARCHAR:
+          case FieldTypes.VARCHAR: {
             row[field.name] = this.#bufferConsumer
               .readStringEncoded()!
               .toString();
             break;
+          }
 
           case FieldTypes.BLOB:
-          case FieldTypes.LONGBLOB:
+          case FieldTypes.LONGBLOB: {
             row[field.name] = this.#bufferConsumer.readStringEncoded();
             break;
+          }
 
-          case FieldTypes.BIGINT:
+          case FieldTypes.BIGINT: {
             row[field.name] = toNumber(
               (field.flags & FieldFlags.UNSIGNED) === FieldFlags.UNSIGNED
                 ? this.#bufferConsumer.readUBigInt()
                 : this.#bufferConsumer.readBigInt(),
             )!;
             break;
+          }
 
-          case FieldTypes.DATETIME:
+          case FieldTypes.DATETIME: {
             row[field.name] = this.#bufferConsumer.readDatetimeEncoded();
             break;
+          }
 
-          case FieldTypes.TIME:
+          case FieldTypes.TIME: {
             row[field.name] = this.#bufferConsumer.readTimeEncoded();
             break;
+          }
 
           default: // empty
         }

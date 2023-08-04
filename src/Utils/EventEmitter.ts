@@ -33,19 +33,17 @@ export class EventEmitter {
   }
 
   /** Emit an event by name. */
-  public emit(
-    event: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...args: any[]
-  ) {
+  public emit(event: string, ...args: unknown[]) {
     const events = this.#events.get(event);
 
-    events?.forEach((ev) => {
-      ev.callback(...args);
+    if (events) {
+      for (const ev of events.values()) {
+        ev.callback(...args);
 
-      if (ev.once) {
-        events.delete(ev.eventId);
+        if (ev.once) {
+          events.delete(ev.eventId);
+        }
       }
-    });
+    }
   }
 }

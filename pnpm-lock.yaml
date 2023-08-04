@@ -13,7 +13,7 @@ devDependencies:
     version: 7.22.5(@babel/core@7.22.9)
   '@rheactor/eslint-config-rheactor':
     specifier: github:rheactor/eslint-config-rheactor
-    version: github.com/rheactor/eslint-config-rheactor/7909aed8a6ed79c8616b7cab5590aab1eabd2597(jest@29.6.2)(tailwindcss@3.3.3)(typescript@5.1.6)
+    version: github.com/rheactor/eslint-config-rheactor/8ca1fe3267ef8bdaf61ed34edcdf687b171ee4f0(jest@29.6.2)(tailwindcss@3.3.3)(typescript@5.1.6)
   '@swc/cli':
     specifier: ^0.1.62
     version: 0.1.62(@swc/core@1.3.74)
@@ -6924,9 +6924,9 @@ packages:
     resolution: {integrity: sha512-m46AKbrzKVzOzs/DZgVnG5H55N1sv1M8qZU3A8RIKbs3mrACDNeIOeilDymVb2HdmP8uwshOCF4uJ8uM9rCqJw==}
     dev: true
 
-  github.com/rheactor/eslint-config-rheactor/7909aed8a6ed79c8616b7cab5590aab1eabd2597(jest@29.6.2)(tailwindcss@3.3.3)(typescript@5.1.6):
-    resolution: {tarball: https://codeload.github.com/rheactor/eslint-config-rheactor/tar.gz/7909aed8a6ed79c8616b7cab5590aab1eabd2597}
-    id: github.com/rheactor/eslint-config-rheactor/7909aed8a6ed79c8616b7cab5590aab1eabd2597
+  github.com/rheactor/eslint-config-rheactor/8ca1fe3267ef8bdaf61ed34edcdf687b171ee4f0(jest@29.6.2)(tailwindcss@3.3.3)(typescript@5.1.6):
+    resolution: {tarball: https://codeload.github.com/rheactor/eslint-config-rheactor/tar.gz/8ca1fe3267ef8bdaf61ed34edcdf687b171ee4f0}
+    id: github.com/rheactor/eslint-config-rheactor/8ca1fe3267ef8bdaf61ed34edcdf687b171ee4f0
     name: '@rheactor/eslint-config-rheactor'
     version: 1.0.0
     peerDependencies:

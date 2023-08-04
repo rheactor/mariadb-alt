@@ -35,9 +35,8 @@ const enum TypeFlag {
   UNSIGNED = 128,
 }
 
-const createTypeBuffer = (type: number, unsigned = true): Buffer => {
-  return Buffer.from([type, unsigned ? TypeFlag.UNSIGNED : 0]);
-};
+const createTypeBuffer = (type: number, unsigned = true): Buffer =>
+  Buffer.from([type, unsigned ? TypeFlag.UNSIGNED : 0]);
 
 export const createExecutePacket = (
   preparedStatement: PreparedStatementResponse,
@@ -54,20 +53,20 @@ export const createExecutePacket = (
   const types: Buffer[] = [];
   const values: Buffer[] = [];
 
-  for (let i = 0; i < preparedStatement.parametersCount; i++) {
-    const parameter = args[i] as ExecuteArgument;
+  for (let index = 0; index < preparedStatement.parametersCount; index++) {
+    const parameter = args[index];
 
     if (parameter === null || parameter === undefined) {
       types.push(createTypeBuffer(FieldTypes.NULL));
     } else if (typeof parameter === "number") {
       if (Number.isSafeInteger(parameter)) {
         // BIGINT > 0xFFFFFFFF
-        if (parameter > 0xffffffff) {
+        if (parameter > 0xff_ff_ff_ff) {
           values.push(createUInt64LE(BigInt(parameter)));
           types.push(createTypeBuffer(FieldTypes.BIGINT));
         }
         // INT, MEDIUMINT > 0xFFFF
-        else if (parameter > 0xffff) {
+        else if (parameter > 0xff_ff) {
           values.push(createUInt32LE(parameter));
           types.push(createTypeBuffer(FieldTypes.INT));
         }
@@ -87,12 +86,12 @@ export const createExecutePacket = (
           types.push(createTypeBuffer(FieldTypes.TINYINT, false));
         }
         // Negative SMALLINT >= -0x7FFF
-        else if (parameter >= -0x7fff) {
+        else if (parameter >= -0x7f_ff) {
           values.push(createInt16LE(parameter));
           types.push(createTypeBuffer(FieldTypes.SMALLINT, false));
         }
         // Negative INT, MEDIUMINT >= -0x7FFFFFFF
-        else if (parameter >= -0x7fffffff) {
+        else if (parameter >= -0x7f_ff_ff_ff) {
           values.push(createInt32LE(parameter));
           types.push(createTypeBuffer(FieldTypes.INT, false));
         }
@@ -110,8 +109,8 @@ export const createExecutePacket = (
       types.push(createTypeBuffer(FieldTypes.VARCHAR));
     } else if (typeof parameter === "bigint") {
       if (
-        parameter >= -0x7fffffffffffffffn &&
-        parameter <= 0xffffffffffffffffn
+        parameter >= -0x7f_ff_ff_ff_ff_ff_ff_ffn &&
+        parameter <= 0xff_ff_ff_ff_ff_ff_ff_ffn
       ) {
         values.push(
           parameter >= 0 ? createUInt64LE(parameter) : createInt64LE(parameter),

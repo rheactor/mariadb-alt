@@ -1,5 +1,6 @@
-import { bufferXOR } from "@/Utils/BufferUtil";
 import { createHash } from "node:crypto";
+
+import { bufferXOR } from "@/Utils/BufferUtil";
 
 export const hashMySQLNativePassword = (
   authenticationSeed: Buffer,

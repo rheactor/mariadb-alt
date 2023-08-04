@@ -74,7 +74,7 @@ export class ConnectionPool {
       port: 3306,
       user: "root",
       connections: 20,
-      idleTimeout: 60000,
+      idleTimeout: 60_000,
       idleConnections:
         options.connections === undefined
           ? 10
@@ -82,7 +82,7 @@ export class ConnectionPool {
       ...options,
     };
 
-    for (let i = 0; i < this.#options.idleConnections; i++) {
+    for (let index = 0; index < this.#options.idleConnections; index++) {
       this.#initializeConnection();
     }
   }
@@ -170,18 +170,22 @@ export class ConnectionPool {
   }
 
   #initializeConnection() {
+    // eslint-disable-next-line unicorn/no-this-assignment, @typescript-eslint/no-this-alias
+    const that = this;
     const connection = new Connection({
       host: this.#options.host,
       port: this.#options.port,
       user: this.#options.user,
       password: this.#options.password,
       database: this.#options.database,
-      afterAuthenticated: this.#options.afterAuthenticated,
+      async afterAuthenticated() {
+        return that.#options.afterAuthenticated?.apply(this);
+      },
     });
 
     const connectionTimer = new TimerUtil(() => {
       if (this.#idleConnections.length > this.#options.idleConnections) {
-        connection.close();
+        void connection.close();
       }
     }, this.#options.idleTimeout);
 
@@ -208,7 +212,7 @@ export class ConnectionPool {
 
     return acquireCallback(connection).finally(async () => {
       if (this.#connections.size > this.#options.connections) {
-        connection.close();
+        void connection.close();
 
         return;
       }

@@ -1,4 +1,4 @@
-import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySQLNativePassword";
+import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword";
 import { getTestName } from "@Tests/Fixtures/Utils";
 
 describe(getTestName(__filename), () => {

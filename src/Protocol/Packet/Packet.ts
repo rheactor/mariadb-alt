@@ -3,7 +3,7 @@ import { chunk } from "@/Utils/BufferUtil";
 export const createPacket = (input: Buffer, sequence: number) => {
   const packets: Buffer[] = [];
 
-  for (const buffer of chunk(input, 0xffffff)) {
+  for (const buffer of chunk(input, 0xff_ff_ff)) {
     const packet = Buffer.alloc(4 + buffer.length);
 
     packet.writeUIntLE(buffer.length, 0, 3);
@@ -15,7 +15,7 @@ export const createPacket = (input: Buffer, sequence: number) => {
 
   // When the packet is sent exactly at the chunk boundary (16MB),
   // we need to send an additional empty packet.
-  if ((input.length & 0xffffff) === 0xffffff) {
+  if ((input.length & 0xff_ff_ff) === 0xff_ff_ff) {
     packets.push(
       Buffer.from([
         // Length: 0 bytes.

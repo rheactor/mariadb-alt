@@ -5,7 +5,7 @@ import {
   capabilitiesMariaDB,
   defaultCollation,
 } from "@/Protocol/Client";
-import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySQLNativePassword";
+import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword";
 import {
   createUInt16LE,
   createUInt32LE,
