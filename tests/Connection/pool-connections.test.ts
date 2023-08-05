@@ -1,5 +1,6 @@
 import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
 import { delay } from "@Tests/Fixtures/utils";
+import { expect, test } from "vitest";
 
 test("debug { idleConnections: 1, connections: 2, idleTimeout: 100 }", () => {
   const connectionPool = TestConnectionPool({
@@ -62,14 +63,14 @@ test("query(): force idle connection to be renewed", async () => {
   const query1 = connectionPool.acquire(async (connection) => {
     await delay(100);
 
-    expect(connection.wasUsed).toBe(false);
+    expect(connection.wasUsed).toBeFalsy();
 
     return connection.execute("SET @REFERENCE_VALUE := ?", [referenceValue]);
   });
 
   // Check if reference value stills is the same from previous acquire: it must be, because the connection is the same.
   const query2 = connectionPool.acquire(async (connection) => {
-    expect(connection.wasUsed).toBe(true);
+    expect(connection.wasUsed).toBeTruthy();
 
     return connection.query<{ "@REFERENCE_VALUE": number }>(
       "SELECT @REFERENCE_VALUE",
@@ -79,7 +80,7 @@ test("query(): force idle connection to be renewed", async () => {
   // Force renew, so reference value must be null now.
   const query3 = connectionPool.acquire(
     async (connection) => {
-      expect(connection.wasUsed).toBe(false);
+      expect(connection.wasUsed).toBeFalsy();
 
       return connection.query<{ "@REFERENCE_VALUE": null }>(
         "SELECT @REFERENCE_VALUE",

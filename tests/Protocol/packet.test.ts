@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { createPacket } from "@/Protocol/Packet/Packet";
 
 type Test = [input: number[], sequence: number, output: number[]];

@@ -1,10 +1,10 @@
-import { BigIntWrapper } from "@Tests/Fixtures/utils";
+import { expect, test } from "vitest";
 
 import { toNumber } from "@/Utils/NumberUtil";
 
 type NumberUnit = [
-  input: BigIntWrapper | Parameters<typeof toNumber>[0],
-  output: BigIntWrapper | number | undefined,
+  input: Parameters<typeof toNumber>[0],
+  output: bigint | number | undefined,
 ];
 
 const numbersUnits: NumberUnit[] = [
@@ -17,35 +17,17 @@ const numbersUnits: NumberUnit[] = [
   [-1.23, -1.23],
 
   // BigInt()
-  [new BigIntWrapper("123"), 123],
-  [
-    new BigIntWrapper(0xff_ff_ff_ff_ff_ff_ff_ffn.toString()),
-    new BigIntWrapper(0xff_ff_ff_ff_ff_ff_ff_ffn.toString()),
-  ],
-  [
-    new BigIntWrapper((-0xff_ff_ff_ff_ff_ff_ff_ffn).toString()),
-    new BigIntWrapper((-0xff_ff_ff_ff_ff_ff_ff_ffn).toString()),
-  ],
-  [
-    new BigIntWrapper(Number.MIN_SAFE_INTEGER.toString()),
-    Number.MIN_SAFE_INTEGER,
-  ],
-  [
-    new BigIntWrapper(Number.MAX_SAFE_INTEGER.toString()),
-    Number.MAX_SAFE_INTEGER,
-  ],
+  [123n, 123],
+  [0xff_ff_ff_ff_ff_ff_ff_ffn, 0xff_ff_ff_ff_ff_ff_ff_ffn],
+  [-0xff_ff_ff_ff_ff_ff_ff_ffn, -0xff_ff_ff_ff_ff_ff_ff_ffn],
+  [BigInt(Number.MIN_SAFE_INTEGER), Number.MIN_SAFE_INTEGER],
+  [BigInt(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER],
 
   // Integer strings.
   ["123", 123],
   ["-123", -123],
-  [
-    0xff_ff_ff_ff_ff_ff_ff_ffn.toString(),
-    new BigIntWrapper(0xff_ff_ff_ff_ff_ff_ff_ffn.toString()),
-  ],
-  [
-    (-0xff_ff_ff_ff_ff_ff_ff_ffn).toString(),
-    new BigIntWrapper((-0xff_ff_ff_ff_ff_ff_ff_ffn).toString()),
-  ],
+  [0xff_ff_ff_ff_ff_ff_ff_ffn.toString(), 0xff_ff_ff_ff_ff_ff_ff_ffn],
+  [(-0xff_ff_ff_ff_ff_ff_ff_ffn).toString(), -0xff_ff_ff_ff_ff_ff_ff_ffn],
 
   // Float strings.
   ["1.23", 1.23],
@@ -57,8 +39,6 @@ const numbersUnits: NumberUnit[] = [
   ["abc", undefined],
 ];
 
-test.each(numbersUnits)("call toNumber(%j) === %j", (input, converted) => {
-  expect(toNumber(input instanceof BigIntWrapper ? input.cast() : input)).toBe(
-    converted instanceof BigIntWrapper ? converted.cast() : converted,
-  );
+test.each(numbersUnits)("call toNumber(%s) === %s", (input, converted) => {
+  expect(toNumber(input)).toBe(converted);
 });

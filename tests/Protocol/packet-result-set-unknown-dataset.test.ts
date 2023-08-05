@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
 
 test('call PacketResultSet.transform("") === unknown metadata', () => {

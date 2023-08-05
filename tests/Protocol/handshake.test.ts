@@ -1,4 +1,5 @@
 import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples";
+import { expect, test } from "vitest";
 
 import { Handshake } from "@/Protocol/Handshake/Handshake";
 

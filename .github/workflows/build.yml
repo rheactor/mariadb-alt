@@ -115,13 +115,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm test:ci
-        env:
-          TESTING_DATABASE: mariadb-alt
-          TESTING_USER: user
-          TESTING_PASSWORD: password
-
-      - run: pnpm test:build:ci
+      - run: pnpm test
         env:
           TESTING_DATABASE: mariadb-alt
           TESTING_USER: user

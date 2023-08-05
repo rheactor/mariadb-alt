@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { PacketReassembler } from "@/Protocol/PacketReassembler/PacketReassembler";
 
 test("new PacketReassembler(empty callback)", () => {

@@ -34,7 +34,7 @@
   },
   "include": [
     "./.env.d.ts",
-    "./jest.config.*.ts",
+    "./vitest.config.ts",
     "./src/**/*.ts",
     "./tests/**/*.ts"
   ],

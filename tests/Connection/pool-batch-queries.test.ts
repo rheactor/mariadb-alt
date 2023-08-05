@@ -1,4 +1,5 @@
 import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
+import { expect, test } from "vitest";
 
 import { type PacketOk } from "@/Protocol/Packet/PacketOk";
 import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";

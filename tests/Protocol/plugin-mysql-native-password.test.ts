@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword";
 
 test("call hashMySQLNativePassword()", () => {

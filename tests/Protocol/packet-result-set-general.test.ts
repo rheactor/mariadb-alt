@@ -1,5 +1,5 @@
 import { TestConnection } from "@Tests/Fixtures/test-connection";
-import { BigIntWrapper } from "@Tests/Fixtures/utils";
+import { expect, test } from "vitest";
 
 import { DateFormat } from "@/Formats/DateFormat";
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
@@ -14,7 +14,6 @@ type Test = [
   metadata: Partial<Field>,
   input: string,
   output:
-    | BigIntWrapper
     | Buffer
     | Date
     | DateFormat
@@ -22,6 +21,7 @@ type Test = [
     | Record<string, number>
     | string[]
     | TimeFormat
+    | bigint
     | boolean
     | number
     | string
@@ -34,24 +34,14 @@ const tests: Test[] = [
   ["SMALLINT", { type: FieldTypes.SMALLINT }, "123", 123],
   ["MEDIUMINT", { type: FieldTypes.MEDIUMINT }, "123", 123],
   ["INT", { type: FieldTypes.INT }, "123", 123],
-  ["BIGINT", { type: FieldTypes.BIGINT }, "123", new BigIntWrapper("123")],
+  ["BIGINT", { type: FieldTypes.BIGINT }, "123", 123n],
   ["BIT(8)", { type: FieldTypes.BIT, length: 8 }, "123", 123],
   ["BIT(1) NULL", { type: FieldTypes.BIT, length: 1 }, "NULL", null],
   ["BIT(1) NULL", { type: FieldTypes.BIT, length: 1 }, "1", true],
   ["BIT(1) NULL", { type: FieldTypes.BIT, length: 1 }, "FALSE", false],
   ["BIT(14)", { type: FieldTypes.BIT, length: 14 }, "12345", 12_345],
-  [
-    "BIT(48)",
-    { type: FieldTypes.BIT, length: 48 },
-    "12345",
-    new BigIntWrapper("12345"),
-  ],
-  [
-    "BIT(64)",
-    { type: FieldTypes.BIT, length: 64 },
-    "12345",
-    new BigIntWrapper("12345"),
-  ],
+  ["BIT(48)", { type: FieldTypes.BIT, length: 48 }, "12345", 12_345n],
+  ["BIT(64)", { type: FieldTypes.BIT, length: 64 }, "12345", 12_345n],
   ["FLOAT", { type: FieldTypes.FLOAT }, "123.45", 123.45],
   ["FLOAT", { type: FieldTypes.FLOAT }, "-123.45", -123.45],
   ["DOUBLE", { type: FieldTypes.DOUBLE }, "123.45", 123.45],
@@ -168,9 +158,8 @@ interface ResultSet {
 }
 
 test.each(tests)(
-  "query %s (metadata: %j) with input %j === %j",
+  "query %s (metadata: %j) with input %s === %s",
   async (query, metadata, input, output) => {
-    // eslint-disable-next-line jest/prefer-expect-assertions
     expect.assertions(5 + Object.keys(metadata).length);
 
     const connectionBase = TestConnection();
@@ -212,9 +201,7 @@ test.each(tests)(
 
       const [selectRow] = [...selectQuery.getRows<ResultSet>()];
 
-      expect(selectRow!.column).toStrictEqual(
-        output instanceof BigIntWrapper ? output.cast() : output,
-      );
+      expect(selectRow!.column).toStrictEqual(output);
     }
 
     void connectionBase.close();

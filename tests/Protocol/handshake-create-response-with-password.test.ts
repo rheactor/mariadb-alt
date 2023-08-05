@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 

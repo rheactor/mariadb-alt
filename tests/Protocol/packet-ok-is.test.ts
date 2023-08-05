@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { PacketOk } from "@/Protocol/Packet/PacketOk";
 
 type Test = [buffer: number[], isOk: boolean, isEOF: boolean];

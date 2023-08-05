@@ -1,3 +1,5 @@
+import { expect, test } from "vitest";
+
 import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 
 test("new PreparedStatementResponse", () => {

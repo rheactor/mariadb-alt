@@ -1,4 +1,5 @@
 import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples";
+import { expect, test } from "vitest";
 
 import { BufferConsumer } from "@/Utils/BufferConsumer";
 
@@ -97,8 +98,8 @@ test("readIntEncoded()", () => {
 test("readBoolean()", () => {
   const bufferConsumer = new BufferConsumer(Buffer.from("\u0000\u0001"));
 
-  expect(bufferConsumer.readBoolean()).toBe(false);
-  expect(bufferConsumer.readBoolean()).toBe(true);
+  expect(bufferConsumer.readBoolean()).toBeFalsy();
+  expect(bufferConsumer.readBoolean()).toBeTruthy();
 });
 
 test("readNullTerminatedString()", () => {
@@ -187,9 +188,11 @@ test("skip()", () => {
 });
 
 test("consumed()", () => {
-  expect(new BufferConsumer(Buffer.from("123")).skip(2).consumed()).toBe(false);
+  expect(new BufferConsumer(Buffer.from("123")).skip(2).consumed()).toBeFalsy();
 
-  expect(new BufferConsumer(Buffer.from("123")).skip(3).consumed()).toBe(true);
+  expect(
+    new BufferConsumer(Buffer.from("123")).skip(3).consumed(),
+  ).toBeTruthy();
 });
 
 test("at()", () => {

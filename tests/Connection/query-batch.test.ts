@@ -1,4 +1,5 @@
 import { TestConnection } from "@Tests/Fixtures/test-connection";
+import { expect, test } from "vitest";
 
 import { QueryException } from "@/Exceptions/QueryException";
 import { UnexpectedResponseTypeException } from "@/Exceptions/UnexpectedResponseTypeException";

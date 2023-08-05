@@ -1,4 +1,6 @@
 /* eslint-disable unicorn/prefer-event-target */
+import { expect, test } from "vitest";
+
 import { EventEmitter } from "@/Utils/EventEmitter";
 
 test("on(), emit()", () => {
@@ -7,7 +9,7 @@ test("on(), emit()", () => {
   const events = new EventEmitter();
 
   events.on("test", () => {
-    expect(true).toBe(true);
+    expect(true).toBeTruthy();
   });
 
   events.emit("test");

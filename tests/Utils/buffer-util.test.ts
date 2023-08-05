@@ -1,4 +1,4 @@
-import { BigIntWrapper } from "@Tests/Fixtures/utils";
+import { expect, test } from "vitest";
 
 import { DateTimeFormat } from "@/Formats/DateTimeFormat";
 import { TimeFormat } from "@/Formats/TimeFormat";
@@ -208,7 +208,7 @@ test.each(readTimeEncodedTests)(
 );
 
 type ToIntEncodedTest = [
-  input: BigIntWrapper | Parameters<typeof toIntEncoded>[0],
+  input: Parameters<typeof toIntEncoded>[0],
   output: Buffer,
 ];
 
@@ -225,17 +225,15 @@ const toIntEncodedTests: ToIntEncodedTest[] = [
     Buffer.from([0xfe, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00]),
   ],
   [
-    new BigIntWrapper("0x8070605040302010"),
+    0x80_70_60_50_40_30_20_10n,
     Buffer.from([0xfe, 0x10, 0x20, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80]),
   ],
 ];
 
 test.each(toIntEncodedTests)(
-  "call toIntEncoded(%j) === %j",
+  "call toIntEncoded(%s) === %s",
   (input, output) => {
-    expect(
-      toIntEncoded(input instanceof BigIntWrapper ? input.cast() : input),
-    ).toStrictEqual(output);
+    expect(toIntEncoded(input)).toStrictEqual(output);
   },
 );
 
