@@ -17,6 +17,11 @@ export abstract class Reassembler {
   public abstract is(packet: Buffer): boolean;
 
   /**
+   * Run some logic if is() is true.
+   */
+  public abstract accept(packet: Buffer): void;
+
+  /**
    * Push a packet to this reassembler (only the payload).
    * Return a recommendation to CONTINUE or consider EOF.
    */

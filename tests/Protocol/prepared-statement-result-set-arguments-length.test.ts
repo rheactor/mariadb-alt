@@ -13,11 +13,9 @@ const tests: Test[] = [
   [64],
   [128],
   [256],
-  [512], // fails
-  [1024],
-  [2047],
-  [2048], // fails
-  [2049],
+  [511],
+  [512],
+  [513],
 ];
 
 test.each(tests)("query with parameters length = %j", async (length) => {

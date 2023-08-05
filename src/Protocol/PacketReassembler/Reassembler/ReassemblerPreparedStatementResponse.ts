@@ -12,13 +12,11 @@ export class ReassemblerPreparedStatementResponse extends Reassembler {
 
   // eslint-disable-next-line class-methods-use-this
   public is(packet: Buffer): boolean {
-    if (packet.readUInt8(0) === 0x00) {
-      this.#intermediateEOFFound = packet.readUint8(5) === 0;
+    return packet.readUInt8(0) === 0x00;
+  }
 
-      return true;
-    }
-
-    return false;
+  public accept(packet: Buffer) {
+    this.#intermediateEOFFound = packet.readUint16LE(5) === 0;
   }
 
   public push(packet: Buffer): PushRecommendation {

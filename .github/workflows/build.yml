@@ -76,6 +76,7 @@ jobs:
         databases:
           - mariadb:10.11
           - mariadb:11.0
+          - quay.io/mariadb-foundation/mariadb-devel:11.1
           - quay.io/mariadb-foundation/mariadb-devel:verylatest
 
     services:

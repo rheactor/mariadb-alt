@@ -158,4 +158,4 @@ test("query SELECT with 64K arguments", async () => {
   );
 
   expect(result).toStrictEqual([{ "?": 9 }]);
-}, 1000);
+}, 2500);

@@ -16,6 +16,11 @@ export abstract class ReassemblerResultSetPartial extends Reassembler {
     return !PacketOk.is(packet) && !PacketError.is(packet);
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  public accept() {
+    // empty
+  }
+
   public push(packet: Buffer): PushRecommendation {
     if (PacketOk.isEOF(packet)) {
       if (this.#intermediateEOFFound) {

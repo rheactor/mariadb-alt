@@ -82,9 +82,12 @@ export class PacketReassembler {
 
       if (this.#reassemblerInstance) {
         if (this.#reassemblerValidation === ReassemblerValidation.PENDING) {
-          this.#reassemblerValidation = this.#reassemblerInstance.is(payload)
-            ? ReassemblerValidation.ACCEPTED
-            : ReassemblerValidation.INCOMPATIBLE;
+          if (this.#reassemblerInstance.is(payload)) {
+            this.#reassemblerValidation = ReassemblerValidation.ACCEPTED;
+            this.#reassemblerInstance.accept(payload);
+          } else {
+            this.#reassemblerValidation = ReassemblerValidation.INCOMPATIBLE;
+          }
         }
 
         if (this.#reassemblerValidation === ReassemblerValidation.ACCEPTED) {
