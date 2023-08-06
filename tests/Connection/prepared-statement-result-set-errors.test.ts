@@ -53,8 +53,10 @@ test("code coverage: unknown data type response", () => {
 test("query SELECT fail", async () => {
   expect.assertions(3);
 
+  const connection = TestConnection();
+
   try {
-    await TestConnection().queryRaw("SELECT!", [123]);
+    await connection.queryRaw("SELECT!", [123]);
   } catch (error) {
     expect(error).toBeInstanceOf(QueryException);
 
@@ -63,13 +65,17 @@ test("query SELECT fail", async () => {
       expect(error.message).toContain("You have an error in your SQL syntax;");
     }
   }
+
+  void connection.close();
 });
 
 test("query SELECT ? without args must fail", async () => {
   expect.assertions(3);
 
+  const connection = TestConnection();
+
   try {
-    await TestConnection().queryRaw("SELECT ?");
+    await connection.queryRaw("SELECT ?");
   } catch (error) {
     expect(error).toBeInstanceOf(QueryException);
 
@@ -78,13 +84,17 @@ test("query SELECT ? without args must fail", async () => {
       expect(error.message).toContain("'?'");
     }
   }
+
+  void connection.close();
 });
 
 test("query SELECT PS with few arguments", async () => {
   expect.assertions(4);
 
+  const connection = TestConnection();
+
   try {
-    await TestConnection().queryRaw("SELECT ?, ?", [123]);
+    await connection.queryRaw("SELECT ?, ?", [123]);
   } catch (error) {
     expect(error).toBeInstanceOf(FewArgumentsException);
     expect((error as FewArgumentsException).message).toBe(
@@ -93,6 +103,8 @@ test("query SELECT PS with few arguments", async () => {
     expect((error as FewArgumentsException).details.received).toBe(1);
     expect((error as FewArgumentsException).details.required).toBe(2);
   }
+
+  void connection.close();
 });
 
 test("query SELECT +64K arguments must throw error", () => {
@@ -100,7 +112,11 @@ test("query SELECT +64K arguments must throw error", () => {
 
   const parameters = Array.from<null>({ length: 0xff_ff + 1 }).fill(null);
 
+  const connection = TestConnection();
+
   void expect(async () => {
-    await TestConnection().queryRaw("DO NULL", parameters);
+    await connection.queryRaw("DO NULL", parameters);
   }).rejects.toThrow("Prepared Statements supports only 65535 arguments");
+
+  void connection.close();
 });

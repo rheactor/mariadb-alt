@@ -163,16 +163,16 @@ test.each(tests)(
   async (query, metadata, input, output) => {
     expect.assertions(5 + Object.keys(metadata).length);
 
-    const connectionBase = TestConnection();
+    const connection = TestConnection();
 
     const table = `test-${Math.random()}`;
-    const createQuery = await connectionBase.queryRaw(
+    const createQuery = await connection.queryRaw(
       `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${query} )`,
     );
 
     expect(createQuery).toBeInstanceOf(PacketOk);
 
-    const insertQuery = await connectionBase.queryRaw(
+    const insertQuery = await connection.queryRaw(
       `INSERT INTO \`${table}\` (\`column\`) VALUES (${input})`,
     );
 
@@ -182,9 +182,7 @@ test.each(tests)(
       expect(insertQuery.affectedRows).toBe(1);
     }
 
-    const selectQuery = await connectionBase.queryRaw(
-      `SELECT * FROM \`${table}\``,
-    );
+    const selectQuery = await connection.queryRaw(`SELECT * FROM \`${table}\``);
 
     expect(selectQuery).toBeInstanceOf(PacketResultSet);
 
@@ -205,6 +203,6 @@ test.each(tests)(
       expect(selectRow!.column).toStrictEqual(output);
     }
 
-    void connectionBase.close();
+    void connection.close();
   },
 );

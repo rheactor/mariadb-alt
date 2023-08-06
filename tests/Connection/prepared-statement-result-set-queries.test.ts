@@ -125,19 +125,23 @@ const tests: Test[] = [
 test.each(tests)("#%# query %j", async (query, input, output) => {
   expect.assertions(2);
 
-  const result = await TestConnection().queryRaw(query, [input]);
+  const connection = TestConnection();
+  const result = await connection.queryRaw(query, [input]);
 
   expect(result).toBeInstanceOf(PreparedStatementResultSet);
 
   if (result instanceof PreparedStatementResultSet) {
     expect([...result.getRows()][0]!).toStrictEqual(output);
   }
+
+  void connection.close();
 });
 
 test(`query SELECT ?, ? with NULL`, async () => {
   expect.assertions(1);
 
-  const [...result] = await TestConnection().query(
+  const connection = TestConnection();
+  const [...result] = await connection.query(
     "SELECT NULL AS a, ? AS b, 123 AS c, ? AS d, NULL AS e",
     [null, null],
   );
@@ -145,6 +149,8 @@ test(`query SELECT ?, ? with NULL`, async () => {
   expect(result).toStrictEqual([
     { a: null, b: null, c: 123, d: null, e: null },
   ]);
+
+  void connection.close();
 });
 
 test("query SELECT with 64K arguments", async () => {
@@ -152,10 +158,13 @@ test("query SELECT with 64K arguments", async () => {
 
   const parameters = Array.from({ length: 0xff_ff }).fill(9) as number[];
 
-  const [...result] = await TestConnection().query(
+  const connection = TestConnection();
+  const [...result] = await connection.query(
     `SELECT ${parameters.map(() => "?").join(",")}`,
     parameters,
   );
 
   expect(result).toStrictEqual([{ "?": 9 }]);
+
+  void connection.close();
 }, 2500);

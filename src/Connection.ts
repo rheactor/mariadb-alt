@@ -246,29 +246,19 @@ export class Connection extends ConnectionEvents {
             });
           }
 
-          return (
-            this.#commandQueue(
-              createExecutePacket(response, args),
-              ReassemblerPreparedStatementResultSet,
-              0,
-              CommandLock.RELEASE,
-            )
-              // eslint-disable-next-line promise/no-nesting
-              .catch((packetError: PacketError) => {
-                throw new QueryException(packetError.message).setDetails(
-                  packetError.code,
-                  { packetError },
-                );
-              })
-              .then(([data]) => {
-                void this.#commandQueue(
-                  createClosePacket(response.statementId),
-                  false,
-                );
+          return this.#commandQueue(
+            createExecutePacket(response, args),
+            ReassemblerPreparedStatementResultSet,
+            0,
+            CommandLock.RELEASE,
+          ).then(([data]) => {
+            void this.#commandQueue(
+              createClosePacket(response.statementId),
+              false,
+            );
 
-                return data;
-              })
-          );
+            return data;
+          });
         });
     }
 
