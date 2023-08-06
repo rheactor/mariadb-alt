@@ -7,56 +7,60 @@ test("authenticate", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connectionBase = TestConnection();
+    const connection = TestConnection();
 
-    connectionBase.on("closed", () => {
+    connection.on("closed", () => {
       resolve();
     });
 
-    connectionBase.once("connected", (connection) => {
-      expect(connection.isConnected()).toBeTruthy();
+    connection.once("connected", (connectionInner) => {
+      expect(connectionInner.isConnected()).toBeTruthy();
     });
 
-    connectionBase.once("authenticating", (connection) => {
-      expect(connection.isAuthenticating()).toBeTruthy();
+    connection.once("authenticating", (connectionInner) => {
+      expect(connectionInner.isAuthenticating()).toBeTruthy();
     });
 
-    connectionBase.once("authenticated", (connection) => {
-      expect(connection.hasAuthenticated()).toBeTruthy();
-      void connection.close();
+    connection.once("authenticated", (connectionInner) => {
+      expect(connectionInner.hasAuthenticated()).toBeTruthy();
+
+      void connectionInner.close();
     });
   }));
 
 test("ping() command", async () => {
   expect.assertions(2);
 
-  const connectionBase = TestConnection();
+  const connection = TestConnection();
 
-  const ping1 = expect(connectionBase.ping()).resolves.toBeInstanceOf(PacketOk);
+  const ping1 = expect(connection.ping()).resolves.toBeInstanceOf(PacketOk);
 
-  const ping2 = expect(connectionBase.ping()).resolves.toBeInstanceOf(PacketOk);
+  const ping2 = expect(connection.ping()).resolves.toBeInstanceOf(PacketOk);
 
   await Promise.all([ping1, ping2]);
+
+  void connection.close();
 });
 
 test("close() command before authentication", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(2);
 
-    const connectionBase = TestConnection();
+    const connection = TestConnection();
 
-    connectionBase.once("closed", () => {
+    connection.once("closed", () => {
       expect(true).toBeTruthy();
       resolve();
     });
 
-    connectionBase
+    connection
       .close()
       .then(() => {
         expect(true).toBeTruthy();
 
         return null;
-      }) // no connected
+      })
+      // no connected
       .catch(() => {
         /** empty */
       });
@@ -66,23 +70,24 @@ test("close() command after authentication", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connectionBase = TestConnection();
+    const connection = TestConnection();
 
-    connectionBase.once("closed", () => {
+    connection.once("closed", () => {
       expect(true).toBeTruthy();
       resolve();
     });
 
-    connectionBase.once("authenticated", () => {
+    connection.once("authenticated", () => {
       expect(true).toBeTruthy();
 
-      connectionBase
+      connection
         .close()
         .then(() => {
           expect(true).toBeTruthy();
 
           return null;
-        }) //  connected
+        })
+        //  connected
         .catch(() => {
           /** empty */
         });

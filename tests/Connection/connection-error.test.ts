@@ -7,14 +7,14 @@ test("invalid port", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(2);
 
-    const connectionBase = TestConnection({ port: 1 });
+    const connection = TestConnection({ port: 1 });
 
-    connectionBase.once("closed", () => {
+    connection.once("closed", () => {
       resolve();
     });
 
-    connectionBase.once("error", (connection, error) => {
-      expect(connection.hasError()).toBeTruthy();
+    connection.once("error", (connectionInner, error) => {
+      expect(connectionInner.hasError()).toBeTruthy();
       expect(error.code).toContain("ECONNREFUSED");
     });
   }));
@@ -23,18 +23,18 @@ test("invalid user", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connectionBase = TestConnection({
+    const connection = TestConnection({
       user: `random-user-0.5318529997882291`,
     });
 
-    connectionBase.once("closed", () => {
+    connection.once("closed", () => {
       resolve();
     });
 
-    connectionBase.once("error", (connection, error) => {
+    connection.once("error", (connectionInner, error) => {
       expect.assertions(3);
 
-      expect(connection.hasError()).toBeTruthy();
+      expect(connectionInner.hasError()).toBeTruthy();
       expect(error.message).toContain("random-user");
 
       if (error instanceof ConnectionException) {
@@ -47,16 +47,16 @@ test("wrong password", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connectionBase = TestConnection({
+    const connection = TestConnection({
       password: Math.random().toString(),
     });
 
-    connectionBase.once("closed", () => {
+    connection.once("closed", () => {
       resolve();
     });
 
-    connectionBase.once("error", (connection, error) => {
-      expect(connection.hasError()).toBeTruthy();
+    connection.once("error", (connectionInner, error) => {
+      expect(connectionInner.hasError()).toBeTruthy();
       expect(error.message).toContain("denied for user");
 
       if (error instanceof ConnectionException) {
