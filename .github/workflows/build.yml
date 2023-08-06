@@ -73,6 +73,10 @@ jobs:
 
     strategy:
       matrix:
+        nodes:
+          - 18
+          - 20
+          - latest
         databases:
           - mariadb:10.11
           - mariadb:11.0
@@ -108,7 +112,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: ${{ matrix.nodes }}
 
       - uses: pnpm/action-setup@v2
         with:
