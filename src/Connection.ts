@@ -361,16 +361,20 @@ export class Connection extends ConnectionEvents {
     // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
     callback: () => Awaitable<boolean | void>,
   ): Promise<void> {
-    this.#transactionsCommands.push([]);
+    const level = this.#transactionsCommands.push([]) - 2;
 
-    await this.execute("START TRANSACTION");
+    await this.execute(
+      level === 0 ? "START TRANSACTION" : `SAVEPOINT n${level}`,
+    );
 
     try {
       const result = await callback();
 
-      await this.execute(result === false ? "ROLLBACK" : "COMMIT");
+      await (result === false
+        ? this.execute(level === 0 ? `ROLLBACK` : `ROLLBACK TO n${level}`)
+        : this.execute(level === 0 ? "COMMIT" : `RELEASE SAVEPOINT n${level}`));
     } catch {
-      await this.execute("ROLLBACK");
+      await this.execute(level === 0 ? `ROLLBACK` : `ROLLBACK TO n${level}`);
     }
 
     this.#transactionsCommands.pop();

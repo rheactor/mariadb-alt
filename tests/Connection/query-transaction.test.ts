@@ -163,3 +163,57 @@ test("transaction(): rollback by uncaught error", async () => {
 
   void connection.close();
 });
+
+test("transaction(): nested transactions", async () => {
+  expect.assertions(1);
+
+  const connection = TestConnection();
+  const tableName = await createSampleTable(connection);
+
+  await connection.transaction(async () => {
+    await connection.execute(`INSERT INTO \`${tableName}\` (value) VALUES (1)`);
+
+    await connection.transaction(async () => {
+      await connection.execute(
+        `INSERT INTO \`${tableName}\` (value) VALUES (2)`,
+      );
+
+      await connection.transaction(async () => {
+        await connection.execute(
+          `INSERT INTO \`${tableName}\` (value) VALUES (3)`,
+        );
+
+        await connection.transaction(async () => {
+          await connection.execute(
+            `INSERT INTO \`${tableName}\` (value) VALUES (4)`,
+          );
+        });
+
+        await connection.execute(
+          `INSERT INTO \`${tableName}\` (value) VALUES (5)`,
+        );
+
+        return false;
+      });
+
+      await connection.execute(
+        `INSERT INTO \`${tableName}\` (value) VALUES (6)`,
+      );
+    });
+
+    await connection.execute(`INSERT INTO \`${tableName}\` (value) VALUES (7)`);
+  });
+
+  const results = await connection.query<SampleRow>(
+    `SELECT * FROM \`${tableName}\``,
+  );
+
+  expect([...results]).toStrictEqual([
+    { id: 1, value: 1 },
+    { id: 2, value: 2 },
+    { id: 6, value: 6 },
+    { id: 7, value: 7 },
+  ]);
+
+  void connection.close();
+});
