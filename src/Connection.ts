@@ -32,6 +32,7 @@ import {
 import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
 import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
 import { EventEmitter } from "@/Utils/EventEmitter";
+import { type Awaitable } from "@/Utils/TypesUtil";
 
 const enum Status {
   CONNECTING,
@@ -58,7 +59,7 @@ export interface ConnectionOptions {
   database: string;
 
   /** Do something with the connection after it is authenticated. */
-  afterAuthenticated?(this: Connection): Promise<void> | void;
+  afterAuthenticated?(this: Connection): Awaitable<void>;
 }
 
 type ConnectionEventsError = "error";
@@ -85,6 +86,8 @@ class ConnectionCommand {
     public lock = CommandLock.FREE,
   ) {}
 }
+
+type Transaction = ConnectionCommand[];
 
 abstract class ConnectionEvents {
   readonly #eventsEmitter = new EventEmitter();
@@ -140,7 +143,7 @@ export class Connection extends ConnectionEvents {
 
   #connected = false;
 
-  #commands: ConnectionCommand[] = [];
+  #transactionsCommands: Transaction[] = [[]];
 
   readonly #socket: Socket;
 
@@ -187,6 +190,10 @@ export class Connection extends ConnectionEvents {
 
   public get wasUsed() {
     return this.#wasUsed;
+  }
+
+  private get currentTransactionCommands(): Transaction {
+    return this.#transactionsCommands.at(-1)!;
   }
 
   public isConnected() {
@@ -350,6 +357,25 @@ export class Connection extends ConnectionEvents {
       );
   }
 
+  public async transaction(
+    // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+    callback: () => Awaitable<boolean | void>,
+  ): Promise<void> {
+    this.#transactionsCommands.push([]);
+
+    await this.execute("START TRANSACTION");
+
+    try {
+      const result = await callback();
+
+      await this.execute(result === false ? "ROLLBACK" : "COMMIT");
+    } catch {
+      await this.execute("ROLLBACK");
+    }
+
+    this.#transactionsCommands.pop();
+  }
+
   public async close(): Promise<void> {
     if (!this.#connected) {
       this.#socket.end();
@@ -386,7 +412,7 @@ export class Connection extends ConnectionEvents {
       if (lock !== CommandLock.FREE && this.#lock === CommandLock.LOCK) {
         this.#commandRunImmediately(command);
       } else {
-        this.#commands.push(command);
+        this.currentTransactionCommands.push(command);
         this.#commandRun();
       }
     });
@@ -397,7 +423,7 @@ export class Connection extends ConnectionEvents {
       return;
     }
 
-    const command = this.#commands.shift();
+    const command = this.currentTransactionCommands.shift();
 
     if (!command) {
       return;
@@ -480,12 +506,12 @@ export class Connection extends ConnectionEvents {
           this.emit("authenticated", this);
 
           if (this.#options.afterAuthenticated) {
-            const queuedCommands = this.#commands;
+            const queuedCommands = this.#transactionsCommands;
 
-            this.#commands = [];
+            this.#transactionsCommands = [[]];
             await this.#options.afterAuthenticated.call(this);
             this.#wasUsed = false;
-            this.#commands.push(...queuedCommands);
+            this.#transactionsCommands.push(...queuedCommands);
           }
 
           this.#commandRun();
