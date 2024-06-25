@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
-import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse.js";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
 type ConnectionOptionsHandshake = Parameters<typeof createHandshakeResponse>[2];
 

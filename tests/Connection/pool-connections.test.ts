@@ -1,9 +1,10 @@
-import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
-import { delay } from "@Tests/Fixtures/utils";
 import { expect, test } from "vitest";
 
+import { testConnectionPool } from "@Tests/Fixtures/test-connection.js";
+import { delay } from "@Tests/Fixtures/utils.js";
+
 test("debug { idleConnections: 1, connections: 2, idleTimeout: 100 }", () => {
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     idleConnections: 1,
     connections: 2,
     idleTimeout: 100,
@@ -18,7 +19,7 @@ test("debug { idleConnections: 1, connections: 2, idleTimeout: 100 }", () => {
 test("query() { idleConnections: 1, connections: 2, idleTimeout: 100 }", async () => {
   expect.assertions(11);
 
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     idleConnections: 1,
     connections: 2,
     idleTimeout: 100,
@@ -56,7 +57,7 @@ test("query() { idleConnections: 1, connections: 2, idleTimeout: 100 }", async (
 test("query(): force idle connection to be renewed", async () => {
   expect.assertions(5);
 
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     idleConnections: 1,
     connections: 1,
   });
@@ -106,7 +107,7 @@ test("query(): force idle connection to be renewed", async () => {
 test("query(): force connections over-limit using { immediate: true } option", async () => {
   expect.assertions(15);
 
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     connections: 1,
   });
 
@@ -156,7 +157,7 @@ test("query(): force connections over-limit using { immediate: true } option", a
 test("query(): force connections over-limit using { immediate: true } option, but still respecting hard-limit", async () => {
   expect.assertions(15);
 
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     connections: 1,
     connectionsHardLimit: 1,
   });
@@ -207,7 +208,7 @@ test("query(): force connections over-limit using { immediate: true } option, bu
 test("query(): with afterAuthenticated() option must return reference value", async () => {
   expect.assertions(1);
 
-  const connection = TestConnectionPool({
+  const connection = testConnectionPool({
     async afterAuthenticated() {
       await this.execute("SET @REFERENCE_VALUE = 123");
       await this.query("SELECT SLEEP(0.1)");

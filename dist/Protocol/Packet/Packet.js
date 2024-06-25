@@ -1,0 +1,1 @@
+import{chunk as t}from"../../Utils/BufferUtil.js";export function createPacket(e,r){let f=[];for(let l of t(e,16777215)){let t=Buffer.alloc(4+l.length);t.writeUIntLE(l.length,0,3),t.writeUInt8(r+f.length&255,3),t.set(l,4),f.push(t)}return(16777215&e.length)==16777215&&f.push(Buffer.from([0,0,0,r+f.length&255])),Buffer.concat(f)}

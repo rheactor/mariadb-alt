@@ -1,7 +1,7 @@
 /* eslint-disable unicorn/prefer-event-target */
 import { expect, test } from "vitest";
 
-import { EventEmitter } from "@/Utils/EventEmitter";
+import { EventEmitter } from "@/Utils/EventEmitter.js";
 
 test("on(), emit()", () => {
   expect.assertions(1);
@@ -20,7 +20,7 @@ test("on(), emit() with arguments", () => {
 
   const events = new EventEmitter();
 
-  events.on("test", (a, b, c) => {
+  events.on("test", (a: number, b: number, c: number) => {
     expect(a + b + c).toBe(6);
   });
 

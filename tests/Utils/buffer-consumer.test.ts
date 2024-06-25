@@ -1,7 +1,7 @@
-import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples";
 import { expect, test } from "vitest";
 
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
+import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples.js";
 
 test("readUInt()", () => {
   const bufferConsumer = new BufferConsumer(

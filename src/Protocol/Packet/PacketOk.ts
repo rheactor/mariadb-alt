@@ -1,5 +1,5 @@
-import { ServerStatus } from "@/Protocol/Enumerations";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { ServerStatus } from "@/Protocol/Enumerations.js";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
 export class PacketOk {
   public constructor(

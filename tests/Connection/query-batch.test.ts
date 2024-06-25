@@ -1,15 +1,15 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { QueryException } from "@/Exceptions/QueryException";
-import { UnexpectedResponseTypeException } from "@/Exceptions/UnexpectedResponseTypeException";
-import { type PacketOk } from "@/Protocol/Packet/PacketOk";
-import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import { QueryException } from "@/Exceptions/QueryException.js";
+import { UnexpectedResponseTypeException } from "@/Exceptions/UnexpectedResponseTypeException.js";
+import type { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import type { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
 test(`batchQueryRaw() with only PacketResultSet`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [query1, query2] = (await connection.batchQueryRaw(
     "SELECT 1, 2; SELECT 3",
@@ -24,7 +24,7 @@ test(`batchQueryRaw() with only PacketResultSet`, async () => {
 test(`batchQueryRaw() with only PacketOK`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [result1, result2] = (await connection.batchQueryRaw(
     "DO NULL; DO NULL",
@@ -39,7 +39,7 @@ test(`batchQueryRaw() with only PacketOK`, async () => {
 test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
   expect.assertions(3);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [query1, result2, query3] = (await connection.batchQueryRaw(
     "SELECT 1, 2; DO NULL; SELECT 3",
@@ -55,7 +55,7 @@ test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
 test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
   expect.assertions(3);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [result1, query2, result3] = (await connection.batchQueryRaw(
     "DO NULL; SELECT 1, 2; DO NULL",
@@ -71,7 +71,7 @@ test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
 test(`batchQuery()`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [query1, query2] = await connection.batchQuery("SELECT 1, 2; SELECT 3");
 
@@ -84,7 +84,7 @@ test(`batchQuery()`, async () => {
 test(`batchExecute()`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [result1, result2] = await connection.batchExecute("DO NULL; DO NULL");
 
@@ -97,7 +97,7 @@ test(`batchExecute()`, async () => {
 test(`batchQuery() invalid query`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.batchQuery("SELECT!");
@@ -112,7 +112,7 @@ test(`batchQuery() invalid query`, async () => {
 test(`batchQuery() unexpected response type`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.batchQuery("DO NULL");
@@ -129,7 +129,7 @@ test(`batchQuery() unexpected response type`, async () => {
 test(`batchExecute() invalid query`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.batchExecute("DO NULL!");
@@ -144,7 +144,7 @@ test(`batchExecute() invalid query`, async () => {
 test(`batchExecute() unexpected response type`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.batchExecute("SELECT 123");

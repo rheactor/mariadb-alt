@@ -1,9 +1,9 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { FewArgumentsException } from "@/Exceptions/FewArgumentsException";
-import { QueryException } from "@/Exceptions/QueryException";
-import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
+import { FewArgumentsException } from "@/Exceptions/FewArgumentsException.js";
+import { QueryException } from "@/Exceptions/QueryException.js";
+import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
 test("code coverage: unknown data type response", () => {
   const resultSet = new PreparedStatementResultSet(
@@ -53,7 +53,7 @@ test("code coverage: unknown data type response", () => {
 test("query SELECT fail", async () => {
   expect.assertions(3);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.queryRaw("SELECT!", [123]);
@@ -72,7 +72,7 @@ test("query SELECT fail", async () => {
 test("query SELECT ? without args must fail", async () => {
   expect.assertions(3);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.queryRaw("SELECT ?");
@@ -91,7 +91,7 @@ test("query SELECT ? without args must fail", async () => {
 test("query SELECT PS with few arguments", async () => {
   expect.assertions(4);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   try {
     await connection.queryRaw("SELECT ?, ?", [123]);
@@ -112,7 +112,7 @@ test("query SELECT +64K arguments must throw error", () => {
 
   const parameters = Array.from<null>({ length: 0xff_ff + 1 }).fill(null);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   void expect(async () => {
     await connection.queryRaw("DO NULL", parameters);

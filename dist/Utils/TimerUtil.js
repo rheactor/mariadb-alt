@@ -1,0 +1,1 @@
+export class TimerUtil{#t;#s;#i;constructor(t,s){this.#s=t,this.#i=s,this.restart()}stop(){clearTimeout(this.#t),this.#t=void 0}restart(){void 0!==this.#i&&(this.#t=setTimeout(this.#s,this.#i))}}

@@ -1,9 +1,9 @@
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
 import {
   PushRecommendation,
   Reassembler,
-} from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
-import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+} from "@/Protocol/PacketReassembler/Reassembler/Reassembler.js";
+import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse.js";
 
 export class ReassemblerPreparedStatementResponse extends Reassembler {
   #packet: Buffer | undefined = undefined;

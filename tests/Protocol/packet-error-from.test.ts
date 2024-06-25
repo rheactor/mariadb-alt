@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { PacketError } from "@/Protocol/Packet/PacketError";
+import { PacketError } from "@/Protocol/Packet/PacketError.js";
 
 type Test = [
   buffer: string,

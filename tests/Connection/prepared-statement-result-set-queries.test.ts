@@ -1,12 +1,12 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { DateFormat } from "@/Formats/DateFormat";
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { type Row } from "@/Protocol/Packet/PacketResultSet";
-import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
-import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
+import { DateFormat } from "@/Formats/DateFormat.js";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import type { Row } from "@/Protocol/Packet/PacketResultSet.js";
+import type { ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement.js";
+import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
 type Test = [query: string, args: ExecuteArgument | undefined, response: Row];
 
@@ -125,7 +125,7 @@ const tests: Test[] = [
 test.each(tests)("#%# query %j", async (query, input, output) => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const result = await connection.queryRaw(query, [input]);
 
   expect(result).toBeInstanceOf(PreparedStatementResultSet);
@@ -140,7 +140,7 @@ test.each(tests)("#%# query %j", async (query, input, output) => {
 test(`query SELECT ?, ? with NULL`, async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const [...result] = await connection.query(
     "SELECT NULL AS a, ? AS b, 123 AS c, ? AS d, NULL AS e",
     [null, null],
@@ -158,7 +158,7 @@ test("query SELECT with 64K arguments", async () => {
 
   const parameters = Array.from({ length: 0xff_ff }).fill(9) as number[];
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const [...result] = await connection.query(
     `SELECT ${parameters.map(() => "?").join(",")}`,
     parameters,

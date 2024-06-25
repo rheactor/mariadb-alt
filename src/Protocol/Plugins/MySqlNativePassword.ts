@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 
-import { bufferXOR } from "@/Utils/BufferUtil";
+import { bufferXOR } from "@/Utils/BufferUtil.js";
 
-export const hashMySQLNativePassword = (
+export function hashMySQLNativePassword(
   authenticationSeed: Buffer,
   password: string,
-) => {
+) {
   const passwordHash = createHash("sha1").update(password).digest();
   const concatHash = createHash("sha1")
     .update(
@@ -17,4 +17,4 @@ export const hashMySQLNativePassword = (
     .digest();
 
   return bufferXOR(passwordHash, concatHash);
-};
+}

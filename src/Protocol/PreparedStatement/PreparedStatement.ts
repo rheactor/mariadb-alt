@@ -1,8 +1,8 @@
-import { DateFormat } from "@/Formats/DateFormat";
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { FieldTypes } from "@/Protocol/Enumerations";
-import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { DateFormat } from "@/Formats/DateFormat.js";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import { FieldTypes } from "@/Protocol/Enumerations.js";
+import type { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse.js";
 import {
   createInt16LE,
   createInt32LE,
@@ -16,7 +16,7 @@ import {
   toDatetimeEncoded,
   toStringEncoded,
   toTimeEncoded,
-} from "@/Utils/BufferUtil";
+} from "@/Utils/BufferUtil.js";
 
 export type ExecuteArgument =
   | Buffer
@@ -35,13 +35,14 @@ const enum TypeFlag {
   UNSIGNED = 128,
 }
 
-const createTypeBuffer = (type: number, unsigned = true): Buffer =>
-  Buffer.from([type, unsigned ? TypeFlag.UNSIGNED : 0]);
+function createTypeBuffer(type: number, unsigned = true): Buffer {
+  return Buffer.from([type, unsigned ? TypeFlag.UNSIGNED : 0]);
+}
 
-export const createExecutePacket = (
+export function createExecutePacket(
   preparedStatement: PreparedStatementResponse,
   args: ExecuteArgument[],
-) => {
+) {
   const header = Buffer.allocUnsafe(10);
 
   // Header.
@@ -61,40 +62,47 @@ export const createExecutePacket = (
     } else if (typeof parameter === "number") {
       if (Number.isSafeInteger(parameter)) {
         // BIGINT > 0xFFFFFFFF
-        if (parameter > 0xff_ff_ff_ff) {
+        if (parameter > 4_294_967_295) {
           values.push(createUInt64LE(BigInt(parameter)));
           types.push(createTypeBuffer(FieldTypes.BIGINT));
         }
+
         // INT, MEDIUMINT > 0xFFFF
-        else if (parameter > 0xff_ff) {
+        else if (parameter > 65_535) {
           values.push(createUInt32LE(parameter));
           types.push(createTypeBuffer(FieldTypes.INT));
         }
+
         // SMALLINT > 0xFF
         else if (parameter > 0xff) {
           values.push(createUInt16LE(parameter));
           types.push(createTypeBuffer(FieldTypes.SMALLINT));
         }
+
         // TINYINT >= 0
         else if (parameter >= 0) {
           values.push(createUInt8(parameter));
           types.push(createTypeBuffer(FieldTypes.TINYINT));
         }
+
         // Negative TINYINT >= -0x7F
         else if (parameter >= -0x7f) {
           values.push(createInt8(parameter));
           types.push(createTypeBuffer(FieldTypes.TINYINT, false));
         }
+
         // Negative SMALLINT >= -0x7FFF
-        else if (parameter >= -0x7f_ff) {
+        else if (parameter >= -32_767) {
           values.push(createInt16LE(parameter));
           types.push(createTypeBuffer(FieldTypes.SMALLINT, false));
         }
+
         // Negative INT, MEDIUMINT >= -0x7FFFFFFF
-        else if (parameter >= -0x7f_ff_ff_ff) {
+        else if (parameter >= -2_147_483_647) {
           values.push(createInt32LE(parameter));
           types.push(createTypeBuffer(FieldTypes.INT, false));
         }
+
         // Negative BIGINT else
         else {
           values.push(createInt64LE(BigInt(parameter)));
@@ -178,7 +186,8 @@ export const createExecutePacket = (
     ...types,
     ...values,
   ]);
-};
+}
 
-export const createClosePacket = (statementId: number) =>
-  Buffer.concat([Buffer.from([0x19]), createUInt32LE(statementId)]);
+export function createClosePacket(statementId: number) {
+  return Buffer.concat([Buffer.from([0x19]), createUInt32LE(statementId)]);
+}

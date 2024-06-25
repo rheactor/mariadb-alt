@@ -1,10 +1,10 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import { PacketError } from "@/Protocol/Packet/PacketError.js";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
 import {
   PushRecommendation,
   Reassembler,
-} from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
+} from "@/Protocol/PacketReassembler/Reassembler/Reassembler.js";
 
 export abstract class ReassemblerResultSetPartial extends Reassembler {
   protected readonly packets: Buffer[] = [];

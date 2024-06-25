@@ -1,13 +1,14 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { DateFormat } from "@/Formats/DateFormat";
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { type Field } from "@/Protocol/Data/Field";
-import { FieldTypes } from "@/Protocol/Enumerations";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
+import { DateFormat } from "@/Formats/DateFormat.js";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import type { Field } from "@/Protocol/Data/Field.js";
+import { FieldTypes } from "@/Protocol/Enumerations.js";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import type { Row } from "@/Protocol/Packet/PacketResultSet.js";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
 type Test = [
   query: string,
@@ -161,11 +162,12 @@ interface ResultSet {
 test.each(tests)(
   "query %s (metadata: %j) with input %s === %s",
   async (query, metadata, input, output) => {
+    // eslint-disable-next-line vitest/prefer-expect-assertions
     expect.assertions(5 + Object.keys(metadata).length);
 
-    const connection = TestConnection();
+    const connection = testConnection();
 
-    const table = `test-${Math.random()}`;
+    const table = `test-${String(Math.random())}`;
     const createQuery = await connection.queryRaw(
       `CREATE TEMPORARY TABLE \`${table}\` ( \`column\` ${query} )`,
     );

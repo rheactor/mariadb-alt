@@ -1,8 +1,9 @@
-import { Connection, type ConnectionOptions } from "@/Connection";
-import { type Row } from "@/Protocol/Packet/PacketResultSet";
-import { type ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement";
-import { removeItem } from "@/Utils/ArrayUtil";
-import { TimerUtil } from "@/Utils/TimerUtil";
+import type { ConnectionOptions } from "@/Connection.js";
+import { Connection } from "@/Connection.js";
+import type { Row } from "@/Protocol/Packet/PacketResultSet.js";
+import type { ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement.js";
+import { removeItem } from "@/Utils/ArrayUtil.js";
+import { TimerUtil } from "@/Utils/TimerUtil.js";
 
 interface ConnectionPoolOptions {
   /**

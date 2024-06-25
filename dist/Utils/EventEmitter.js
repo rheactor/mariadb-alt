@@ -1,0 +1,1 @@
+let e=0;export class EventEmitter{#e;on(t,s){this.#e.has(t)||this.#e.set(t,new Map),this.#e.get(t).set(e,{eventId:e++,callback:s})}once(t,s){this.#e.has(t)||this.#e.set(t,new Map),this.#e.get(t).set(e,{eventId:e++,callback:s,once:!0})}emit(e,...t){let s=this.#e.get(e);if(s)for(let e of s.values())e.callback(...t),e.once&&s.delete(e.eventId)}constructor(){this.#e=new Map}}

@@ -1,4 +1,4 @@
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
 interface FieldExtended {
   json: boolean;
@@ -14,7 +14,7 @@ export interface Field extends FieldExtended {
   decimals: number;
 }
 
-const readFieldExtended = (bufferConsumer: BufferConsumer) => {
+function readFieldExtended(bufferConsumer: BufferConsumer) {
   const extendedMetadataLength = bufferConsumer.readIntEncoded();
   const extendedMetadata: FieldExtended = { json: false, uuid: false };
 
@@ -38,9 +38,9 @@ const readFieldExtended = (bufferConsumer: BufferConsumer) => {
   }
 
   return extendedMetadata;
-};
+}
 
-export const readField = (bufferConsumer: BufferConsumer) => {
+export function readField(bufferConsumer: BufferConsumer) {
   bufferConsumer
     .skip(4) // catalog
     .skipStringEncoded() // database
@@ -60,4 +60,4 @@ export const readField = (bufferConsumer: BufferConsumer) => {
   bufferConsumer.skip(2);
 
   return field;
-};
+}

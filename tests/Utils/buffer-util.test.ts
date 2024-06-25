@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
 import {
   bufferXOR,
   chunk,
@@ -17,7 +17,7 @@ import {
   toNullTerminatedStringEscaped,
   toStringEncoded,
   toTimeEncoded,
-} from "@/Utils/BufferUtil";
+} from "@/Utils/BufferUtil.js";
 
 type ReadNTSTest = [input: Buffer, byteOffset: number, output: Buffer];
 

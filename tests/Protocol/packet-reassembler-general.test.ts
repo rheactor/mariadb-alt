@@ -1,13 +1,11 @@
 import { expect, test } from "vitest";
 
-import { PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
-import {
-  PacketReassembler,
-  type PacketType,
-} from "@/Protocol/PacketReassembler/PacketReassembler";
-import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
+import { PacketError } from "@/Protocol/Packet/PacketError.js";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import type { PacketType } from "@/Protocol/PacketReassembler/PacketReassembler.js";
+import { PacketReassembler } from "@/Protocol/PacketReassembler/PacketReassembler.js";
+import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet.js";
 
 type Test = [
   buffers: number[][],

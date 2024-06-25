@@ -1,5 +1,6 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
+
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
 type Test = [length: number];
 
@@ -25,14 +26,14 @@ test.each(tests)("query with parameters length = %j", async (length) => {
   expect.assertions(1);
 
   const parameters = Array.from<number>({ length }).map(
-    (_, index) => `? AS \`p${index}\``,
+    (_, index) => `? AS \`p${String(index)}\``,
   );
 
   const parametersValues = Array.from<number>({
     length,
   }).map((_parameter, parameterIndex) => parameterIndex);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const [...result] = await connection.query(
     `SELECT ${parameters.join(", ")}`,
@@ -41,7 +42,10 @@ test.each(tests)("query with parameters length = %j", async (length) => {
 
   expect(result).toStrictEqual([
     Object.fromEntries(
-      Array.from<number>({ length }).map((_, index) => [`p${index}`, index]),
+      Array.from<number>({ length }).map((_, index) => [
+        `p${String(index)}`,
+        index,
+      ]),
     ),
   ]);
 

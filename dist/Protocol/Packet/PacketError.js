@@ -1,0 +1,1 @@
+export class PacketError{constructor(r,t,a){this.message=r,this.code=t,this.state=a}static from(r){return new PacketError(r.subarray(8).toString("binary"),r.readUInt16LE(),r.subarray(3,8).toString("binary"))}static is(r){return 255===r.readUInt8()}}

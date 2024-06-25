@@ -1,8 +1,8 @@
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
-export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
+export function readNullTerminatedString(data: Buffer, byteOffset?: number) {
   const nullIndexOf = data.indexOf("\0", byteOffset);
 
   if (nullIndexOf === -1) {
@@ -10,17 +10,17 @@ export const readNullTerminatedString = (data: Buffer, byteOffset?: number) => {
   }
 
   return data.subarray(byteOffset, nullIndexOf);
-};
+}
 
-export const toNullTerminatedStringEscaped = (data: string | null) => {
+export function toNullTerminatedStringEscaped(data: string | null) {
   if (data === "" || data === null) {
     return Buffer.from([0x00]);
   }
 
   return Buffer.from(`${data.replaceAll("\u0000", "\u0000\u0000")}\u0000`);
-};
+}
 
-export const toStringEncoded = (value: Buffer | string | null) => {
+export function toStringEncoded(value: Buffer | string | null) {
   if (value === null) {
     return Buffer.from([0xfb]);
   }
@@ -37,9 +37,9 @@ export const toStringEncoded = (value: Buffer | string | null) => {
     toIntEncoded(value.length),
     Buffer.from(value, "binary"),
   ]);
-};
+}
 
-export const toDatetimeEncoded = (
+export function toDatetimeEncoded(
   year = 0,
   month = 0,
   day = 0,
@@ -47,7 +47,7 @@ export const toDatetimeEncoded = (
   minutes = 0,
   seconds = 0,
   ms = 0,
-): Buffer => {
+): Buffer {
   const hasDate = year !== 0 || month !== 0 || day !== 0;
   const hasTime = hours !== 0 || minutes !== 0 || seconds !== 0;
   const hasMs = ms !== 0;
@@ -86,9 +86,9 @@ export const toDatetimeEncoded = (
   }
 
   return Buffer.from([0]);
-};
+}
 
-export const readDatetimeEncoded = (buffer: Buffer): DateTimeFormat => {
+export function readDatetimeEncoded(buffer: Buffer): DateTimeFormat {
   const bufferConsumer = new BufferConsumer(buffer);
   const format = bufferConsumer.readInt();
 
@@ -101,14 +101,14 @@ export const readDatetimeEncoded = (buffer: Buffer): DateTimeFormat => {
     format > 4 ? bufferConsumer.readInt() : 0,
     format > 7 ? bufferConsumer.readInt(4) : 0,
   );
-};
+}
 
-export const toTimeEncoded = (
+export function toTimeEncoded(
   hours = 0,
   minutes = 0,
   seconds = 0,
   ms = 0,
-): Buffer => {
+): Buffer {
   if (hours === 0 && minutes === 0 && seconds === 0 && ms === 0) {
     return Buffer.from([0]);
   }
@@ -136,9 +136,9 @@ export const toTimeEncoded = (
     daysBuffer,
     Buffer.from([hoursAbsolute % 24, minutes, seconds]),
   ]);
-};
+}
 
-export const readTimeEncoded = (buffer: Buffer): TimeFormat => {
+export function readTimeEncoded(buffer: Buffer): TimeFormat {
   const bufferConsumer = new BufferConsumer(buffer);
   const format = bufferConsumer.readInt();
 
@@ -157,18 +157,18 @@ export const readTimeEncoded = (buffer: Buffer): TimeFormat => {
   }
 
   return TimeFormat.from(hours, minutes, seconds, 0);
-};
+}
 
-const toBigIntEncoded = (value: bigint) => {
+function toBigIntEncoded(value: bigint) {
   const bufferBigInt = Buffer.allocUnsafe(9);
 
   bufferBigInt.writeUInt8(0xfe);
   bufferBigInt.writeBigUint64LE(value, 1);
 
   return bufferBigInt;
-};
+}
 
-export const toIntEncoded = (value: bigint | number | null) => {
+export function toIntEncoded(value: bigint | number | null) {
   if (value === null) {
     return Buffer.from([0xfb]);
   }
@@ -178,11 +178,11 @@ export const toIntEncoded = (value: bigint | number | null) => {
   }
 
   if (value > 0xfa) {
-    if (value > 0xff_ff_ff) {
+    if (value > 16_777_215) {
       return toBigIntEncoded(BigInt(value));
     }
 
-    const inputBigger = Number(value > 0xff_ff);
+    const inputBigger = Number(value > 65_535);
     const bufferInt = Buffer.allocUnsafe(3 + inputBigger);
 
     bufferInt.writeUInt8(0xfc + inputBigger);
@@ -192,9 +192,9 @@ export const toIntEncoded = (value: bigint | number | null) => {
   }
 
   return Buffer.from([value]);
-};
+}
 
-export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
+export function bufferXOR(bufferA: Buffer, bufferB: Buffer) {
   if (bufferA.length !== bufferB.length) {
     throw new Error("both Buffer instances must have the same size");
   }
@@ -206,77 +206,77 @@ export const bufferXOR = (bufferA: Buffer, bufferB: Buffer) => {
   }
 
   return bufferResult;
-};
+}
 
-export const createUInt8 = (value: number) => {
+export function createUInt8(value: number) {
   const buffer = Buffer.allocUnsafe(1);
 
   buffer.writeUInt8(value);
 
   return buffer;
-};
+}
 
-export const createInt8 = (value: number) => {
+export function createInt8(value: number) {
   const buffer = Buffer.allocUnsafe(1);
 
   buffer.writeInt8(value);
 
   return buffer;
-};
+}
 
-export const createUInt16LE = (value: number) => {
+export function createUInt16LE(value: number) {
   const buffer = Buffer.allocUnsafe(2);
 
   buffer.writeUInt16LE(value);
 
   return buffer;
-};
+}
 
-export const createInt16LE = (value: number) => {
+export function createInt16LE(value: number) {
   const buffer = Buffer.allocUnsafe(2);
 
   buffer.writeInt16LE(value);
 
   return buffer;
-};
+}
 
-export const createUInt32LE = (value: number) => {
+export function createUInt32LE(value: number) {
   const buffer = Buffer.allocUnsafe(4);
 
   buffer.writeUInt32LE(value);
 
   return buffer;
-};
+}
 
-export const createInt32LE = (value: number) => {
+export function createInt32LE(value: number) {
   const buffer = Buffer.allocUnsafe(4);
 
   buffer.writeInt32LE(value);
 
   return buffer;
-};
+}
 
-export const createUInt64LE = (value: bigint) => {
+export function createUInt64LE(value: bigint) {
   const buffer = Buffer.allocUnsafe(8);
 
   buffer.writeBigUInt64LE(value);
 
   return buffer;
-};
+}
 
-export const createInt64LE = (value: bigint) => {
+export function createInt64LE(value: bigint) {
   const buffer = Buffer.allocUnsafe(8);
 
   buffer.writeBigInt64LE(value);
 
   return buffer;
-};
+}
 
-export const getNullPositions = (
+export function getNullPositions(
   nullBitmap: Buffer,
   fieldsCount: number,
   offset: number,
-): number[] => {
+): number[] {
   const positions: number[] = [];
 
   let currentByte = 0;
@@ -296,9 +296,9 @@ export const getNullPositions = (
   }
 
   return positions;
-};
+}
 
-export const generateNullBitmap = (args: unknown[]): Buffer => {
+export function generateNullBitmap(args: unknown[]): Buffer {
   const nullBitmap = Array.from({
     length: Math.floor((args.length + 7) / 8),
   }).fill(0) as number[];
@@ -307,14 +307,14 @@ export const generateNullBitmap = (args: unknown[]): Buffer => {
     if (argument === null) {
       const bit = Math.floor(index / 8);
 
-      nullBitmap[bit] |= 1 << (index - bit * 8);
+      nullBitmap[bit]! |= 1 << (index - bit * 8);
     }
   }
 
   return Buffer.from(nullBitmap);
-};
+}
 
-export const chunk = (buffer: Buffer, size: number) => {
+export function chunk(buffer: Buffer, size: number) {
   if (buffer.length < size) {
     return [buffer];
   }
@@ -328,4 +328,4 @@ export const chunk = (buffer: Buffer, size: number) => {
   }
 
   return buffers;
-};
+}

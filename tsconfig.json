@@ -1,21 +1,22 @@
 {
   "compilerOptions": {
+    "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "alwaysStrict": true,
-    "checkJs": true,
+    "baseUrl": ".",
     "declaration": true,
     "declarationDir": "dist",
     "disableSizeLimit": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
-    "lib": ["ES2022"],
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "newLine": "LF",
     "noErrorTruncation": true,
+    "noImplicitAny": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
@@ -25,11 +26,12 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ES2022",
+    "target": "ESNext",
+    "useDefineForClassFields": true,
 
     "paths": {
-      "@/*": ["./src/*"],
-      "@Tests/*": ["./tests/*"]
+      "@/*": ["src/*"],
+      "@Tests/*": ["tests/*"]
     }
   },
   "include": [
@@ -38,5 +40,5 @@
     "./src/**/*.ts",
     "./tests/**/*.ts"
   ],
-  "exclude": ["./dist"]
+  "exclude": ["./node_modules", "./dist"]
 }

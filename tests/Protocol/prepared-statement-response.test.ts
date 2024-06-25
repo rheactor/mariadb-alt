@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
+import { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse.js";
 
 test("new PreparedStatementResponse", () => {
   // Query: "SELECT TRUE, ?".

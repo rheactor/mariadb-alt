@@ -1,5 +1,5 @@
-import { Connection } from "@/Connection";
-import { ConnectionPool } from "@/ConnectionPool";
+import { Connection } from "@/Connection.js";
+import { ConnectionPool } from "@/ConnectionPool.js";
 
 type ConnectionOptions = ConstructorParameters<typeof Connection>[0];
 
@@ -14,21 +14,21 @@ const defaultConnection = {
   database: process.env.TESTING_DATABASE ?? "mariadb-alt",
 };
 
-export const TestConnection = (options?: TestConnectionOptions) => {
+export function testConnection(options?: TestConnectionOptions) {
   const connection = new Connection({
     ...defaultConnection,
     ...options,
   });
 
   return connection;
-};
+}
 
 type ConnectionOptionsPool = ConstructorParameters<typeof ConnectionPool>[0];
 
 type TestConnectionOptionsPool = Omit<ConnectionOptionsPool, "database"> &
   Partial<Pick<ConnectionOptionsPool, "database">>;
 
-export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
+export function testConnectionPool(options?: TestConnectionOptionsPool) {
   const connection = new ConnectionPool({
     connections: 2,
 
@@ -37,4 +37,4 @@ export const TestConnectionPool = (options?: TestConnectionOptionsPool) => {
   });
 
   return connection;
-};
+}

@@ -5,14 +5,21 @@ jobs:
   quality:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nodes:
+          - 20
+          - 22
+          - latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: pnpm/action-setup@v2
+          node-version: ${{ matrix.nodes }}
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8.6.10
+          version: latest
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm code:analysis
@@ -22,14 +29,21 @@ jobs:
     if: ${{ always() && contains(needs.quality.result, 'failure') }}
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nodes:
+          - 20
+          - 22
+          - latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: pnpm/action-setup@v2
+          node-version: ${{ matrix.nodes }}
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8.6.10
+          version: latest
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm prettier
@@ -39,14 +53,21 @@ jobs:
     if: ${{ always() && contains(needs.quality.result, 'failure') }}
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nodes:
+          - 20
+          - 22
+          - latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: pnpm/action-setup@v2
+          node-version: ${{ matrix.nodes }}
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8.6.10
+          version: latest
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm eslint
@@ -56,14 +77,21 @@ jobs:
     if: ${{ always() && contains(needs.quality.result, 'failure') }}
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        nodes:
+          - 20
+          - 22
+          - latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - uses: pnpm/action-setup@v2
+          node-version: ${{ matrix.nodes }}
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8.6.10
+          version: latest
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm tsc
@@ -74,13 +102,12 @@ jobs:
     strategy:
       matrix:
         nodes:
-          - 18
           - 20
+          - 22
           - latest
         databases:
           - mariadb:10.11
-          - mariadb:11.0
-          - quay.io/mariadb-foundation/mariadb-devel:11.1
+          - quay.io/mariadb-foundation/mariadb-devel:11.4
           - quay.io/mariadb-foundation/mariadb-devel:verylatest
 
     services:
@@ -102,7 +129,7 @@ jobs:
           - ${{ github.workspace }}/build:/etc/mysql/conf.d
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Copy MariaDB configurations
         run: sudo cp ${{ github.workspace }}/build/my.cnf /etc/mysql/conf.d/my.cnf
@@ -110,13 +137,13 @@ jobs:
       - name: Restart MariaDB
         run: docker restart $(docker ps -q)
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.nodes }}
 
-      - uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8.6.10
+          version: latest
 
       - run: pnpm install --frozen-lockfile
 

@@ -1,4 +1,4 @@
-export const toNativeDate = (
+export function toNativeDate(
   year: number,
   month: number,
   day: number,
@@ -6,11 +6,11 @@ export const toNativeDate = (
   minutes: number,
   seconds: number,
   ms: number,
-): Date => {
+): Date {
   const date = new Date();
 
   date.setUTCFullYear(year, month - 1, day);
   date.setUTCHours(hours, minutes, seconds, ms / 1000);
 
   return date;
-};
+}

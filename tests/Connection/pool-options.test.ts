@@ -1,12 +1,12 @@
-import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import { testConnectionPool } from "@Tests/Fixtures/test-connection.js";
 
 test("option.afterAuthenticated: check sql_mode", async () => {
   expect.assertions(1);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [result] = await connection.query<{
     "@@SESSION.sql_mode": string;
@@ -23,7 +23,7 @@ test("option.afterAuthenticated: check sql_mode", async () => {
 test("option.connections: unlimited connections", async () => {
   expect.assertions(2);
 
-  const connection = TestConnectionPool({ connections: undefined });
+  const connection = testConnectionPool({ connections: undefined });
 
   const query = await connection.queryRaw("SELECT 1");
 

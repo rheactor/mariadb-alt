@@ -1,24 +1,24 @@
-import { type ConnectionOptions } from "@/Connection";
+import type { ConnectionOptions } from "@/Connection.js";
 import {
   capabilitiesBase,
   capabilitiesExtended,
   capabilitiesMariaDB,
   defaultCollation,
-} from "@/Protocol/Client";
-import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword";
+} from "@/Protocol/Client.js";
+import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword.js";
 import {
   createUInt16LE,
   createUInt32LE,
   toNullTerminatedStringEscaped,
   toStringEncoded,
-} from "@/Utils/BufferUtil";
+} from "@/Utils/BufferUtil.js";
 
-export const createHandshakeResponse = (
+export function createHandshakeResponse(
   authSeed: Buffer,
   authPluginName: Buffer,
   options: Pick<ConnectionOptions, "database" | "password" | "user">,
   maxPacketSize: number,
-) => {
+) {
   const bufferAuthentication =
     options.password === undefined || options.password === ""
       ? Buffer.from([0])
@@ -40,4 +40,4 @@ export const createHandshakeResponse = (
     toNullTerminatedStringEscaped(options.database),
     toNullTerminatedStringEscaped(authPluginName.toString("binary")),
   ]);
-};
+}

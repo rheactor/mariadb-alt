@@ -1,0 +1,1 @@
+export function toNumber(r){if("number"==typeof r)return r;if("bigint"==typeof r)return r>=Number.MIN_SAFE_INTEGER&&r<=Number.MAX_SAFE_INTEGER?Number(r):r;if(r.includes("."))return Number(r);try{return toNumber(BigInt(r))}catch{return}}

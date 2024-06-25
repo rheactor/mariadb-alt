@@ -1,0 +1,1 @@
+export function removeItem(e,t){let i=e.indexOf(t);-1!==i&&e.splice(i,1)}

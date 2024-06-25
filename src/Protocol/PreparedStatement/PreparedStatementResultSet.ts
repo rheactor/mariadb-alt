@@ -1,9 +1,10 @@
-import { readField, type Field } from "@/Protocol/Data/Field";
-import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
-import { type Row } from "@/Protocol/Packet/PacketResultSet";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
-import { getNullPositions } from "@/Utils/BufferUtil";
-import { toNumber } from "@/Utils/NumberUtil";
+import type { Field } from "@/Protocol/Data/Field.js";
+import { readField } from "@/Protocol/Data/Field.js";
+import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations.js";
+import type { Row } from "@/Protocol/Packet/PacketResultSet.js";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
+import { getNullPositions } from "@/Utils/BufferUtil.js";
+import { toNumber } from "@/Utils/NumberUtil.js";
 
 const PS_RESULT_ROW_OFFSET = 2;
 

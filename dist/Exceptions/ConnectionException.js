@@ -1,0 +1,1 @@
+import{Exception as o}from"./Exception.js";export class ConnectionException extends o{}

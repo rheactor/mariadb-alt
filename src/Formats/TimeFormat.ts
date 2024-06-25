@@ -1,4 +1,4 @@
-import { toNativeDate } from "@/Utils/DatetimeUtil";
+import { toNativeDate } from "@/Utils/DatetimeUtil.js";
 
 const timeParseRegexp = /^(-?\d{2,3}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?/;
 

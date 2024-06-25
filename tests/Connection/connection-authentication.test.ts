@@ -1,13 +1,14 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("authenticate", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connection = TestConnection();
+    const connection = testConnection();
 
     connection.on("closed", () => {
       resolve();
@@ -31,7 +32,7 @@ test("authenticate", async () =>
 test("ping() command", async () => {
   expect.assertions(2);
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   const ping1 = expect(connection.ping()).resolves.toBeInstanceOf(PacketOk);
 
@@ -42,11 +43,12 @@ test("ping() command", async () => {
   void connection.close();
 });
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("close() command before authentication", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(2);
 
-    const connection = TestConnection();
+    const connection = testConnection();
 
     connection.once("closed", () => {
       expect(true).toBeTruthy();
@@ -66,11 +68,12 @@ test("close() command before authentication", async () =>
       });
   }));
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("close() command after authentication", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connection = TestConnection();
+    const connection = testConnection();
 
     connection.once("closed", () => {
       expect(true).toBeTruthy();

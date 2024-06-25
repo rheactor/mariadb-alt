@@ -3,7 +3,7 @@ import {
   CapabilitiesExtended,
   CapabilitiesMariaDB,
   Collations,
-} from "@/Protocol/Enumerations";
+} from "@/Protocol/Enumerations.js";
 
 export const capabilitiesBase =
   CapabilitiesBase.CONNECT_WITH_DB |

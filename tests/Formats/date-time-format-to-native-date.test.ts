@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
 
 type Test = [input: string, output: string];
 

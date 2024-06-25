@@ -1,12 +1,10 @@
-import { PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
-import {
-  PushRecommendation,
-  type Reassembler,
-} from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
-import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
-import { type PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
+import { PacketError } from "@/Protocol/Packet/PacketError.js";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import type { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import type { Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler.js";
+import { PushRecommendation } from "@/Protocol/PacketReassembler/Reassembler/Reassembler.js";
+import type { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse.js";
+import type { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet.js";
 
 const PAYLOAD_LENGTH = 3;
 const SEQUENCE_LENGTH = 1;

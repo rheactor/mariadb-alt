@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { toNumber } from "@/Utils/NumberUtil";
+import { toNumber } from "@/Utils/NumberUtil.js";
 
 type NumberUnit = [
   input: Parameters<typeof toNumber>[0],

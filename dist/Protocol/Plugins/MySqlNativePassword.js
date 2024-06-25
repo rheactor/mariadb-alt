@@ -1,0 +1,1 @@
+import{createHash as t}from"node:crypto";import{bufferXOR as e}from"../../Utils/BufferUtil.js";export function hashMySQLNativePassword(r,s){let a=t("sha1").update(s).digest(),o=t("sha1").update(Buffer.concat([r,t("sha1").update(a).digest()])).digest();return e(a,o)}

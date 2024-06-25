@@ -1,13 +1,13 @@
-import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { type PacketOk } from "@/Protocol/Packet/PacketOk";
-import { type PacketResultSet } from "@/Protocol/Packet/PacketResultSet";
+import type { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import type { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import { testConnectionPool } from "@Tests/Fixtures/test-connection.js";
 
 test(`batchQueryRaw() with only PacketResultSet`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [query1, query2] = (await connection.batchQueryRaw(
     "SELECT 1, 2; SELECT 3",
@@ -22,7 +22,7 @@ test(`batchQueryRaw() with only PacketResultSet`, async () => {
 test(`batchQueryRaw() with only PacketOK`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [result1, result2] = (await connection.batchQueryRaw(
     "DO NULL; DO NULL",
@@ -37,7 +37,7 @@ test(`batchQueryRaw() with only PacketOK`, async () => {
 test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
   expect.assertions(3);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [query1, result2, query3] = (await connection.batchQueryRaw(
     "SELECT 1, 2; DO NULL; SELECT 3",
@@ -53,7 +53,7 @@ test(`batchQueryRaw() mixing PacketOK and PacketResultSet #1`, async () => {
 test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
   expect.assertions(3);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [result1, query2, result3] = (await connection.batchQueryRaw(
     "DO NULL; SELECT 1, 2; DO NULL",
@@ -69,7 +69,7 @@ test(`batchQueryRaw() mixing PacketOK and PacketResultSet #2`, async () => {
 test(`batchQuery()`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [query1, query2] = await connection.batchQuery("SELECT 1, 2; SELECT 3");
 
@@ -82,7 +82,7 @@ test(`batchQuery()`, async () => {
 test(`batchExecute()`, async () => {
   expect.assertions(2);
 
-  const connection = TestConnectionPool();
+  const connection = testConnectionPool();
 
   const [result1, result2] = await connection.batchExecute("DO NULL; DO NULL");
 

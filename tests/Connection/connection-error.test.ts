@@ -1,13 +1,14 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { ConnectionException } from "@/Exceptions/ConnectionException";
+import { ConnectionException } from "@/Exceptions/ConnectionException.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("invalid port", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(2);
 
-    const connection = TestConnection({ port: 1 });
+    const connection = testConnection({ port: 1 });
 
     connection.once("closed", () => {
       resolve();
@@ -19,11 +20,12 @@ test("invalid port", async () =>
     });
   }));
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("invalid user", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connection = TestConnection({
+    const connection = testConnection({
       user: `random-user-0.5318529997882291`,
     });
 
@@ -43,11 +45,12 @@ test("invalid user", async () =>
     });
   }));
 
+// eslint-disable-next-line vitest/prefer-expect-assertions
 test("wrong password", async () =>
   new Promise<void>((resolve) => {
     expect.assertions(3);
 
-    const connection = TestConnection({
+    const connection = testConnection({
       password: Math.random().toString(),
     });
 

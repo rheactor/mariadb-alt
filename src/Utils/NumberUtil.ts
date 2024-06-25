@@ -1,6 +1,6 @@
-export const toNumber = (
+export function toNumber(
   value: bigint | number | string,
-): bigint | number | undefined => {
+): bigint | number | undefined {
   if (typeof value === "number") {
     return value;
   }
@@ -20,4 +20,4 @@ export const toNumber = (
   } catch {
     return undefined;
   }
-};
+}

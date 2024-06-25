@@ -1,0 +1,1 @@
+export class Exception extends Error{setDetails(t,e){return this.details=e,this.code=t,this}}

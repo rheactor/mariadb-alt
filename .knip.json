@@ -1,4 +1,10 @@
 {
-  "$schema": "https://unpkg.com/knip@2/schema.json",
-  "ignore": ["./jest.config.build.ts", "./**/*.d.ts", "./tests/Fixtures"]
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": ["dist/**/*.{js,d.ts}"],
+  "entry": ["@/index.ts!", "@Tests/**/*.ts"],
+  "ignoreBinaries": ["eslint", "prettier"],
+  "ignoreDependencies": [
+    "@rheactor/eslint-config-rheactor",
+    "eslint-plugin-vitest"
+  ]
 }

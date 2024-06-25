@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { PacketReassembler } from "@/Protocol/PacketReassembler/PacketReassembler";
+import { PacketReassembler } from "@/Protocol/PacketReassembler/PacketReassembler.js";
 
 test("new PacketReassembler(empty callback)", () => {
   const reassembler = new PacketReassembler(() => {

@@ -1,4 +1,4 @@
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
 export class Handshake {
   /** DBMS protocol version (eg. MariaDB 10.x === 10). */

@@ -1,4 +1,4 @@
-import { type PacketType } from "@/Protocol/PacketReassembler/PacketReassembler";
+import type { PacketType } from "@/Protocol/PacketReassembler/PacketReassembler.js";
 
 export enum PushRecommendation {
   // Packet is incomplete, more data incoming.
@@ -9,6 +9,7 @@ export enum PushRecommendation {
   MORE_RESULTS,
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 export abstract class Reassembler {
   /**
    * Check if packet is a compatible data with this reassembler.

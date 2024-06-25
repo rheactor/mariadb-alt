@@ -1,7 +1,7 @@
-import { TestConnectionPool } from "@Tests/Fixtures/test-connection";
 import { expect, test } from "vitest";
 
-import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
+import type { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { testConnectionPool } from "@Tests/Fixtures/test-connection.js";
 
 interface TimeSleepResultSet {
   time: DateTimeFormat;
@@ -9,7 +9,7 @@ interface TimeSleepResultSet {
 }
 
 test("debug", () => {
-  const connection = TestConnectionPool({ idleTimeout: undefined });
+  const connection = testConnectionPool({ idleTimeout: undefined });
 
   expect(connection.debug.connectionsCount).toBe(1);
   expect(connection.debug.idleConnectionsCount).toBe(1);
@@ -20,7 +20,7 @@ test("debug", () => {
 test("query() simultaneous", async () => {
   expect.assertions(4);
 
-  const connection = TestConnectionPool({ idleTimeout: undefined });
+  const connection = testConnectionPool({ idleTimeout: undefined });
 
   const query1 = connection.query<TimeSleepResultSet>(
     "SELECT NOW() AS time, SLEEP(0.1) AS sleep",

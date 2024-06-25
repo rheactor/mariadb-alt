@@ -1,6 +1,6 @@
-import { DateFormat } from "@/Formats/DateFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { toNativeDate } from "@/Utils/DatetimeUtil";
+import { DateFormat } from "@/Formats/DateFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import { toNativeDate } from "@/Utils/DatetimeUtil.js";
 
 export class DateTimeFormat {
   public date!: DateFormat;

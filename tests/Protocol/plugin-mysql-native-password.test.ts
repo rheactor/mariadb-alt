@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword";
+import { hashMySQLNativePassword } from "@/Protocol/Plugins/MySqlNativePassword.js";
 
 test("call hashMySQLNativePassword()", () => {
   const authenticationSeed = Buffer.from([

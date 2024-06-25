@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { DateFormat } from "@/Formats/DateFormat";
+import { DateFormat } from "@/Formats/DateFormat.js";
 
 type Test = [input: string, offset: number | undefined, output: string];
 

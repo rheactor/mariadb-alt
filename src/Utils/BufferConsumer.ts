@@ -1,10 +1,10 @@
-import { type DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { type TimeFormat } from "@/Formats/TimeFormat";
+import type { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import type { TimeFormat } from "@/Formats/TimeFormat.js";
 import {
   readDatetimeEncoded,
   readNullTerminatedString,
   readTimeEncoded,
-} from "@/Utils/BufferUtil";
+} from "@/Utils/BufferUtil.js";
 
 export class BufferConsumer {
   readonly #buffer: Buffer;

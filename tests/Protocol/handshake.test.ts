@@ -1,7 +1,7 @@
-import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples";
 import { expect, test } from "vitest";
 
-import { Handshake } from "@/Protocol/Handshake/Handshake";
+import { Handshake } from "@/Protocol/Handshake/Handshake.js";
+import { initialHandshakePacketSamples } from "@Tests/Fixtures/samples.js";
 
 test('new Handshake with sample "A"', () => {
   const packet = new Handshake(initialHandshakePacketSamples.sampleA);

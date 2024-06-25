@@ -1,9 +1,10 @@
-import { DateFormat } from "@/Formats/DateFormat";
-import { DateTimeFormat } from "@/Formats/DateTimeFormat";
-import { TimeFormat } from "@/Formats/TimeFormat";
-import { readField, type Field } from "@/Protocol/Data/Field";
-import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations";
-import { BufferConsumer } from "@/Utils/BufferConsumer";
+import { DateFormat } from "@/Formats/DateFormat.js";
+import { DateTimeFormat } from "@/Formats/DateTimeFormat.js";
+import { TimeFormat } from "@/Formats/TimeFormat.js";
+import type { Field } from "@/Protocol/Data/Field.js";
+import { readField } from "@/Protocol/Data/Field.js";
+import { FieldFlags, FieldTypes } from "@/Protocol/Enumerations.js";
+import { BufferConsumer } from "@/Utils/BufferConsumer.js";
 
 type RowUnprocessed = Array<Buffer | null>;
 

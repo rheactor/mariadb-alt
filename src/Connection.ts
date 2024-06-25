@@ -1,38 +1,37 @@
 /* eslint-disable unicorn/prefer-event-target */
 import { Socket } from "node:net";
 
-import { ConnectionException } from "@/Exceptions/ConnectionException";
-import { type Exception } from "@/Exceptions/Exception";
-import { FewArgumentsException } from "@/Exceptions/FewArgumentsException";
-import { QueryException } from "@/Exceptions/QueryException";
-import { TooManyArgumentsException } from "@/Exceptions/TooManyArgumentsException";
+import { ConnectionException } from "@/Exceptions/ConnectionException.js";
+import type { Exception } from "@/Exceptions/Exception.js";
+import { FewArgumentsException } from "@/Exceptions/FewArgumentsException.js";
+import { QueryException } from "@/Exceptions/QueryException.js";
+import { TooManyArgumentsException } from "@/Exceptions/TooManyArgumentsException.js";
 import {
   expectedOKPacket,
   expectedResultSetPacket,
-} from "@/Exceptions/UnexpectedResponseTypeException";
-import { Handshake } from "@/Protocol/Handshake/Handshake";
-import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse";
-import { createPacket } from "@/Protocol/Packet/Packet";
-import { type PacketError } from "@/Protocol/Packet/PacketError";
-import { PacketOk } from "@/Protocol/Packet/PacketOk";
-import { PacketResultSet, type Row } from "@/Protocol/Packet/PacketResultSet";
-import {
-  PacketReassembler,
-  type PacketType,
-} from "@/Protocol/PacketReassembler/PacketReassembler";
-import { type Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler";
-import { ReassemblerPreparedStatementResponse } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResponse";
-import { ReassemblerPreparedStatementResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResultSet";
-import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet";
+} from "@/Exceptions/UnexpectedResponseTypeException.js";
+import { Handshake } from "@/Protocol/Handshake/Handshake.js";
+import { createHandshakeResponse } from "@/Protocol/Handshake/HandshakeResponse.js";
+import { createPacket } from "@/Protocol/Packet/Packet.js";
+import { PacketError } from "@/Protocol/Packet/PacketError.js";
+import { PacketOk } from "@/Protocol/Packet/PacketOk.js";
+import type { Row } from "@/Protocol/Packet/PacketResultSet.js";
+import { PacketResultSet } from "@/Protocol/Packet/PacketResultSet.js";
+import type { PacketType } from "@/Protocol/PacketReassembler/PacketReassembler.js";
+import { PacketReassembler } from "@/Protocol/PacketReassembler/PacketReassembler.js";
+import type { Reassembler } from "@/Protocol/PacketReassembler/Reassembler/Reassembler.js";
+import { ReassemblerPreparedStatementResponse } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResponse.js";
+import { ReassemblerPreparedStatementResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerPreparedStatementResultSet.js";
+import { ReassemblerResultSet } from "@/Protocol/PacketReassembler/Reassembler/ReassemblerResultSet.js";
+import type { ExecuteArgument } from "@/Protocol/PreparedStatement/PreparedStatement.js";
 import {
   createClosePacket,
   createExecutePacket,
-  type ExecuteArgument,
-} from "@/Protocol/PreparedStatement/PreparedStatement";
-import { type PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse";
-import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet";
-import { EventEmitter } from "@/Utils/EventEmitter";
-import { type Awaitable } from "@/Utils/TypesUtil";
+} from "@/Protocol/PreparedStatement/PreparedStatement.js";
+import type { PreparedStatementResponse } from "@/Protocol/PreparedStatement/PreparedStatementResponse.js";
+import { PreparedStatementResultSet } from "@/Protocol/PreparedStatement/PreparedStatementResultSet.js";
+import { EventEmitter } from "@/Utils/EventEmitter.js";
+import type { Awaitable } from "@/Utils/TypesUtil.js";
 
 const enum Status {
   CONNECTING,
@@ -220,7 +219,7 @@ export class Connection extends ConnectionEvents {
     if (args !== undefined && args.length > 0) {
       if (args.length > 0xff_ff) {
         throw new TooManyArgumentsException(
-          `Prepared Statements supports only ${0xff_ff} arguments`,
+          `Prepared Statements supports only 65535 arguments`,
         );
       }
 
@@ -230,11 +229,15 @@ export class Connection extends ConnectionEvents {
         0,
         CommandLock.LOCK,
       )
-        .catch((packetError: PacketError) => {
-          throw new QueryException(packetError.message).setDetails(
-            packetError.code,
-            { packetError },
-          );
+        .catch((packetError: unknown) => {
+          if (packetError instanceof PacketError) {
+            throw new QueryException(packetError.message).setDetails(
+              packetError.code,
+              { packetError },
+            );
+          }
+
+          throw packetError;
         })
         .then(async ([packet]) => {
           const response = packet as PreparedStatementResponse;
@@ -246,7 +249,9 @@ export class Connection extends ConnectionEvents {
             );
 
             throw new FewArgumentsException(
-              `Prepared Statement number of arguments is ${response.parametersCount}, but received ${args.length}`,
+              `Prepared Statement number of arguments is ${String(
+                response.parametersCount,
+              )}, but received ${String(args.length)}`,
             ).setDetails(undefined, {
               required: response.parametersCount,
               received: args.length,
@@ -270,11 +275,15 @@ export class Connection extends ConnectionEvents {
     }
 
     return this.batchQueryRaw(sql)
-      .catch((packetError: PacketError) => {
-        throw new QueryException(packetError.message).setDetails(
-          packetError.code,
-          { packetError },
-        );
+      .catch((packetError: unknown) => {
+        if (packetError instanceof PacketError) {
+          throw new QueryException(packetError.message).setDetails(
+            packetError.code,
+            { packetError },
+          );
+        }
+
+        throw packetError;
       })
       .then(([packet]) => packet);
   }
@@ -297,11 +306,15 @@ export class Connection extends ConnectionEvents {
 
   public async execute(sql: string, args?: ExecuteArgument[]) {
     return this.queryRaw(sql, args)
-      .catch((packetError: PacketError) => {
-        throw new QueryException(packetError.message).setDetails(
-          packetError.code,
-          { packetError },
-        );
+      .catch((packetError: unknown) => {
+        if (packetError instanceof PacketError) {
+          throw new QueryException(packetError.message).setDetails(
+            packetError.code,
+            { packetError },
+          );
+        }
+
+        throw packetError;
       })
       .then((response) => {
         if (response instanceof PacketOk) {
@@ -321,11 +334,15 @@ export class Connection extends ConnectionEvents {
 
   public async batchQuery<T extends object = Row>(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((packetError: PacketError) => {
-        throw new QueryException(packetError.message).setDetails(
-          packetError.code,
-          { packetError },
-        );
+      .catch((packetError: unknown) => {
+        if (packetError instanceof PacketError) {
+          throw new QueryException(packetError.message).setDetails(
+            packetError.code,
+            { packetError },
+          );
+        }
+
+        throw packetError;
       })
       .then((packets) =>
         packets.map((packet) => {
@@ -340,11 +357,15 @@ export class Connection extends ConnectionEvents {
 
   public async batchExecute(sql: string) {
     return this.batchQueryRaw(sql)
-      .catch((packetError: PacketError) => {
-        throw new QueryException(packetError.message).setDetails(
-          packetError.code,
-          { packetError },
-        );
+      .catch((packetError: unknown) => {
+        if (packetError instanceof PacketError) {
+          throw new QueryException(packetError.message).setDetails(
+            packetError.code,
+            { packetError },
+          );
+        }
+
+        throw packetError;
       })
       .then((packets) =>
         packets.map((packet) => {
@@ -364,17 +385,23 @@ export class Connection extends ConnectionEvents {
     const level = this.#transactionsCommands.push([]) - 2;
 
     await this.execute(
-      level === 0 ? "START TRANSACTION" : `SAVEPOINT n${level}`,
+      level === 0 ? "START TRANSACTION" : `SAVEPOINT n${String(level)}`,
     );
 
     try {
       const result = await callback();
 
       await (result === false
-        ? this.execute(level === 0 ? `ROLLBACK` : `ROLLBACK TO n${level}`)
-        : this.execute(level === 0 ? "COMMIT" : `RELEASE SAVEPOINT n${level}`));
+        ? this.execute(
+            level === 0 ? `ROLLBACK` : `ROLLBACK TO n${String(level)}`,
+          )
+        : this.execute(
+            level === 0 ? "COMMIT" : `RELEASE SAVEPOINT n${String(level)}`,
+          ));
     } catch {
-      await this.execute(level === 0 ? `ROLLBACK` : `ROLLBACK TO n${level}`);
+      await this.execute(
+        level === 0 ? `ROLLBACK` : `ROLLBACK TO n${String(level)}`,
+      );
     }
 
     this.#transactionsCommands.pop();

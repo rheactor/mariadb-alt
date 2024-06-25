@@ -1,16 +1,16 @@
-import { TestConnection } from "@Tests/Fixtures/test-connection";
-import { delay } from "@Tests/Fixtures/utils";
 import { expect, test } from "vitest";
 
-import { type Connection } from "@/Connection";
+import type { Connection } from "@/Connection.js";
+import { testConnection } from "@Tests/Fixtures/test-connection.js";
+import { delay } from "@Tests/Fixtures/utils.js";
 
 interface SampleRow {
   id: number;
   value: number;
 }
 
-const createSampleTable = async (connection: Connection) => {
-  const tableName = `table-${Math.random()}`;
+async function createSampleTable(connection: Connection) {
+  const tableName = `table-${String(Math.random())}`;
 
   await connection.execute(`CREATE TEMPORARY TABLE \`${tableName}\` (
         id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -19,12 +19,14 @@ const createSampleTable = async (connection: Connection) => {
       )`);
 
   return tableName;
-};
+}
 
 test("transaction(): noop", async () => {
+  expect.assertions(3);
+
   let counter = 0;
 
-  const connection = TestConnection();
+  const connection = testConnection();
 
   await connection.transaction(async () => {
     await delay(0);
@@ -44,7 +46,7 @@ test("transaction(): noop", async () => {
 test("transaction(): auto-commit", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {
@@ -67,7 +69,7 @@ test("transaction(): auto-commit", async () => {
 test("transaction(): commit with return true", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {
@@ -92,7 +94,7 @@ test("transaction(): commit with return true", async () => {
 test("transaction(): rollback with return false", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {
@@ -117,7 +119,7 @@ test("transaction(): rollback with return false", async () => {
 test("transaction(): auto-rollback after a SQL error", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {
@@ -142,7 +144,7 @@ test("transaction(): auto-rollback after a SQL error", async () => {
 test("transaction(): rollback by uncaught error", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {
@@ -167,7 +169,7 @@ test("transaction(): rollback by uncaught error", async () => {
 test("transaction(): nested transactions", async () => {
   expect.assertions(1);
 
-  const connection = TestConnection();
+  const connection = testConnection();
   const tableName = await createSampleTable(connection);
 
   await connection.transaction(async () => {

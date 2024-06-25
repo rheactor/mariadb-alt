@@ -1,12 +1,10 @@
 {
-  "extends": ["@rheactor/eslint-config-rheactor/all-node"],
+  "extends": ["@rheactor/eslint-config-rheactor/base-vitest"],
 
   "overrides": [
     {
       "files": "./src/**/*.ts",
-      "rules": {
-        "unicorn/filename-case": ["error", { "case": "pascalCase" }]
-      }
+      "rules": { "unicorn/filename-case": ["error", { "case": "pascalCase" }] }
     }
   ]
 }

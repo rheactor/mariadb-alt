@@ -1,0 +1,1 @@
+import{ReassemblerResultSetPartial as e}from"./ReassemblerResultSet.js";import{PreparedStatementResultSet as t}from"../../PreparedStatement/PreparedStatementResultSet.js";export class ReassemblerPreparedStatementResultSet extends e{get(){return new t(Buffer.concat(this.packets))}}
